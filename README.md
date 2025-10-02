@@ -21,7 +21,7 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 
 ### Juicy Elements
 - ✅ **Audio Feedback**: Typing sounds, button clicks, hover sounds with volume controls
-- ✅ **Visual Effects**: Glow effects, pulse animations, customizable intensities  
+- ✅ **Visual Effects**: Shader-based text shadows, outlines, gradient backgrounds with real-time configuration
 - ✅ **Animations**: Character typing animations, cursor pulse, button interactions, smooth transitions
 - ✅ **Themes**: Dark, Light, and Juicy themes with visual effect integration
 
@@ -42,16 +42,22 @@ juicyeditor/
 │   │   └── game_controller.gd # Central application controller
 │   ├── components/           # Reusable UI and logic components
 │   │   ├── audio_manager.gd  # Audio feedback system
+│   │   ├── visual_effects_manager.gd # Shader-based visual effects
 │   │   └── juicy_text_edit.gd # Enhanced text editor
 │   └── ui/                   # UI-specific scripts
 ├── scenes/
 │   ├── components/           # Reusable scene components
 │   └── ui/                   # UI layouts and screens
+│       └── effects_settings_panel.tscn # Visual effects configuration
 ├── audio/
 │   └── sfx/                  # Sound effects
 ├── effects/
 │   ├── shaders/              # Visual effect shaders
 │   └── animations/           # Animation resources
+├── shaders/                  # GLSL shader files
+│   ├── shadow.gdshader       # Text shadow effects
+│   ├── outline.gdshader      # Text outline effects
+│   └── gradient.gdshader     # Background gradient effects
 └── themes/                   # UI and color themes
 ```
 
@@ -70,6 +76,14 @@ Handles all audio feedback:
 - UI interaction sounds
 - File operation audio cues
 - Volume and preference management
+
+#### VisualEffectsManager
+Handles shader-based visual effects:
+- Text shadow effects with configurable color, offset, and blur
+- Text outline effects with customizable color, width, and smoothness
+- Background gradient effects with start/end colors and direction
+- Real-time effect configuration through UI controls
+- Shader material management and optimization
 
 #### JuicyTextEdit
 Enhanced TextEdit component:
@@ -125,6 +139,11 @@ Scenes are designed to work independently with minimal external dependencies.
   - **Audio**: Master volume, UI sounds, typing sounds, effect volume
   - **Visual Effects**: Enable/disable effects, glow, pulse, intensity control
   - **Animations**: Typing animations, cursor pulse, button animations, speed control
+- **Visual Effects**: Effects → Visual Effects Settings...
+  - **Text Shadow**: Color, offset, blur radius configuration
+  - **Outline**: Color, width, smoothness settings
+  - **Background Gradient**: Start/end colors, gradient direction
+  - **Quick Toggles**: Use Effects menu for instant on/off switching
 
 ### Keyboard Shortcuts
 | Action | Shortcut |

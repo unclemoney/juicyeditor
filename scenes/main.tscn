@@ -1,7 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://bt74kgu67tnxg"]
+[gd_scene load_steps=6 format=3 uid="uid://bt74kgu67tnxg"]
 
 [ext_resource type="Script" uid="uid://dhfhsla164f80" path="res://scripts/ui/main_scene.gd" id="1_51l7b"]
 [ext_resource type="Script" uid="uid://cs73sg5vom7ql" path="res://scripts/components/juicy_text_edit.gd" id="2_h3n2m"]
+[ext_resource type="Shader" uid="uid://cvcqfj50imfxw" path="res://shaders/gradient.gdshader" id="2_jyhfs"]
+[ext_resource type="Script" uid="uid://bxg7hdo3st8ji" path="res://scripts/components/visual_effects_manager.gd" id="4_tbgi4"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_o6xl0"]
+shader = ExtResource("2_jyhfs")
+shader_parameter/start_color = Color(0.1, 0.1, 0.1, 1)
+shader_parameter/end_color = Color(0.05, 0.05, 0.05, 1)
+shader_parameter/gradient_direction_x = 0.0
+shader_parameter/gradient_direction_y = 1.0
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -45,6 +54,23 @@ item_2/id = 2
 item_3/text = "Replace"
 item_3/id = 3
 
+[node name="Effects" type="PopupMenu" parent="VBoxContainer/MenuBar"]
+item_count = 5
+item_0/text = "Visual Effects Settings..."
+item_0/id = 0
+item_1/id = 1
+item_2/text = "Enable Text Shadow"
+item_2/checkable = 1
+item_2/checked = true
+item_2/id = 2
+item_3/text = "Enable Outline"
+item_3/checkable = 1
+item_3/checked = true
+item_3/id = 3
+item_4/text = "Enable Background Gradient"
+item_4/checkable = 1
+item_4/id = 4
+
 [node name="Toolbar" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
@@ -75,9 +101,28 @@ text = "Redo"
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="TextEditor" type="TextEdit" parent="VBoxContainer/MainArea"]
+[node name="TextEditorContainer" type="Control" parent="VBoxContainer/MainArea"]
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="BackgroundPanel" type="ColorRect" parent="VBoxContainer/MainArea/TextEditorContainer"]
+material = SubResource("ShaderMaterial_o6xl0")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0846899, 0.0846899, 0.0846899, 1)
+
+[node name="TextEditor" type="TextEdit" parent="VBoxContainer/MainArea/TextEditorContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 placeholder_text = "Start typing to create your document..."
 scroll_smooth = true
 script = ExtResource("2_h3n2m")
@@ -112,3 +157,6 @@ title = "Save File"
 initial_position = 2
 size = Vector2i(800, 600)
 access = 2
+
+[node name="VisualEffectsManager" type="Node" parent="."]
+script = ExtResource("4_tbgi4")

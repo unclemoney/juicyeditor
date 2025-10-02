@@ -10,10 +10,12 @@ const FindReplaceDialogScene = preload("res://scripts/ui/find_replace_dialog.gd"
 const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 
 # Node references
-@onready var text_editor: TextEdit = $VBoxContainer/MainArea/TextEditor
+@onready var text_editor: TextEdit = $VBoxContainer/MainArea/TextEditorContainer/TextEditor
+@onready var background_panel: ColorRect = $VBoxContainer/MainArea/TextEditorContainer/BackgroundPanel
 @onready var menu_bar: MenuBar = $VBoxContainer/MenuBar
 @onready var file_menu: PopupMenu = $VBoxContainer/MenuBar/File
 @onready var edit_menu: PopupMenu = $VBoxContainer/MenuBar/Edit
+@onready var effects_menu: PopupMenu = $VBoxContainer/MenuBar/Effects
 @onready var toolbar_buttons: HBoxContainer = $VBoxContainer/Toolbar
 @onready var new_button: Button = $VBoxContainer/Toolbar/NewButton
 @onready var open_button: Button = $VBoxContainer/Toolbar/OpenButton
@@ -148,15 +150,18 @@ func _setup_menus() -> void:
 	settings_menu.add_item("Preferences...", 0)
 	settings_menu.id_pressed.connect(_on_settings_menu_selected)
 	
-	# Setup menu bar
-	menu_bar.add_child(file_menu)
-	menu_bar.add_child(edit_menu)
-	menu_bar.add_child(settings_menu)
+	# Setup Effects menu
+	if effects_menu:
+		effects_menu.id_pressed.connect(_on_effects_menu_selected)
 	
-	# Set menu titles
+	# Setup menu bar (menus already exist in scene, just set titles)
 	menu_bar.set_menu_title(0, "File")
 	menu_bar.set_menu_title(1, "Edit")
-	menu_bar.set_menu_title(2, "Settings")
+	menu_bar.set_menu_title(2, "Effects")
+	
+	# Add the settings menu
+	menu_bar.add_child(settings_menu)
+	menu_bar.set_menu_title(3, "Settings")
 	
 	# Setup file dialogs with filters
 	_setup_file_dialogs()
@@ -368,6 +373,17 @@ func _on_settings_menu_selected(id: int) -> void:
 	match id:
 		0:  # Preferences
 			_open_settings_dialog()
+
+func _on_effects_menu_selected(id: int) -> void:
+	match id:
+		0:  # Visual Effects Settings
+			_open_effects_settings_dialog()
+		2:  # Enable Text Shadow
+			_toggle_text_shadow()
+		3:  # Enable Outline
+			_toggle_outline()
+		4:  # Enable Background Gradient
+			_toggle_background_gradient()
 
 func _on_edit_menu_selected(id: int) -> void:
 	match id:
@@ -612,13 +628,56 @@ func _show_text_statistics() -> void:
 	message += "Lines: " + str(stats.lines) + "\n"
 	message += "Paragraphs: " + str(stats.paragraphs)
 	
-	# Create and show a simple dialog
+	# Show statistics in a dialog
 	var dialog = AcceptDialog.new()
-	dialog.title = "Text Statistics"
 	dialog.dialog_text = message
+	dialog.title = "Text Statistics"
 	add_child(dialog)
 	dialog.popup_centered()
-	dialog.confirmed.connect(_on_stats_dialog_confirmed.bind(dialog))
+	dialog.confirmed.connect(func(): dialog.queue_free())
 
-func _on_stats_dialog_confirmed(dialog: AcceptDialog) -> void:
-	dialog.queue_free()
+# Effects menu methods
+func _open_effects_settings_dialog() -> void:
+	# Create and show effects settings dialog
+	var effects_panel = preload("res://scenes/ui/effects_settings_panel.tscn").instantiate()
+	add_child(effects_panel)
+	
+	# Center the dialog
+	effects_panel.position = (get_viewport().size - effects_panel.size) / 2
+	
+	# Load current settings if visual effects manager exists
+	if visual_effects_manager and effects_panel.has_method("load_settings_from_manager"):
+		effects_panel.load_settings_from_manager()
+
+func _toggle_text_shadow() -> void:
+	if visual_effects_manager and visual_effects_manager.has_method("enable_effect"):
+		var current_enabled = effects_menu.is_item_checked(2)
+		var new_enabled = not current_enabled
+		effects_menu.set_item_checked(2, new_enabled)
+		visual_effects_manager.enable_effect("text_shadow", new_enabled)
+		
+		# Apply to text editor
+		if visual_effects_manager.has_method("apply_text_shadow"):
+			visual_effects_manager.apply_text_shadow(text_editor, new_enabled)
+
+func _toggle_outline() -> void:
+	if visual_effects_manager and visual_effects_manager.has_method("enable_effect"):
+		var current_enabled = effects_menu.is_item_checked(3)
+		var new_enabled = not current_enabled
+		effects_menu.set_item_checked(3, new_enabled)
+		visual_effects_manager.enable_effect("outline", new_enabled)
+		
+		# Apply to text editor
+		if visual_effects_manager.has_method("apply_outline"):
+			visual_effects_manager.apply_outline(text_editor, new_enabled)
+
+func _toggle_background_gradient() -> void:
+	if visual_effects_manager and visual_effects_manager.has_method("enable_effect"):
+		var current_enabled = effects_menu.is_item_checked(4)
+		var new_enabled = not current_enabled
+		effects_menu.set_item_checked(4, new_enabled)
+		visual_effects_manager.enable_effect("gradient", new_enabled)
+		
+		# Apply to background panel
+		if visual_effects_manager.has_method("apply_gradient_background"):
+			visual_effects_manager.apply_gradient_background(background_panel, new_enabled)

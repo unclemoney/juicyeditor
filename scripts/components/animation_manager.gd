@@ -46,6 +46,23 @@ var transition_config: Dictionary = {
 	"elastic_strength": 0.8
 }
 
+# Text explosion configuration
+var explosion_config: Dictionary = {
+	"enabled": true,
+	"gravity": 800.0,
+	"start_force_x_min": -200.0,
+	"start_force_x_max": 200.0,
+	"start_force_y_min": -300.0,
+	"start_force_y_max": -100.0,
+	"force_multiplier": 1.0,
+	"horizontal_drag": 0.98,
+	"vertical_drag": 0.99,
+	"rotation_speed_min": -5.0,
+	"rotation_speed_max": 5.0,
+	"lifetime": 3.0,
+	"fade_start_ratio": 0.5
+}
+
 func _ready() -> void:
 	print("Animation Manager initialized")
 	_setup_cursor_animations()
@@ -408,6 +425,13 @@ func configure_transitions(enabled: bool, fade_duration: float = 0.2, slide_dura
 	transition_config.fade_duration = fade_duration
 	transition_config.slide_duration = slide_duration
 
+func configure_text_explosions(enabled: bool, gravity: float = 800.0, force_multiplier: float = 1.0, lifetime: float = 3.0) -> void:
+	"""Configure text explosion effects"""
+	explosion_config.enabled = enabled
+	explosion_config.gravity = gravity
+	explosion_config.force_multiplier = force_multiplier
+	explosion_config.lifetime = lifetime
+
 func stop_all_animations() -> void:
 	for animation_name in active_animations:
 		var tween = active_animations[animation_name]
@@ -449,3 +473,105 @@ func get_animation_info() -> Dictionary:
 		"active_animations_count": active_animations.size(),
 		"animation_speed": animation_speed_multiplier
 	}
+
+func create_text_explosion(deleted_char: String, position: Vector2, parent_control: Control) -> void:
+	"""Create an exploding text effect for deleted characters"""
+	if not explosion_config.enabled:
+		return
+	
+	if not parent_control:
+		return
+	
+	# Create a label for the flying text
+	var flying_text = Label.new()
+	flying_text.text = deleted_char
+	flying_text.add_theme_font_size_override("font_size", 16)
+	flying_text.modulate = Color.WHITE
+	flying_text.position = position
+	
+	# Add to parent's scene tree
+	var scene_root = parent_control.get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(flying_text)
+	else:
+		parent_control.add_child(flying_text)
+	
+	# Setup explosion physics directly
+	_setup_text_explosion_physics(
+		flying_text,
+		Vector2(
+			randf_range(explosion_config.start_force_x_min, explosion_config.start_force_x_max),
+			randf_range(explosion_config.start_force_y_min, explosion_config.start_force_y_max)
+		) * explosion_config.force_multiplier,
+		randf_range(explosion_config.rotation_speed_min, explosion_config.rotation_speed_max)
+	)
+
+func _setup_text_explosion_physics(label: Label, initial_velocity: Vector2, rotation_speed: float) -> void:
+	"""Setup physics simulation for exploding text"""
+	if not label:
+		return
+	
+	# Store physics data in the label's metadata
+	label.set_meta("explosion_velocity", initial_velocity)
+	label.set_meta("explosion_rotation_speed", rotation_speed)
+	label.set_meta("explosion_lifetime", 0.0)
+	
+	# Create physics timer
+	var physics_timer = Timer.new()
+	physics_timer.wait_time = 0.016  # ~60 FPS
+	physics_timer.timeout.connect(_update_explosion_physics.bind(label))
+	label.add_child(physics_timer)
+	physics_timer.start()
+	
+	# Create cleanup timer
+	var cleanup_timer = Timer.new()
+	cleanup_timer.wait_time = explosion_config.lifetime
+	cleanup_timer.one_shot = true
+	cleanup_timer.timeout.connect(_cleanup_explosion_text.bind(label))
+	label.add_child(cleanup_timer)
+	cleanup_timer.start()
+
+func _update_explosion_physics(label: Label) -> void:
+	"""Update physics for a single explosion text label"""
+	if not label or not label.is_inside_tree():
+		return
+	
+	var delta = 0.016  # Approximate delta time
+	
+	# Get physics data from metadata
+	var velocity = label.get_meta("explosion_velocity", Vector2.ZERO)
+	var rotation_speed = label.get_meta("explosion_rotation_speed", 0.0)
+	var lifetime = label.get_meta("explosion_lifetime", 0.0)
+	
+	# Apply gravity
+	velocity.y += explosion_config.gravity * delta
+	
+	# Apply drag
+	velocity.x *= pow(explosion_config.horizontal_drag, delta * 60.0)
+	velocity.y *= pow(explosion_config.vertical_drag, delta * 60.0)
+	
+	# Update position
+	label.position += velocity * delta
+	
+	# Update rotation
+	label.rotation += rotation_speed * delta
+	
+	# Update lifetime and fade
+	lifetime += delta
+	if lifetime > explosion_config.lifetime * explosion_config.fade_start_ratio:
+		var fade_factor = 1.0 - ((lifetime - explosion_config.lifetime * explosion_config.fade_start_ratio) / (explosion_config.lifetime * (1.0 - explosion_config.fade_start_ratio)))
+		label.modulate.a = fade_factor
+	
+	# Store updated values
+	label.set_meta("explosion_velocity", velocity)
+	label.set_meta("explosion_lifetime", lifetime)
+	
+	# Check if off screen or too old
+	var viewport_size = label.get_viewport().get_visible_rect().size
+	if label.position.y > viewport_size.y + 100 or lifetime > explosion_config.lifetime:
+		_cleanup_explosion_text(label)
+
+func _cleanup_explosion_text(label: Label) -> void:
+	"""Clean up explosion text label"""
+	if label and label.is_inside_tree():
+		label.queue_free()

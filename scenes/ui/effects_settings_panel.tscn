@@ -1,0 +1,207 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqsyb6m5w7h3v"]
+
+[ext_resource type="Script" path="res://scripts/ui/effects_settings_panel.gd" id="1_g8m7k"]
+
+[node name="EffectsSettingsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_g8m7k")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TitleLabel" type="Label" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+text = "Visual Effects Settings"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ShadowGroup" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ShadowTitle" type="Label" parent="ScrollContainer/VBoxContainer/ShadowGroup"]
+layout_mode = 2
+text = "Text Shadow"
+
+[node name="ShadowEnabled" type="CheckBox" parent="ScrollContainer/VBoxContainer/ShadowGroup"]
+layout_mode = 2
+button_pressed = true
+text = "Enable Text Shadow"
+
+[node name="ShadowContainer" type="GridContainer" parent="ScrollContainer/VBoxContainer/ShadowGroup"]
+layout_mode = 2
+columns = 2
+
+[node name="ColorLabel" type="Label" parent="ScrollContainer/VBoxContainer/ShadowGroup/ShadowContainer"]
+layout_mode = 2
+text = "Shadow Color:"
+
+[node name="ShadowColor" type="ColorPicker" parent="ScrollContainer/VBoxContainer/ShadowGroup/ShadowContainer"]
+layout_mode = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="OffsetXLabel" type="Label" parent="ScrollContainer/VBoxContainer/ShadowGroup/ShadowContainer"]
+layout_mode = 2
+text = "Offset X:"
+
+[node name="OffsetX" type="SpinBox" parent="ScrollContainer/VBoxContainer/ShadowGroup/ShadowContainer"]
+layout_mode = 2
+min_value = -10.0
+max_value = 10.0
+step = 0.1
+value = 2.0
+
+[node name="OffsetYLabel" type="Label" parent="ScrollContainer/VBoxContainer/ShadowGroup/ShadowContainer"]
+layout_mode = 2
+text = "Offset Y:"
+
+[node name="OffsetY" type="SpinBox" parent="ScrollContainer/VBoxContainer/ShadowGroup/ShadowContainer"]
+layout_mode = 2
+min_value = -10.0
+max_value = 10.0
+step = 0.1
+value = 2.0
+
+[node name="BlurLabel" type="Label" parent="ScrollContainer/VBoxContainer/ShadowGroup/ShadowContainer"]
+layout_mode = 2
+text = "Blur Radius:"
+
+[node name="BlurRadius" type="SpinBox" parent="ScrollContainer/VBoxContainer/ShadowGroup/ShadowContainer"]
+layout_mode = 2
+max_value = 5.0
+step = 0.1
+value = 1.0
+
+[node name="HSeparator2" type="HSeparator" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="OutlineGroup" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="OutlineTitle" type="Label" parent="ScrollContainer/VBoxContainer/OutlineGroup"]
+layout_mode = 2
+text = "Outline Effects"
+
+[node name="OutlineEnabled" type="CheckBox" parent="ScrollContainer/VBoxContainer/OutlineGroup"]
+layout_mode = 2
+button_pressed = true
+text = "Enable Outline"
+
+[node name="OutlineContainer" type="GridContainer" parent="ScrollContainer/VBoxContainer/OutlineGroup"]
+layout_mode = 2
+columns = 2
+
+[node name="OutlineColorLabel" type="Label" parent="ScrollContainer/VBoxContainer/OutlineGroup/OutlineContainer"]
+layout_mode = 2
+text = "Outline Color:"
+
+[node name="OutlineColor" type="ColorPicker" parent="ScrollContainer/VBoxContainer/OutlineGroup/OutlineContainer"]
+layout_mode = 2
+color = Color(1, 1, 1, 0.8)
+
+[node name="WidthLabel" type="Label" parent="ScrollContainer/VBoxContainer/OutlineGroup/OutlineContainer"]
+layout_mode = 2
+text = "Width:"
+
+[node name="OutlineWidth" type="SpinBox" parent="ScrollContainer/VBoxContainer/OutlineGroup/OutlineContainer"]
+layout_mode = 2
+max_value = 5.0
+step = 0.1
+value = 1.0
+
+[node name="SmoothnessLabel" type="Label" parent="ScrollContainer/VBoxContainer/OutlineGroup/OutlineContainer"]
+layout_mode = 2
+text = "Smoothness:"
+
+[node name="OutlineSmoothness" type="SpinBox" parent="ScrollContainer/VBoxContainer/OutlineGroup/OutlineContainer"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.1
+
+[node name="HSeparator3" type="HSeparator" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="GradientGroup" type="VBoxContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="GradientTitle" type="Label" parent="ScrollContainer/VBoxContainer/GradientGroup"]
+layout_mode = 2
+text = "Background Gradient"
+
+[node name="GradientEnabled" type="CheckBox" parent="ScrollContainer/VBoxContainer/GradientGroup"]
+layout_mode = 2
+text = "Enable Background Gradient"
+
+[node name="GradientContainer" type="GridContainer" parent="ScrollContainer/VBoxContainer/GradientGroup"]
+layout_mode = 2
+columns = 2
+
+[node name="StartColorLabel" type="Label" parent="ScrollContainer/VBoxContainer/GradientGroup/GradientContainer"]
+layout_mode = 2
+text = "Start Color:"
+
+[node name="StartColor" type="ColorPicker" parent="ScrollContainer/VBoxContainer/GradientGroup/GradientContainer"]
+layout_mode = 2
+color = Color(0.1, 0.1, 0.1, 1)
+
+[node name="EndColorLabel" type="Label" parent="ScrollContainer/VBoxContainer/GradientGroup/GradientContainer"]
+layout_mode = 2
+text = "End Color:"
+
+[node name="EndColor" type="ColorPicker" parent="ScrollContainer/VBoxContainer/GradientGroup/GradientContainer"]
+layout_mode = 2
+color = Color(0.05, 0.05, 0.05, 1)
+
+[node name="DirectionXLabel" type="Label" parent="ScrollContainer/VBoxContainer/GradientGroup/GradientContainer"]
+layout_mode = 2
+text = "Direction X:"
+
+[node name="DirectionX" type="SpinBox" parent="ScrollContainer/VBoxContainer/GradientGroup/GradientContainer"]
+layout_mode = 2
+min_value = -1.0
+max_value = 1.0
+step = 0.1
+
+[node name="DirectionYLabel" type="Label" parent="ScrollContainer/VBoxContainer/GradientGroup/GradientContainer"]
+layout_mode = 2
+text = "Direction Y:"
+
+[node name="DirectionY" type="SpinBox" parent="ScrollContainer/VBoxContainer/GradientGroup/GradientContainer"]
+layout_mode = 2
+min_value = -1.0
+max_value = 1.0
+step = 0.1
+value = 1.0
+
+[node name="HSeparator4" type="HSeparator" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ApplyButton" type="Button" parent="ScrollContainer/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Apply"
+
+[node name="ResetButton" type="Button" parent="ScrollContainer/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Reset to Defaults"

@@ -286,6 +286,13 @@ func _create_animation_settings_tab() -> void:
 	animation_tab.add_child(button_animations_check)
 	animation_settings["button_animations"] = button_animations_check
 	
+	# Deletion Explosions
+	var deletion_explosions_check = CheckBox.new()
+	deletion_explosions_check.text = "Enable Deletion Explosions"
+	deletion_explosions_check.name = "deletion_explosions"
+	animation_tab.add_child(deletion_explosions_check)
+	animation_settings["deletion_explosions"] = deletion_explosions_check
+	
 	# Animation Speed
 	var speed_group = HBoxContainer.new()
 	animation_tab.add_child(speed_group)
@@ -396,6 +403,9 @@ func _load_current_settings() -> void:
 	if "button_animations" in game_controller.editor_settings and animation_settings.has("button_animations"):
 		animation_settings["button_animations"].button_pressed = game_controller.editor_settings.button_animations
 	
+	if "deletion_explosions" in game_controller.editor_settings and animation_settings.has("deletion_explosions"):
+		animation_settings["deletion_explosions"].button_pressed = game_controller.editor_settings.deletion_explosions
+	
 	if "animation_speed" in game_controller.editor_settings and animation_settings.has("animation_speed"):
 		animation_settings["animation_speed"].value = game_controller.editor_settings.animation_speed
 
@@ -470,6 +480,9 @@ func _collect_settings() -> Dictionary:
 	if animation_settings.has("button_animations"):
 		settings.button_animations = animation_settings["button_animations"].button_pressed
 	
+	if animation_settings.has("deletion_explosions"):
+		settings.deletion_explosions = animation_settings["deletion_explosions"].button_pressed
+	
 	if animation_settings.has("animation_speed"):
 		settings.animation_speed = animation_settings["animation_speed"].value
 	
@@ -495,6 +508,8 @@ func _apply_settings_to_managers(settings: Dictionary) -> void:
 			animation_manager.enable_typing_animations = settings.typing_animations
 		if "cursor_animations" in settings:
 			animation_manager.enable_cursor_animations = settings.cursor_animations
+		if "deletion_explosions" in settings:
+			animation_manager.explosion_config.enabled = settings.deletion_explosions
 		if "animation_speed" in settings:
 			animation_manager.animation_speed_multiplier = settings.animation_speed
 
@@ -540,6 +555,8 @@ func _reset_to_defaults() -> void:
 		animation_settings["cursor_animations"].button_pressed = true
 	if animation_settings.has("button_animations"):
 		animation_settings["button_animations"].button_pressed = true
+	if animation_settings.has("deletion_explosions"):
+		animation_settings["deletion_explosions"].button_pressed = true
 	if animation_settings.has("animation_speed"):
 		animation_settings["animation_speed"].value = 1.0
 

@@ -8,7 +8,7 @@ signal effects_updated
 
 @export var enable_text_shadows: bool = true
 @export var enable_outline_effects: bool = true
-@export var enable_gradient_backgrounds: bool = false
+@export var enable_gradient_backgrounds: bool = true
 @export var enable_particle_effects: bool = true
 
 var text_shadow_material: ShaderMaterial
@@ -47,91 +47,34 @@ func _initialize_materials() -> void:
 	_create_gradient_material()
 
 func _create_text_shadow_material() -> void:
-	# Create a simple text shadow shader
-	var shader_code = """
-shader_type canvas_item;
-
-uniform float shadow_offset_x : hint_range(-10.0, 10.0) = 2.0;
-uniform float shadow_offset_y : hint_range(-10.0, 10.0) = 2.0;
-uniform vec4 shadow_color : source_color = vec4(0.0, 0.0, 0.0, 0.5);
-uniform float shadow_blur : hint_range(0.0, 5.0) = 1.0;
-
-void fragment() {
-	vec2 texture_size = vec2(textureSize(TEXTURE, 0));
-	vec2 shadow_uv = UV + vec2(shadow_offset_x, shadow_offset_y) / texture_size;
-	vec4 shadow = texture(TEXTURE, shadow_uv) * shadow_color;
-	vec4 original = texture(TEXTURE, UV);
-	
-	// Blend shadow with original
-	COLOR = mix(shadow, original, original.a);
-}
-"""
-	
-	var shader = Shader.new()
-	shader.code = shader_code
-	text_shadow_material = ShaderMaterial.new()
-	text_shadow_material.shader = shader
-	_update_text_shadow_material()
+	# Load shader from file instead of inline code
+	var shader = load("res://shaders/shadow.gdshader") as Shader
+	if shader:
+		text_shadow_material = ShaderMaterial.new()
+		text_shadow_material.shader = shader
+		_update_text_shadow_material()
+	else:
+		print("Error: Could not load shadow shader")
 
 func _create_outline_material() -> void:
-	# Create an outline shader
-	var shader_code = """
-shader_type canvas_item;
-
-uniform vec4 outline_color : source_color = vec4(1.0, 1.0, 1.0, 0.8);
-uniform float outline_width : hint_range(0.0, 5.0) = 1.0;
-uniform float outline_smoothness : hint_range(0.0, 1.0) = 0.1;
-
-void fragment() {
-	vec2 size = vec2(textureSize(TEXTURE, 0));
-	vec4 color = texture(TEXTURE, UV);
-	
-	if (color.a == 0.0) {
-		float alpha = 0.0;
-		for (float x = -outline_width; x <= outline_width; x += 1.0) {
-			for (float y = -outline_width; y <= outline_width; y += 1.0) {
-				vec2 offset = vec2(x, y) / size;
-				alpha = max(alpha, texture(TEXTURE, UV + offset).a);
-			}
-		}
-		COLOR = vec4(outline_color.rgb, outline_color.a * alpha);
-	} else {
-		COLOR = color;
-	}
-}
-"""
-	
-	var shader = Shader.new()
-	shader.code = shader_code
-	outline_material = ShaderMaterial.new()
-	outline_material.shader = shader
-	_update_outline_material()
+	# Load shader from file instead of inline code
+	var shader = load("res://shaders/outline.gdshader") as Shader
+	if shader:
+		outline_material = ShaderMaterial.new()
+		outline_material.shader = shader
+		_update_outline_material()
+	else:
+		print("Error: Could not load outline shader")
 
 func _create_gradient_material() -> void:
-	# Create a gradient background shader
-	var shader_code = """
-shader_type canvas_item;
-
-uniform vec4 start_color : source_color = vec4(0.1, 0.1, 0.1, 1.0);
-uniform vec4 end_color : source_color = vec4(0.05, 0.05, 0.05, 1.0);
-uniform float gradient_direction_x : hint_range(-1.0, 1.0) = 0.0;
-uniform float gradient_direction_y : hint_range(-1.0, 1.0) = 1.0;
-
-void fragment() {
-	vec2 normalized_uv = UV;
-	vec2 gradient_direction = vec2(gradient_direction_x, gradient_direction_y);
-	float gradient_factor = dot(normalized_uv, normalize(gradient_direction));
-	gradient_factor = clamp(gradient_factor, 0.0, 1.0);
-	
-	COLOR = mix(start_color, end_color, gradient_factor);
-}
-"""
-	
-	var shader = Shader.new()
-	shader.code = shader_code
-	gradient_material = ShaderMaterial.new()
-	gradient_material.shader = shader
-	_update_gradient_material()
+	# Load shader from file instead of inline code
+	var shader = load("res://shaders/gradient.gdshader") as Shader
+	if shader:
+		gradient_material = ShaderMaterial.new()
+		gradient_material.shader = shader
+		_update_gradient_material()
+	else:
+		print("Error: Could not load gradient shader")
 
 func _update_text_shadow_material() -> void:
 	if text_shadow_material and text_shadow_material.shader:

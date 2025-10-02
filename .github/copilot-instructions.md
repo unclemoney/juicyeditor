@@ -19,6 +19,7 @@ We are making a simple text editor for Godot called Juicy Editor. It is a simple
 - Ensure all visual effects are configurable via exported properties or settings menus.
 - Document all new features in the `README.md` file, including setup instructions and usage examples.
 - Godot installation folder: "C:\Users\danie\OneDrive\Documents\GODOT\Godot_v4.4.1-stable_win64.exe", you can use this path to run in headless mode.
+- Update the README.md file to reflect any new features or changes made to the project structure.
 
 ## Scene & Node Organization
 - Single responsibility: each scene owns exactly one domain (UI, gameplay logic, effects).

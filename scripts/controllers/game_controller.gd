@@ -39,10 +39,10 @@ func initialize_node_references() -> void:
 	status_bar = get_node_or_null(status_bar_path) if status_bar_path != NodePath() else null
 	file_dialog = get_node_or_null(file_dialog_path) if file_dialog_path != NodePath() else null
 	
-	# Get visual effects manager
-	visual_effects_manager = get_node("/root/VisualEffectsManager") if has_node("/root/VisualEffectsManager") else null
+	# Get visual effects manager from main scene
+	visual_effects_manager = get_node_or_null("/root/Main/VisualEffectsManager")
 	
-	# Get animation manager
+	# Get animation manager (if it exists)
 	animation_manager = get_node("/root/AnimationManager") if has_node("/root/AnimationManager") else null
 	
 	print("Node references initialized:")
@@ -83,6 +83,7 @@ func _initialize_systems() -> void:
 		"typing_animations": true,
 		"cursor_animations": true,
 		"button_animations": true,
+		"deletion_explosions": true,
 		"animation_speed": 1.0,
 		
 		# Legacy settings (for compatibility)
@@ -93,6 +94,22 @@ func _initialize_systems() -> void:
 		# File management
 		"recent_files": []
 	}
+	
+	# Setup visual effects after node initialization
+	call_deferred("_setup_visual_effects")
+
+func _setup_visual_effects() -> void:
+	if visual_effects_manager:
+		# Connect to effects updated signal
+		if visual_effects_manager.has_signal("effects_updated"):
+			visual_effects_manager.effects_updated.connect(_on_effects_updated)
+		print("Visual effects manager connected")
+	else:
+		print("Visual effects manager not found")
+
+func _on_effects_updated() -> void:
+	# Refresh effects when settings change
+	print("Visual effects updated")
 
 func _connect_text_editor_signals() -> void:
 	# Connect text editor signals (called after node references are set)

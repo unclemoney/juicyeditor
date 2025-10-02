@@ -11,12 +11,14 @@ signal line_changed(line_number: int)
 @export var enable_typing_sounds: bool = true
 @export var enable_typing_animations: bool = true
 @export var enable_line_numbers: bool = true
+@export var enable_deletion_explosions: bool = true
 
 @onready var audio_manager: Node
 @onready var animation_manager: Node
 
 var last_text_length: int = 0
 var last_caret_line: int = 0
+var previous_text: String = ""  # Store previous text to detect deletions
 
 func _ready() -> void:
 	# Find managers in the scene tree
@@ -54,9 +56,11 @@ func _configure_editor() -> void:
 	# Store initial state
 	last_text_length = text.length()
 	last_caret_line = get_caret_line()
+	previous_text = text
 
 func _on_text_changed_internal() -> void:
 	var current_length = text.length()
+	var current_text = text
 	
 	# Detect if text was added or removed
 	if current_length > last_text_length:
@@ -74,9 +78,28 @@ func _on_text_changed_internal() -> void:
 		# Text was deleted
 		var diff = last_text_length - current_length
 		if diff == 1:
-			_handle_character_deleted()
+			# Find the deleted character by comparing previous_text and current_text
+			var deleted_char = _find_deleted_character(previous_text, current_text)
+			_handle_character_deleted(deleted_char)
 	
+	# Update tracking variables
 	last_text_length = current_length
+	previous_text = current_text
+
+func _find_deleted_character(old_text: String, new_text: String) -> String:
+	"""Find which character was deleted by comparing old and new text"""
+	# Simple approach: find the first difference
+	var min_length = min(old_text.length(), new_text.length())
+	
+	for i in range(min_length):
+		if old_text[i] != new_text[i]:
+			return old_text[i]
+	
+	# If the difference is at the end, return the last character of old_text
+	if old_text.length() > new_text.length():
+		return old_text[old_text.length() - 1]
+	
+	return " "  # Fallback character
 
 func _on_caret_changed_internal() -> void:
 	var current_line = get_caret_line()
@@ -93,12 +116,40 @@ func _handle_character_typed(character: String) -> void:
 	if enable_typing_animations:
 		_play_typing_animation(character)
 
-func _handle_character_deleted() -> void:
-	text_deleted.emit("")
+func _handle_character_deleted(deleted_char: String = "") -> void:
+	text_deleted.emit(deleted_char)
 	
 	if enable_typing_sounds and audio_manager and audio_manager.has_method("play_typing_sound"):
 		# Could play a different sound for deletion
 		audio_manager.play_typing_sound()
+	
+	# Create explosion effect for deleted character
+	if deleted_char != "" and enable_deletion_explosions and animation_manager and animation_manager.has_method("create_text_explosion"):
+		var caret_pos = get_caret_column()
+		var line_num = get_caret_line()
+		
+		# Calculate approximate position of deleted character
+		var char_position = _calculate_character_position(line_num, caret_pos)
+		
+		# Create the explosion effect
+		animation_manager.create_text_explosion(deleted_char, char_position, self)
+
+func _calculate_character_position(line: int, column: int) -> Vector2:
+	"""Calculate approximate screen position for a character in the text editor"""
+	# Get font metrics
+	var font = get_theme_font("font", "TextEdit")
+	var font_size = get_theme_font_size("font_size", "TextEdit")
+	
+	if not font:
+		# Use default values if font not available
+		return Vector2(column * 8, line * 16) + global_position
+	
+	# Calculate position based on font metrics
+	var line_height = font.get_height(font_size)
+	var char_width = font.get_string_size("W", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x  # Use 'W' as average width
+	
+	var local_pos = Vector2(column * char_width, line * line_height)
+	return local_pos + global_position
 
 func _play_typing_animation(_character: String) -> void:
 	# Trigger typing animation
