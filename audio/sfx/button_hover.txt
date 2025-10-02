@@ -1,0 +1,2 @@
+# Placeholder for button hover sound
+# Subtle hover feedback sound

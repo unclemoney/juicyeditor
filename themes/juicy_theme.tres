@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="JuicyTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/components/juicy_theme.gd" id="1_vh8j6"]
+
+[resource]
+script = ExtResource("1_vh8j6")
+theme_name = "Juicy"
+description = "Full-featured theme with all visual effects enabled"
+background_color = Color(0.08, 0.08, 0.12, 1)
+text_color = Color(0.95, 0.95, 0.98, 1)
+selection_color = Color(0.4, 0.6, 1, 0.6)
+current_line_color = Color(0.12, 0.12, 0.18, 1)
+line_number_color = Color(0.6, 0.6, 0.7, 1)
+caret_color = Color(1, 1, 1, 1)
+button_color = Color(0.15, 0.15, 0.25, 1)
+button_hover_color = Color(0.25, 0.25, 0.35, 1)
+button_pressed_color = Color(0.35, 0.35, 0.45, 1)
+menu_background_color = Color(0.1, 0.1, 0.15, 1)
+status_bar_color = Color(0.05, 0.05, 0.1, 1)
+keyword_color = Color(0.5, 0.9, 1, 1)
+string_color = Color(1, 0.9, 0.5, 1)
+comment_color = Color(0.6, 0.6, 0.6, 1)
+number_color = Color(0.9, 1, 0.7, 1)
+function_color = Color(1, 0.7, 0.9, 1)
+variable_color = Color(0.9, 0.9, 1, 1)
+editor_font_size = 14
+ui_font_size = 12
+line_height_multiplier = 1.2
+enable_text_shadows = true
+text_shadow_color = Color(0, 0, 0, 0.5)
+text_shadow_offset = Vector2(2, 2)
+enable_gradient_backgrounds = true
+gradient_start_color = Color(0.08, 0.08, 0.12, 1)
+gradient_end_color = Color(0.04, 0.04, 0.08, 1)
+enable_outline_effects = true
+outline_color = Color(0.4, 0.6, 1, 0.8)
+outline_width = 1.0
+enable_pulse_effects = true
+enable_glow_effects = true

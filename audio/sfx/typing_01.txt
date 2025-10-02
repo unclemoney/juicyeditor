@@ -1,0 +1,16 @@
+# Placeholder for typing sound 1
+# This is a placeholder audio file for the juicy editor typing sounds.
+# In a real implementation, this would be a .wav or .ogg audio file.
+# For now, we'll create this as a text placeholder that will be replaced with actual audio.
+
+# Sound properties:
+# - Type: Soft keyboard click
+# - Duration: ~50ms
+# - Frequency: Mid-range
+# - Volume: Moderate
+# - Intended use: Regular typing feedback
+
+# To add actual audio:
+# 1. Place .wav or .ogg files in this directory
+# 2. Import them in Godot
+# 3. Reference them in the AudioManager
