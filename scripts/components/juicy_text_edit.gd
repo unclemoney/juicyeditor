@@ -1,8 +1,8 @@
 extends TextEdit
 class_name JuicyTextEdit
 
-# Juicy Editor - Enhanced Text Editor Component
-# Extends TextEdit with juicy effects and enhanced functionality
+# Juicy Editor - Enhanced Text Editor Component (Simplified)
+# Focuses on node-based typing effects instead of complex RichTextLabel overlay
 
 signal text_typed(character: String)
 signal text_deleted(character: String)
@@ -16,25 +16,62 @@ signal line_changed(line_number: int)
 @onready var audio_manager: Node
 @onready var animation_manager: Node
 
+# New Juicy Typing Effects System (replaces complex RichTextLabel overlay)
+var typing_effects_manager: Node
+
 var last_text_length: int = 0
 var last_caret_line: int = 0
 var previous_text: String = ""  # Store previous text to detect deletions
 
 func _ready() -> void:
+	print("DEBUG: JuicyTextEdit _ready() starting")
+	
 	# Find managers in the scene tree
 	audio_manager = get_node("/root/AudioManager") if has_node("/root/AudioManager") else null
 	animation_manager = get_node("/root/AnimationManager") if has_node("/root/AnimationManager") else null
+	
+	print("DEBUG: Managers found - Audio:", audio_manager != null, " Animation:", animation_manager != null)
+	
+	# Set up initial configuration
+	_configure_editor()
+	
+	# Setup new node-based typing effects system
+	_setup_typing_effects()
 	
 	# Connect signals
 	text_changed.connect(_on_text_changed_internal)
 	caret_changed.connect(_on_caret_changed_internal)
 	
-	# Set up initial configuration
-	_configure_editor()
-	
 	print("JuicyTextEdit initialized:")
 	print("  Audio manager: ", audio_manager != null)
 	print("  Animation manager: ", animation_manager != null)
+	print("  Typing effects: ", typing_effects_manager != null)
+
+func _setup_typing_effects() -> void:
+	"""Create and setup the new node-based typing effects manager"""
+	var typing_effects_script = preload("res://scripts/components/typing_effects_manager.gd")
+	typing_effects_manager = Node.new()
+	typing_effects_manager.set_script(typing_effects_script)
+	typing_effects_manager.name = "TypingEffectsManager"
+	add_child(typing_effects_manager)
+	
+	# Setup the text editor connection
+	typing_effects_manager.setup_text_editor(self)
+	
+	# Connect to audio manager for coordinated sound effects
+	if typing_effects_manager.has_signal("effect_spawned") and audio_manager:
+		typing_effects_manager.effect_spawned.connect(_on_typing_effect_spawned)
+	
+	print("TypingEffectsManager setup complete")
+
+func _on_typing_effect_spawned(character: String, _pos: Vector2) -> void:
+	"""Handle typing effect spawning for coordinated audio feedback"""
+	if audio_manager and enable_typing_sounds:
+		# Let the audio manager handle typing sound with character info
+		audio_manager.play_typing_sound()
+	
+	# Emit our own signal for other systems
+	text_typed.emit(character)
 
 func _configure_editor() -> void:
 	# Basic editor setup
@@ -52,54 +89,21 @@ func _configure_editor() -> void:
 	
 	# Set up syntax highlighting (basic)
 	syntax_highlighter = CodeHighlighter.new()
-	
-	# Store initial state
-	last_text_length = text.length()
-	last_caret_line = get_caret_line()
-	previous_text = text
 
 func _on_text_changed_internal() -> void:
+	# Simple text change handling without RichTextLabel complexity
 	var current_length = text.length()
-	var current_text = text
 	
-	# Detect if text was added or removed
+	# Determine if text was added or deleted
 	if current_length > last_text_length:
-		# Text was added
-		var diff = current_length - last_text_length
-		if diff == 1:
-			# Single character typed
-			var caret_pos = get_caret_column()
-			if caret_pos > 0 and caret_pos <= text.length():
-				var line_text = get_line(get_caret_line())
-				if caret_pos <= line_text.length():
-					var typed_char = line_text[caret_pos - 1]
-					_handle_character_typed(typed_char)
+		# Text was added - effects handled by TypingEffectsManager
+		pass
 	elif current_length < last_text_length:
-		# Text was deleted
-		var diff = last_text_length - current_length
-		if diff == 1:
-			# Find the deleted character by comparing previous_text and current_text
-			var deleted_char = _find_deleted_character(previous_text, current_text)
-			_handle_character_deleted(deleted_char)
+		# Text was deleted - emit deletion signal
+		text_deleted.emit("")
 	
-	# Update tracking variables
 	last_text_length = current_length
-	previous_text = current_text
-
-func _find_deleted_character(old_text: String, new_text: String) -> String:
-	"""Find which character was deleted by comparing old and new text"""
-	# Simple approach: find the first difference
-	var min_length = min(old_text.length(), new_text.length())
-	
-	for i in range(min_length):
-		if old_text[i] != new_text[i]:
-			return old_text[i]
-	
-	# If the difference is at the end, return the last character of old_text
-	if old_text.length() > new_text.length():
-		return old_text[old_text.length() - 1]
-	
-	return " "  # Fallback character
+	previous_text = text
 
 func _on_caret_changed_internal() -> void:
 	var current_line = get_caret_line()
@@ -107,61 +111,42 @@ func _on_caret_changed_internal() -> void:
 		line_changed.emit(current_line)
 		last_caret_line = current_line
 
-func _handle_character_typed(character: String) -> void:
-	text_typed.emit(character)
+# Settings management
+func apply_settings(settings: Dictionary) -> void:
+	"""Apply settings from the main controller"""
+	if settings.has("enable_typing_sounds"):
+		enable_typing_sounds = settings.get("enable_typing_sounds", true)
+	if settings.has("enable_typing_animations"):
+		enable_typing_animations = settings.get("enable_typing_animations", true)
+	if settings.has("enable_line_numbers"):
+		enable_line_numbers = settings.get("enable_line_numbers", true)
 	
-	if enable_typing_sounds and audio_manager and audio_manager.has_method("play_typing_sound"):
-		audio_manager.play_typing_sound()
-	
-	if enable_typing_animations:
-		_play_typing_animation(character)
+	# Apply to typing effects manager
+	if typing_effects_manager:
+		typing_effects_manager.apply_settings(settings)
 
-func _handle_character_deleted(deleted_char: String = "") -> void:
-	text_deleted.emit(deleted_char)
-	
-	if enable_typing_sounds and audio_manager and audio_manager.has_method("play_typing_sound"):
-		# Could play a different sound for deletion
-		audio_manager.play_typing_sound()
-	
-	# Create explosion effect for deleted character
-	if deleted_char != "" and enable_deletion_explosions and animation_manager and animation_manager.has_method("create_text_explosion"):
-		var caret_pos = get_caret_column()
-		var line_num = get_caret_line()
-		
-		# Calculate approximate position of deleted character
-		var char_position = _calculate_character_position(line_num, caret_pos)
-		
-		# Create the explosion effect
-		animation_manager.create_text_explosion(deleted_char, char_position, self)
+func set_typing_effects_enabled(enabled: bool) -> void:
+	"""Enable or disable typing effects"""
+	if typing_effects_manager:
+		typing_effects_manager.set_effects_enabled(enabled)
 
-func _calculate_character_position(line: int, column: int) -> Vector2:
-	"""Calculate approximate screen position for a character in the text editor"""
-	# Get font metrics
-	var font = get_theme_font("font", "TextEdit")
-	var font_size = get_theme_font_size("font_size", "TextEdit")
-	
-	if not font:
-		# Use default values if font not available
-		return Vector2(column * 8, line * 16) + global_position
-	
-	# Calculate position based on font metrics
-	var line_height = font.get_height(font_size)
-	var char_width = font.get_string_size("W", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x  # Use 'W' as average width
-	
-	var local_pos = Vector2(column * char_width, line * line_height)
-	return local_pos + global_position
+func clear_all_effects() -> void:
+	"""Clear all active typing effects"""
+	if typing_effects_manager:
+		typing_effects_manager.clear_all_effects()
 
-func _play_typing_animation(_character: String) -> void:
-	# Trigger typing animation
-	if animation_manager and animation_manager.has_method("animate_character_typed"):
-		animation_manager.animate_character_typed(self, Vector2.ZERO)
-	
-	# Don't animate the entire text field for cursor - just trigger a visual cursor effect
-	# if animation_manager and animation_manager.has_method("animate_cursor_pulse"):
-	#	animation_manager.animate_cursor_pulse(self)
-	# Instead, we could add a cursor blink effect or other visual feedback here
+# Deprecated RichTextLabel methods (kept for compatibility)
+func set_rich_effect_property(_property_name: String, _value) -> void:
+	"""DEPRECATED: RichTextLabel overlay system disabled"""
+	print("WARNING: set_rich_effect_property() is deprecated - RichTextLabel overlay disabled")
 
+func sync_to_overlay() -> void:
+	"""DEPRECATED: RichTextLabel overlay system disabled"""
+	print("WARNING: sync_to_overlay() is deprecated - RichTextLabel overlay disabled")
+
+# Syntax highlighting method (restored from original implementation)
 func set_syntax_highlighting_for_file(file_path: String) -> void:
+	"""Set syntax highlighting based on file extension"""
 	var extension = file_path.get_extension().to_lower()
 	
 	if not syntax_highlighter:
@@ -237,6 +222,7 @@ func _setup_python_highlighting(highlighter: CodeHighlighter) -> void:
 	highlighter.add_color_region("#", "", Color.GRAY, true)
 	highlighter.add_color_region("\"", "\"", Color.YELLOW)
 	highlighter.add_color_region("'", "'", Color.YELLOW)
+	highlighter.number_color = Color.LIGHT_GREEN
 
 func _setup_javascript_highlighting(highlighter: CodeHighlighter) -> void:
 	var keywords = [
@@ -250,26 +236,23 @@ func _setup_javascript_highlighting(highlighter: CodeHighlighter) -> void:
 	for keyword in keywords:
 		highlighter.add_keyword_color(keyword, Color.CYAN)
 	
-	# Built-in objects
-	var builtins = ["console", "window", "document", "Array", "Object", "String", "Number", "Boolean"]
-	for builtin in builtins:
-		highlighter.add_keyword_color(builtin, Color.LIGHT_BLUE)
-	
 	highlighter.add_color_region("//", "", Color.GRAY, true)
 	highlighter.add_color_region("/*", "*/", Color.GRAY)
 	highlighter.add_color_region("\"", "\"", Color.YELLOW)
 	highlighter.add_color_region("'", "'", Color.YELLOW)
-	highlighter.add_color_region("`", "`", Color.ORANGE)  # Template literals
 	highlighter.number_color = Color.LIGHT_GREEN
 
 func _setup_html_highlighting(highlighter: CodeHighlighter) -> void:
-	highlighter.add_color_region("<", ">", Color.CYAN)
+	highlighter.add_color_region("<", ">", Color.LIGHT_BLUE)
+	highlighter.add_color_region("<!--", "-->", Color.GRAY)
 	highlighter.add_color_region("\"", "\"", Color.YELLOW)
 	highlighter.add_color_region("'", "'", Color.YELLOW)
-	highlighter.add_color_region("<!--", "-->", Color.GRAY)
 
 func _setup_css_highlighting(highlighter: CodeHighlighter) -> void:
-	highlighter.add_color_region("{", "}", Color.CYAN)
+	var properties = ["color", "background", "margin", "padding", "border", "font"]
+	for prop in properties:
+		highlighter.add_keyword_color(prop, Color.CYAN)
+	
 	highlighter.add_color_region("/*", "*/", Color.GRAY)
 	highlighter.add_color_region("\"", "\"", Color.YELLOW)
 	highlighter.add_color_region("'", "'", Color.YELLOW)
@@ -277,33 +260,9 @@ func _setup_css_highlighting(highlighter: CodeHighlighter) -> void:
 func _setup_markdown_highlighting(highlighter: CodeHighlighter) -> void:
 	highlighter.add_color_region("#", "", Color.CYAN, true)
 	highlighter.add_color_region("**", "**", Color.YELLOW)
-	highlighter.add_color_region("*", "*", Color.GREEN)
-	highlighter.add_color_region("`", "`", Color.ORANGE)
+	highlighter.add_color_region("*", "*", Color.LIGHT_BLUE)
+	highlighter.add_color_region("`", "`", Color.LIGHT_GREEN)
 
 func _setup_json_highlighting(highlighter: CodeHighlighter) -> void:
-	# JSON keywords
-	var keywords = ["true", "false", "null"]
-	for keyword in keywords:
-		highlighter.add_keyword_color(keyword, Color.CYAN)
-	
-	# Strings (keys and values)
 	highlighter.add_color_region("\"", "\"", Color.YELLOW)
-	
-	# Numbers
 	highlighter.number_color = Color.LIGHT_GREEN
-
-func apply_juicy_effects(effects_config: Dictionary) -> void:
-	# Apply visual effects based on configuration
-	if "typing_animations" in effects_config:
-		enable_typing_animations = effects_config.typing_animations
-	
-	if "typing_sounds" in effects_config:
-		enable_typing_sounds = effects_config.typing_sounds
-	
-	if "line_numbers" in effects_config:
-		enable_line_numbers = effects_config.line_numbers
-		if enable_line_numbers:
-			add_gutter()
-			set_gutter_type(0, TextEdit.GUTTER_TYPE_ICON)
-			set_gutter_draw(0, true)
-			set_gutter_width(0, 50)

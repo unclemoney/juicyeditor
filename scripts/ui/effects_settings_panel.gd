@@ -169,6 +169,8 @@ func _on_gradient_direction_y_changed(value: float) -> void:
 # Button signal handlers
 func _on_apply_pressed() -> void:
 	apply_settings.emit()
+	# Close the panel after applying settings
+	queue_free()
 
 func _on_reset_pressed() -> void:
 	reset_to_defaults()

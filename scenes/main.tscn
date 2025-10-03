@@ -2,15 +2,11 @@
 
 [ext_resource type="Script" uid="uid://dhfhsla164f80" path="res://scripts/ui/main_scene.gd" id="1_51l7b"]
 [ext_resource type="Script" uid="uid://cs73sg5vom7ql" path="res://scripts/components/juicy_text_edit.gd" id="2_h3n2m"]
-[ext_resource type="Shader" uid="uid://cvcqfj50imfxw" path="res://shaders/gradient.gdshader" id="2_jyhfs"]
 [ext_resource type="Script" uid="uid://bxg7hdo3st8ji" path="res://scripts/components/visual_effects_manager.gd" id="4_tbgi4"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_o6xl0"]
-shader = ExtResource("2_jyhfs")
-shader_parameter/start_color = Color(0.1, 0.1, 0.1, 1)
-shader_parameter/end_color = Color(0.05, 0.05, 0.05, 1)
-shader_parameter/gradient_direction_x = 0.0
-shader_parameter/gradient_direction_y = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tefeu"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -114,9 +110,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.0846899, 0.0846899, 0.0846899, 1)
+color = Color(0.717749, 0.000113781, 0.613139, 1)
 
 [node name="TextEditor" type="TextEdit" parent="VBoxContainer/MainArea/TextEditorContainer"]
+material = SubResource("ShaderMaterial_tefeu")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

@@ -376,14 +376,18 @@ func _on_settings_menu_selected(id: int) -> void:
 
 func _on_effects_menu_selected(id: int) -> void:
 	match id:
-		0:  # Visual Effects Settings
-			_open_effects_settings_dialog()
-		2:  # Enable Text Shadow
-			_toggle_text_shadow()
-		3:  # Enable Outline
-			_toggle_outline()
-		4:  # Enable Background Gradient
-			_toggle_background_gradient()
+		0:  # Visual Effects Settings (DISABLED)
+			print("Visual Effects Settings disabled - RichTextLabel overlay system deprecated")
+			# _open_effects_settings_dialog()
+		2:  # Enable Text Shadow (DISABLED)
+			print("Text Shadow disabled - RichTextLabel overlay system deprecated")
+			# _toggle_text_shadow()
+		3:  # Enable Outline (DISABLED)
+			print("Outline disabled - RichTextLabel overlay system deprecated")
+			# _toggle_outline()
+		4:  # Enable Background Gradient (DISABLED)
+			print("Background Gradient disabled - RichTextLabel overlay system deprecated")
+			# _toggle_background_gradient()
 
 func _on_edit_menu_selected(id: int) -> void:
 	match id:
@@ -643,11 +647,47 @@ func _open_effects_settings_dialog() -> void:
 	add_child(effects_panel)
 	
 	# Center the dialog
-	effects_panel.position = (get_viewport().size - effects_panel.size) / 2
+	effects_panel.position = (Vector2(get_viewport().size) - effects_panel.size) / 2
+	
+	# Connect signals for real-time updates
+	if effects_panel.has_signal("effect_setting_changed"):
+		effects_panel.effect_setting_changed.connect(_on_effect_setting_changed)
+	if effects_panel.has_signal("apply_settings"):
+		effects_panel.apply_settings.connect(_on_effects_apply_settings)
+	if effects_panel.has_signal("reset_settings"):
+		effects_panel.reset_settings.connect(_on_effects_reset_settings)
 	
 	# Load current settings if visual effects manager exists
 	if visual_effects_manager and effects_panel.has_method("load_settings_from_manager"):
 		effects_panel.load_settings_from_manager()
+
+func _on_effect_setting_changed(effect_name: String, property: String, value) -> void:
+	"""Handle real-time effect setting changes"""
+	if game_controller:
+		# Apply the setting immediately for live preview
+		var setting_key = "rich_" + effect_name + "_" + property
+		if effect_name == "text_shadow":
+			setting_key = "rich_text_shadows" if property == "enabled" else setting_key
+		elif effect_name == "outline":
+			setting_key = "rich_text_outlines" if property == "enabled" else setting_key
+		elif effect_name == "gradient":
+			setting_key = "rich_gradient_backgrounds" if property == "enabled" else setting_key
+		
+		game_controller.set_setting(setting_key, value)
+
+func _on_effects_apply_settings() -> void:
+	"""Handle effects apply button press"""
+	print("Effects settings applied")
+
+func _on_effects_reset_settings() -> void:
+	"""Handle effects reset button press"""
+	if game_controller:
+		# Reset rich effects settings to defaults
+		game_controller.set_setting("rich_text_shadows", true)
+		game_controller.set_setting("rich_text_outlines", true)
+		game_controller.set_setting("rich_gradient_backgrounds", false)
+		game_controller.set_setting("rich_effects", true)
+	print("Effects settings reset to defaults")
 
 func _toggle_text_shadow() -> void:
 	if visual_effects_manager and visual_effects_manager.has_method("enable_effect"):
