@@ -234,10 +234,10 @@ JuicyTextEdit (Simplified)
 │   ├── Syntax highlighting
 │   └── Keyboard shortcuts
 └── TypingEffectsManager
-    ├── Effect spawning coordination
-    ├── Node2D-based visual effects
-    ├── Audio feedback integration
-    └── Performance management
+	├── Effect spawning coordination
+	├── Node2D-based visual effects
+	├── Audio feedback integration
+	└── Performance management
 
 TypingEffect (Node2D)
 ├── Label (Character display)

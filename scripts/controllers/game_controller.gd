@@ -96,9 +96,11 @@ func _initialize_systems() -> void:
 		# Animation Settings
 		"animations": true,
 		"typing_animations": true,
+		"flying_letters": true,
+		"deletion_explosions": true,
+		"sparkle_effects": true,
 		"cursor_animations": true,
 		"button_animations": true,
-		"deletion_explosions": true,
 		"animation_speed": 1.0,
 		
 		# Legacy settings (for compatibility)
@@ -395,6 +397,63 @@ func get_recent_files() -> Array[String]:
 func clear_recent_files() -> void:
 	recent_files.clear()
 	_save_settings()
+
+func _on_settings_applied(new_settings: Dictionary) -> void:
+	"""Handle settings being applied from the settings dialog"""
+	print("Settings applied from dialog: ", new_settings)
+	
+	# Update our editor_settings with the new values
+	for key in new_settings:
+		editor_settings[key] = new_settings[key]
+	
+	# Apply the settings to the appropriate managers and components
+	_apply_settings_to_components(new_settings)
+	
+	# Save the updated settings
+	_save_settings()
+	
+	# Emit our settings changed signal
+	settings_changed.emit(editor_settings)
+
+func _apply_settings_to_components(settings: Dictionary) -> void:
+	"""Apply settings to all relevant components"""
+	# Apply to text editor
+	if text_editor:
+		if "font_size" in settings:
+			text_editor.add_theme_font_size_override("font_size", int(settings.font_size))
+		# Note: Line numbers and word wrap settings will be handled by the text editor component directly
+	
+	# Apply to audio manager
+	if AudioManager:
+		if "master_volume" in settings:
+			AudioManager.set_master_volume(settings.master_volume)
+		if "ui_sounds" in settings:
+			AudioManager.set_ui_sounds_enabled(settings.ui_sounds)
+		if "typing_sounds" in settings:
+			AudioManager.set_typing_sounds_enabled(settings.typing_sounds)
+		if "sound_volume" in settings:
+			AudioManager.set_sound_volume(settings.sound_volume)
+	
+	# Apply to animation manager
+	if AnimationManager:
+		if "animations" in settings:
+			AnimationManager.enable_transition_animations = settings.animations
+		if "animation_speed" in settings:
+			AnimationManager.animation_speed_multiplier = settings.animation_speed
+	
+	# Apply to typing effects manager
+	var typing_effects_mgr = get_node("/root/TypingEffectsManager") if has_node("/root/TypingEffectsManager") else null
+	if typing_effects_mgr:
+		if "typing_animations" in settings:
+			typing_effects_mgr.set_typing_effects_enabled(settings.typing_animations)
+		if "flying_letters" in settings:
+			typing_effects_mgr.set_flying_letters_enabled(settings.flying_letters)
+		if "deletion_explosions" in settings:
+			typing_effects_mgr.set_deletion_explosions_enabled(settings.deletion_explosions)
+		if "sparkle_effects" in settings:
+			typing_effects_mgr.set_sparkle_effects_enabled(settings.sparkle_effects)
+		if "effect_intensity" in settings:
+			typing_effects_mgr.set_effect_intensity(settings.effect_intensity)
 
 func is_file_writable(file_path: String) -> bool:
 	# Check if we can write to the file location

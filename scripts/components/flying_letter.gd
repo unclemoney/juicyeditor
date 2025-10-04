@@ -19,6 +19,7 @@ class_name FlyingLetter
 
 @export var effect_duration: float = 3.0
 @export var fade_start_time: float = 2.0
+@export var use_debris_sprites: bool = true  # Use debris sprites for enhanced effects
 
 var linear_velocity: Vector2
 var angular_velocity: float = 0.0
@@ -27,13 +28,29 @@ var character_text: String = ""
 var start_time: float = 0.0
 
 @onready var label: Label
+@onready var debris_sprite: AnimatedSprite2D  # New debris sprite component
 @onready var cleanup_timer: Timer
 @onready var visibility_notifier: VisibleOnScreenNotifier2D
 
+# Debris sprite resources
+var debris_textures: Array[Texture2D] = []
+
 func _ready() -> void:
+	_load_debris_sprites()
 	_setup_components()
 	_setup_physics()
 	start_time = Time.get_unix_time_from_system()
+
+func _load_debris_sprites() -> void:
+	"""Load debris textures for enhanced deletion effects"""
+	for i in range(1, 9):  # Assuming debris_01.png to debris_08.png
+		var texture_path = "res://effects/sprites/deletion/debris_%02d.png" % i
+		if ResourceLoader.exists(texture_path):
+			var texture = load(texture_path) as Texture2D
+			if texture:
+				debris_textures.append(texture)
+	
+	print("Loaded ", debris_textures.size(), " debris textures")
 
 func _setup_components() -> void:
 	# Create Label for character display
@@ -42,6 +59,12 @@ func _setup_components() -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.text = character_text
 	add_child(label)
+	
+	# Create debris sprite for enhanced visual effects
+	if use_debris_sprites and debris_textures.size() > 0:
+		debris_sprite = AnimatedSprite2D.new()
+		add_child(debris_sprite)
+		_setup_debris_sprite()
 	
 	# Create visibility notifier to clean up when off-screen
 	visibility_notifier = VisibleOnScreenNotifier2D.new()
@@ -60,6 +83,27 @@ func _setup_components() -> void:
 	if label:
 		# Use a reasonable default rect size for the notifier
 		visibility_notifier.rect = Rect2(-10, -10, 20, 20)
+
+func _setup_debris_sprite() -> void:
+	"""Setup debris sprite for enhanced deletion effects"""
+	if not debris_sprite or debris_textures.size() == 0:
+		return
+	
+	# Create SpriteFrames with a random debris texture
+	var sprite_frames = SpriteFrames.new()
+	sprite_frames.add_animation("debris")
+	sprite_frames.set_animation_speed("debris", 1.0)  # Static sprite
+	sprite_frames.set_animation_loop("debris", false)
+	
+	# Use a random debris texture
+	var random_texture = debris_textures[randi() % debris_textures.size()]
+	sprite_frames.add_frame("debris", random_texture)
+	
+	debris_sprite.sprite_frames = sprite_frames
+	debris_sprite.play("debris")
+	
+	# Make debris sprite slightly smaller than the character
+	debris_sprite.scale = Vector2(0.8, 0.8)
 
 func _setup_physics() -> void:
 	# Calculate effect scale based on font size (default to reasonable values)

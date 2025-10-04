@@ -95,10 +95,9 @@ func _pause_typing_animations() -> void:
 			control.scale = original_scales[control_id]
 
 func _setup_cursor_animations() -> void:
-	# Set up cursor pulse animation
-	cursor_pulse_tween = create_tween()
-	cursor_pulse_tween.set_loops()
-	cursor_pulse_tween.finished.connect(_on_cursor_pulse_finished)
+	# Cursor pulse tween will be created when needed in animate_cursor_pulse()
+	# This prevents "started with no Tweeners" error on initialization
+	pass
 
 func _on_cursor_pulse_finished() -> void:
 	animation_finished.emit("cursor_pulse")

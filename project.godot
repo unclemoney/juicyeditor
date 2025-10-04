@@ -21,6 +21,7 @@ GDAIMCPRuntime="*res://addons/gdai-mcp-plugin-godot/gdai_mcp_runtime.gd"
 AudioManager="*res://scripts/components/audio_manager.gd"
 VisualEffectsManager="*res://scripts/components/visual_effects_manager.gd"
 AnimationManager="*res://scripts/components/animation_manager.gd"
+TypingEffectsManager="*res://scripts/components/typing_effects_manager.gd"
 
 [editor_plugins]
 

@@ -24,6 +24,7 @@ var game_controller: GameController
 var audio_manager: Node
 var visual_effects_manager: Node
 var animation_manager: Node
+var typing_effects_manager: Node
 
 func _ready() -> void:
 	title = "Juicy Editor Settings"
@@ -40,6 +41,7 @@ func _initialize_node_references() -> void:
 	audio_manager = get_node("/root/AudioManager") if has_node("/root/AudioManager") else null
 	visual_effects_manager = get_node("/root/VisualEffectsManager") if has_node("/root/VisualEffectsManager") else null
 	animation_manager = get_node("/root/AnimationManager") if has_node("/root/AnimationManager") else null
+	typing_effects_manager = get_node("/root/TypingEffectsManager") if has_node("/root/TypingEffectsManager") else null
 	
 	# Initialize UI references
 	tab_container = get_node_or_null(tab_container_path) if tab_container_path != NodePath() else null
@@ -265,12 +267,78 @@ func _create_animation_settings_tab() -> void:
 	animation_tab.add_child(animations_check)
 	animation_settings["animations"] = animations_check
 	
+	# Create a separator
+	var separator1 = HSeparator.new()
+	animation_tab.add_child(separator1)
+	
+	# Typing Effects Section
+	var typing_effects_label = Label.new()
+	typing_effects_label.text = "Typing Effects"
+	typing_effects_label.add_theme_font_size_override("font_size", 18)
+	animation_tab.add_child(typing_effects_label)
+	
 	# Typing Animations
 	var typing_animations_check = CheckBox.new()
 	typing_animations_check.text = "Enable Typing Animations"
 	typing_animations_check.name = "typing_animations"
 	animation_tab.add_child(typing_animations_check)
 	animation_settings["typing_animations"] = typing_animations_check
+	
+	# Flying Letters on Deletion
+	var flying_letters_check = CheckBox.new()
+	flying_letters_check.text = "Enable Flying Letters (Deletion)"
+	flying_letters_check.name = "flying_letters"
+	animation_tab.add_child(flying_letters_check)
+	animation_settings["flying_letters"] = flying_letters_check
+	
+	# Deletion Explosions
+	var deletion_explosions_check = CheckBox.new()
+	deletion_explosions_check.text = "Enable Deletion Explosions"
+	deletion_explosions_check.name = "deletion_explosions"
+	animation_tab.add_child(deletion_explosions_check)
+	animation_settings["deletion_explosions"] = deletion_explosions_check
+	
+	# Sparkle Effects on Typing
+	var sparkle_effects_check = CheckBox.new()
+	sparkle_effects_check.text = "Enable Sparkle Effects (Typing)"
+	sparkle_effects_check.name = "sparkle_effects"
+	animation_tab.add_child(sparkle_effects_check)
+	animation_settings["sparkle_effects"] = sparkle_effects_check
+	
+	# Effect Intensity
+	var intensity_group = HBoxContainer.new()
+	animation_tab.add_child(intensity_group)
+	
+	var intensity_label = Label.new()
+	intensity_label.text = "Effect Intensity:"
+	intensity_label.custom_minimum_size.x = 120
+	intensity_group.add_child(intensity_label)
+	
+	var intensity_slider = HSlider.new()
+	intensity_slider.min_value = 0.1
+	intensity_slider.max_value = 3.0
+	intensity_slider.value = 1.0
+	intensity_slider.step = 0.1
+	intensity_slider.name = "effect_intensity"
+	intensity_group.add_child(intensity_slider)
+	
+	var intensity_value_label = Label.new()
+	intensity_value_label.text = "100%"
+	intensity_value_label.custom_minimum_size.x = 50
+	intensity_group.add_child(intensity_value_label)
+	intensity_slider.value_changed.connect(_on_intensity_changed.bind(intensity_value_label))
+	
+	animation_settings["effect_intensity"] = intensity_slider
+	
+	# Add a separator
+	var separator2 = HSeparator.new()
+	animation_tab.add_child(separator2)
+	
+	# General Animation Settings Section
+	var general_label = Label.new()
+	general_label.text = "General Animation Settings"
+	general_label.add_theme_font_size_override("font_size", 18)
+	animation_tab.add_child(general_label)
 	
 	# Cursor Animations
 	var cursor_animations_check = CheckBox.new()
@@ -285,13 +353,6 @@ func _create_animation_settings_tab() -> void:
 	button_animations_check.name = "button_animations"
 	animation_tab.add_child(button_animations_check)
 	animation_settings["button_animations"] = button_animations_check
-	
-	# Deletion Explosions
-	var deletion_explosions_check = CheckBox.new()
-	deletion_explosions_check.text = "Enable Deletion Explosions"
-	deletion_explosions_check.name = "deletion_explosions"
-	animation_tab.add_child(deletion_explosions_check)
-	animation_settings["deletion_explosions"] = deletion_explosions_check
 	
 	# Animation Speed
 	var speed_group = HBoxContainer.new()
@@ -317,6 +378,18 @@ func _create_animation_settings_tab() -> void:
 	speed_slider.value_changed.connect(_on_speed_changed.bind(speed_value_label))
 	
 	animation_settings["animation_speed"] = speed_slider
+	
+	# Add real-time preview connection for typing effects
+	if typing_animations_check:
+		typing_animations_check.toggled.connect(_on_typing_effect_setting_changed)
+	if flying_letters_check:
+		flying_letters_check.toggled.connect(_on_typing_effect_setting_changed)
+	if deletion_explosions_check:
+		deletion_explosions_check.toggled.connect(_on_typing_effect_setting_changed)
+	if sparkle_effects_check:
+		sparkle_effects_check.toggled.connect(_on_typing_effect_setting_changed)
+	if intensity_slider:
+		intensity_slider.value_changed.connect(_on_typing_effect_intensity_changed)
 
 func _create_dialog_buttons() -> void:
 	# Use AcceptDialog's built-in button system
@@ -397,14 +470,23 @@ func _load_current_settings() -> void:
 	if "typing_animations" in game_controller.editor_settings and animation_settings.has("typing_animations"):
 		animation_settings["typing_animations"].button_pressed = game_controller.editor_settings.typing_animations
 	
+	if "flying_letters" in game_controller.editor_settings and animation_settings.has("flying_letters"):
+		animation_settings["flying_letters"].button_pressed = game_controller.editor_settings.flying_letters
+	
+	if "deletion_explosions" in game_controller.editor_settings and animation_settings.has("deletion_explosions"):
+		animation_settings["deletion_explosions"].button_pressed = game_controller.editor_settings.deletion_explosions
+	
+	if "sparkle_effects" in game_controller.editor_settings and animation_settings.has("sparkle_effects"):
+		animation_settings["sparkle_effects"].button_pressed = game_controller.editor_settings.sparkle_effects
+	
+	if "effect_intensity" in game_controller.editor_settings and animation_settings.has("effect_intensity"):
+		animation_settings["effect_intensity"].value = game_controller.editor_settings.effect_intensity
+	
 	if "cursor_animations" in game_controller.editor_settings and animation_settings.has("cursor_animations"):
 		animation_settings["cursor_animations"].button_pressed = game_controller.editor_settings.cursor_animations
 	
 	if "button_animations" in game_controller.editor_settings and animation_settings.has("button_animations"):
 		animation_settings["button_animations"].button_pressed = game_controller.editor_settings.button_animations
-	
-	if "deletion_explosions" in game_controller.editor_settings and animation_settings.has("deletion_explosions"):
-		animation_settings["deletion_explosions"].button_pressed = game_controller.editor_settings.deletion_explosions
 	
 	if "animation_speed" in game_controller.editor_settings and animation_settings.has("animation_speed"):
 		animation_settings["animation_speed"].value = game_controller.editor_settings.animation_speed
@@ -474,14 +556,23 @@ func _collect_settings() -> Dictionary:
 	if animation_settings.has("typing_animations"):
 		settings.typing_animations = animation_settings["typing_animations"].button_pressed
 	
+	if animation_settings.has("flying_letters"):
+		settings.flying_letters = animation_settings["flying_letters"].button_pressed
+	
+	if animation_settings.has("deletion_explosions"):
+		settings.deletion_explosions = animation_settings["deletion_explosions"].button_pressed
+	
+	if animation_settings.has("sparkle_effects"):
+		settings.sparkle_effects = animation_settings["sparkle_effects"].button_pressed
+	
+	if animation_settings.has("effect_intensity"):
+		settings.effect_intensity = animation_settings["effect_intensity"].value
+	
 	if animation_settings.has("cursor_animations"):
 		settings.cursor_animations = animation_settings["cursor_animations"].button_pressed
 	
 	if animation_settings.has("button_animations"):
 		settings.button_animations = animation_settings["button_animations"].button_pressed
-	
-	if animation_settings.has("deletion_explosions"):
-		settings.deletion_explosions = animation_settings["deletion_explosions"].button_pressed
 	
 	if animation_settings.has("animation_speed"):
 		settings.animation_speed = animation_settings["animation_speed"].value
@@ -512,6 +603,19 @@ func _apply_settings_to_managers(settings: Dictionary) -> void:
 			animation_manager.explosion_config.enabled = settings.deletion_explosions
 		if "animation_speed" in settings:
 			animation_manager.animation_speed_multiplier = settings.animation_speed
+	
+	# Apply typing effects settings
+	if typing_effects_manager:
+		if "typing_animations" in settings:
+			typing_effects_manager.set_typing_effects_enabled(settings.typing_animations)
+		if "flying_letters" in settings:
+			typing_effects_manager.set_flying_letters_enabled(settings.flying_letters)
+		if "deletion_explosions" in settings:
+			typing_effects_manager.set_deletion_explosions_enabled(settings.deletion_explosions)
+		if "sparkle_effects" in settings:
+			typing_effects_manager.set_sparkle_effects_enabled(settings.sparkle_effects)
+		if "effect_intensity" in settings:
+			typing_effects_manager.set_effect_intensity(settings.effect_intensity)
 
 func _reset_to_defaults() -> void:
 	# Reset text editor settings
@@ -551,12 +655,18 @@ func _reset_to_defaults() -> void:
 		animation_settings["animations"].button_pressed = true
 	if animation_settings.has("typing_animations"):
 		animation_settings["typing_animations"].button_pressed = true
+	if animation_settings.has("flying_letters"):
+		animation_settings["flying_letters"].button_pressed = true
+	if animation_settings.has("deletion_explosions"):
+		animation_settings["deletion_explosions"].button_pressed = true
+	if animation_settings.has("sparkle_effects"):
+		animation_settings["sparkle_effects"].button_pressed = true
+	if animation_settings.has("effect_intensity"):
+		animation_settings["effect_intensity"].value = 1.0
 	if animation_settings.has("cursor_animations"):
 		animation_settings["cursor_animations"].button_pressed = true
 	if animation_settings.has("button_animations"):
 		animation_settings["button_animations"].button_pressed = true
-	if animation_settings.has("deletion_explosions"):
-		animation_settings["deletion_explosions"].button_pressed = true
 	if animation_settings.has("animation_speed"):
 		animation_settings["animation_speed"].value = 1.0
 
@@ -568,3 +678,49 @@ func _on_intensity_changed(value: float, label: Label) -> void:
 
 func _on_speed_changed(value: float, label: Label) -> void:
 	label.text = str(int(value * 100)) + "%"
+
+# Real-time preview functions for typing effects
+func _on_typing_effect_setting_changed(_enabled: bool) -> void:
+	"""Handle real-time preview of typing effect setting changes"""
+	if typing_effects_manager:
+		# Apply current settings immediately for preview
+		_apply_typing_effects_settings()
+
+func _on_typing_effect_intensity_changed(value: float) -> void:
+	"""Handle real-time preview of effect intensity changes"""
+	if typing_effects_manager:
+		typing_effects_manager.set_effect_intensity(value)
+
+func _apply_typing_effects_settings() -> void:
+	"""Apply current typing effects settings to the manager for real-time preview"""
+	if not typing_effects_manager:
+		return
+	
+	# Get current checkbox states safely
+	var typing_enabled = true
+	var flying_enabled = true
+	var explosions_enabled = true
+	var sparkles_enabled = true
+	var intensity = 1.0
+	
+	if animation_settings.has("typing_animations") and animation_settings["typing_animations"]:
+		typing_enabled = animation_settings["typing_animations"].button_pressed
+	
+	if animation_settings.has("flying_letters") and animation_settings["flying_letters"]:
+		flying_enabled = animation_settings["flying_letters"].button_pressed
+		
+	if animation_settings.has("deletion_explosions") and animation_settings["deletion_explosions"]:
+		explosions_enabled = animation_settings["deletion_explosions"].button_pressed
+		
+	if animation_settings.has("sparkle_effects") and animation_settings["sparkle_effects"]:
+		sparkles_enabled = animation_settings["sparkle_effects"].button_pressed
+		
+	if animation_settings.has("effect_intensity") and animation_settings["effect_intensity"]:
+		intensity = animation_settings["effect_intensity"].value
+	
+	# Apply settings to typing effects manager
+	typing_effects_manager.set_typing_effects_enabled(typing_enabled)
+	typing_effects_manager.set_flying_letters_enabled(flying_enabled)
+	typing_effects_manager.set_deletion_explosions_enabled(explosions_enabled)
+	typing_effects_manager.set_sparkle_effects_enabled(sparkles_enabled)
+	typing_effects_manager.set_effect_intensity(intensity)

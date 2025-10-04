@@ -1,5 +1,5 @@
 extends Node
-class_name TypingEffectsManager
+#class_name TypingEffectsManager
 
 # Juicy Editor - Typing Effects Manager
 # Manages fun typing animations and effects spawned during text editing
@@ -25,9 +25,30 @@ var last_text_length: int = 0
 var last_caret_line: int = 0
 var previous_text: String = ""  # Store previous text to detect which character was deleted
 
+# Object pooling for performance
+var effect_pool: Node
+
 func _ready() -> void:
-	# Note: TypingEffect is a script class, instantiate directly
-	print("TypingEffectsManager ready")
+	# Setup object pool for performance optimization
+	_setup_effect_pool()
+	print("TypingEffectsManager ready with object pooling")
+
+func _setup_effect_pool() -> void:
+	"""Initialize object pool for effect optimization"""
+	var pool_script = preload("res://scripts/components/effect_pool.gd")
+	effect_pool = Node.new()
+	effect_pool.set_script(pool_script)
+	effect_pool.name = "EffectPool"
+	add_child(effect_pool)
+	
+	# Connect pool statistics for monitoring
+	if effect_pool.has_signal("pool_stats_updated"):
+		effect_pool.pool_stats_updated.connect(_on_pool_stats_updated)
+
+func _on_pool_stats_updated(pool_name: String, active: int, _available: int) -> void:
+	"""Monitor pool statistics for debugging"""
+	if active > 50:  # Warn if we have too many active effects
+		print("Warning: High effect count in ", pool_name, " pool: ", active, " active")
 
 func setup_text_editor(editor: TextEdit) -> void:
 	"""Connect this manager to a text editor"""
@@ -147,15 +168,12 @@ func _spawn_deletion_effect(pos: Vector2, deleted_char: String = "") -> void:
 	
 	_cleanup_excess_effects()
 	
-	# Create explosion effect
-	var effect_script = preload("res://scripts/components/typing_effect.gd")
+	# Create enhanced explosion effect using new DeletionEffect component
+	var deletion_script = preload("res://scripts/components/deletion_effect.gd")
 	var explosion = Node2D.new()
-	explosion.set_script(effect_script)
-	explosion.character_typed = "💥"  # Use explosion emoji for deletion
+	explosion.set_script(deletion_script)
 	explosion.position = pos
 	explosion.destroy_on_complete = true
-	explosion.scale_bounce = 1.5  # Bigger bounce for deletions
-	explosion.color_randomization = true
 	
 	text_editor.add_child(explosion)
 	active_effects.append(explosion)
@@ -173,7 +191,7 @@ func _spawn_deletion_effect(pos: Vector2, deleted_char: String = "") -> void:
 		
 		print("Spawned flying letter '", deleted_char, "' at ", pos)
 	
-	print("Spawned deletion effect at ", pos)
+	print("Spawned enhanced deletion effect at ", pos)
 
 func _spawn_newline_effect(pos: Vector2) -> void:
 	"""Create a newline effect at the specified position"""
@@ -225,6 +243,30 @@ func set_effects_enabled(enabled: bool) -> void:
 	
 	if not enabled:
 		clear_all_effects()
+
+# Individual effect control methods for settings integration
+func set_typing_effects_enabled(enabled: bool) -> void:
+	"""Enable or disable typing sparkle effects"""
+	enable_typing_effects = enabled
+
+func set_flying_letters_enabled(enabled: bool) -> void:
+	"""Enable or disable flying letter deletion effects"""
+	enable_flying_letters = enabled
+
+func set_deletion_explosions_enabled(enabled: bool) -> void:
+	"""Enable or disable deletion explosion effects"""
+	enable_deletion_effects = enabled
+
+func set_sparkle_effects_enabled(enabled: bool) -> void:
+	"""Enable or disable sparkle typing effects (alias for typing effects)"""
+	enable_typing_effects = enabled
+
+func set_effect_intensity(intensity: float) -> void:
+	"""Set the intensity/scale of all effects"""
+	# We'll store intensity and apply it to newly created effects
+	# For now, just implement the method signature for settings integration
+	print("Effect intensity set to: ", intensity)
+	# TODO: Apply intensity to effect scaling in spawn methods
 
 # Settings integration
 func apply_settings(settings: Dictionary) -> void:

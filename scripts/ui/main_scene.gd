@@ -15,7 +15,6 @@ const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 @onready var menu_bar: MenuBar = $VBoxContainer/MenuBar
 @onready var file_menu: PopupMenu = $VBoxContainer/MenuBar/File
 @onready var edit_menu: PopupMenu = $VBoxContainer/MenuBar/Edit
-@onready var effects_menu: PopupMenu = $VBoxContainer/MenuBar/Effects
 @onready var toolbar_buttons: HBoxContainer = $VBoxContainer/Toolbar
 @onready var new_button: Button = $VBoxContainer/Toolbar/NewButton
 @onready var open_button: Button = $VBoxContainer/Toolbar/OpenButton
@@ -150,18 +149,23 @@ func _setup_menus() -> void:
 	settings_menu.add_item("Preferences...", 0)
 	settings_menu.id_pressed.connect(_on_settings_menu_selected)
 	
-	# Setup Effects menu
-	if effects_menu:
-		effects_menu.id_pressed.connect(_on_effects_menu_selected)
-	
 	# Setup menu bar (menus already exist in scene, just set titles)
 	menu_bar.set_menu_title(0, "File")
 	menu_bar.set_menu_title(1, "Edit")
-	menu_bar.set_menu_title(2, "Effects")
+	
+	# Remove the original Effects menu if it exists (now deprecated, we use Settings instead)
+	if menu_bar.get_menu_count() > 2:
+		print("Removing deprecated Effects menu (menu count: ", menu_bar.get_menu_count(), ")")
+		# Remove the third menu (index 2) which should be the old Effects menu
+		var effects_popup = menu_bar.get_menu_popup(2)
+		if effects_popup:
+			menu_bar.remove_child(effects_popup)
+			effects_popup.queue_free()
+			print("Successfully removed deprecated Effects menu")
 	
 	# Add the settings menu
 	menu_bar.add_child(settings_menu)
-	menu_bar.set_menu_title(3, "Settings")
+	menu_bar.set_menu_title(menu_bar.get_menu_count() - 1, "Settings")
 	
 	# Setup file dialogs with filters
 	_setup_file_dialogs()
@@ -374,21 +378,6 @@ func _on_settings_menu_selected(id: int) -> void:
 		0:  # Preferences
 			_open_settings_dialog()
 
-func _on_effects_menu_selected(id: int) -> void:
-	match id:
-		0:  # Visual Effects Settings (DISABLED)
-			print("Visual Effects Settings disabled - RichTextLabel overlay system deprecated")
-			# _open_effects_settings_dialog()
-		2:  # Enable Text Shadow (DISABLED)
-			print("Text Shadow disabled - RichTextLabel overlay system deprecated")
-			# _toggle_text_shadow()
-		3:  # Enable Outline (DISABLED)
-			print("Outline disabled - RichTextLabel overlay system deprecated")
-			# _toggle_outline()
-		4:  # Enable Background Gradient (DISABLED)
-			print("Background Gradient disabled - RichTextLabel overlay system deprecated")
-			# _toggle_background_gradient()
-
 func _on_edit_menu_selected(id: int) -> void:
 	match id:
 		0:  # Find & Replace
@@ -415,10 +404,14 @@ func _open_settings_dialog() -> void:
 	settings_dialog.popup_centered_ratio(0.8)
 
 func _on_settings_applied(new_settings: Dictionary) -> void:
-	# Pass settings to game controller
-	if game_controller:
-		for key in new_settings:
-			game_controller.set_setting(key, new_settings[key])
+	# Pass settings to game controller using the comprehensive handler
+	if game_controller and game_controller.has_method("_on_settings_applied"):
+		game_controller._on_settings_applied(new_settings)
+	else:
+		# Fallback to individual setting method
+		if game_controller:
+			for key in new_settings:
+				game_controller.set_setting(key, new_settings[key])
 	
 	print("Settings updated: ", new_settings)
 
@@ -689,35 +682,4 @@ func _on_effects_reset_settings() -> void:
 		game_controller.set_setting("rich_effects", true)
 	print("Effects settings reset to defaults")
 
-func _toggle_text_shadow() -> void:
-	if visual_effects_manager and visual_effects_manager.has_method("enable_effect"):
-		var current_enabled = effects_menu.is_item_checked(2)
-		var new_enabled = not current_enabled
-		effects_menu.set_item_checked(2, new_enabled)
-		visual_effects_manager.enable_effect("text_shadow", new_enabled)
-		
-		# Apply to text editor
-		if visual_effects_manager.has_method("apply_text_shadow"):
-			visual_effects_manager.apply_text_shadow(text_editor, new_enabled)
-
-func _toggle_outline() -> void:
-	if visual_effects_manager and visual_effects_manager.has_method("enable_effect"):
-		var current_enabled = effects_menu.is_item_checked(3)
-		var new_enabled = not current_enabled
-		effects_menu.set_item_checked(3, new_enabled)
-		visual_effects_manager.enable_effect("outline", new_enabled)
-		
-		# Apply to text editor
-		if visual_effects_manager.has_method("apply_outline"):
-			visual_effects_manager.apply_outline(text_editor, new_enabled)
-
-func _toggle_background_gradient() -> void:
-	if visual_effects_manager and visual_effects_manager.has_method("enable_effect"):
-		var current_enabled = effects_menu.is_item_checked(4)
-		var new_enabled = not current_enabled
-		effects_menu.set_item_checked(4, new_enabled)
-		visual_effects_manager.enable_effect("gradient", new_enabled)
-		
-		# Apply to background panel
-		if visual_effects_manager.has_method("apply_gradient_background"):
-			visual_effects_manager.apply_gradient_background(background_panel, new_enabled)
+# End of MainScene class
