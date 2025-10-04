@@ -25,13 +25,35 @@ var last_text_length: int = 0
 var last_caret_line: int = 0
 var previous_text: String = ""  # Store previous text to detect which character was deleted
 
+# Deletion scaling reset timer
+var deletion_reset_timer: Timer
+
 # Object pooling for performance
 var effect_pool: Node
 
 func _ready() -> void:
 	# Setup object pool for performance optimization
 	_setup_effect_pool()
+	
+	# Setup deletion reset timer
+	_setup_deletion_reset_timer()
+	
 	print("TypingEffectsManager ready with object pooling")
+
+func _setup_deletion_reset_timer() -> void:
+	"""Setup timer to reset deletion scaling when typing stops"""
+	deletion_reset_timer = Timer.new()
+	deletion_reset_timer.wait_time = 2.0  # Reset after 2 seconds of no typing
+	deletion_reset_timer.one_shot = true
+	deletion_reset_timer.timeout.connect(_on_deletion_reset_timeout)
+	add_child(deletion_reset_timer)
+
+func _on_deletion_reset_timeout() -> void:
+	"""Reset deletion scale when typing stops"""
+	# Call the static reset method directly
+	var deletion_effect_script = preload("res://scripts/components/deletion_effect.gd")
+	deletion_effect_script.reset_deletion_scale()
+	print("Reset deletion scale due to typing inactivity")
 
 func _setup_effect_pool() -> void:
 	"""Initialize object pool for effect optimization"""
@@ -167,6 +189,10 @@ func _spawn_deletion_effect(pos: Vector2, deleted_char: String = "") -> void:
 		return
 	
 	_cleanup_excess_effects()
+	
+	# Restart the deletion reset timer (keep scaling active while deleting)
+	if deletion_reset_timer:
+		deletion_reset_timer.start()
 	
 	# Create enhanced explosion effect using new DeletionEffect component
 	var deletion_script = preload("res://scripts/components/deletion_effect.gd")

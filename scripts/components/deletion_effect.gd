@@ -10,6 +10,13 @@ class_name DeletionEffect
 @export var use_sprites: bool = true
 @export var particle_effects: bool = true
 
+# Enhanced deletion scaling properties
+@export var min_scale: float = 1.0
+@export var max_scale: float = 3.0
+@export var scale_increment: float = 0.2
+@export var position_variance: float = 15.0  # Random Y position variance
+@export var deletion_reset_time: float = 1.0  # Time before resetting scale
+
 # Core components
 var explosion_sprite: AnimatedSprite2D
 var particles: CPUParticles2D
@@ -18,6 +25,11 @@ var cleanup_timer: Timer
 
 # Explosion resources
 var explosion_textures: Array[Texture2D] = []
+
+# Static variables for tracking repeated deletions across all instances
+static var consecutive_deletions: int = 0
+static var last_deletion_time: float = 0.0
+static var current_deletion_scale: float = 1.0
 
 func _ready() -> void:
 	_setup_components()
@@ -51,7 +63,8 @@ func _load_explosion_sprites() -> void:
 	"""Load explosion sprite textures"""
 	var explosion_files = [
 		"explosion_01.png", "explosion_02.png", "explosion_03.png",
-		"explosion_04.png", "explosion_05.png"
+		"explosion_04.png", "explosion_05.png", "explosion_06.png",
+		"explosion_07.png", "explosion_08.png", "explosion_09.png"
 	]
 	
 	for file_name in explosion_files:
@@ -81,7 +94,7 @@ func _setup_explosion_animation() -> void:
 		sprite_frames.add_frame("explode", texture)
 	
 	# Configure animation
-	sprite_frames.set_animation_speed("explode", 10.0)  # Fast explosion
+	sprite_frames.set_animation_speed("explode", 35.0)  # Fast explosion
 	sprite_frames.set_animation_loop("explode", false)  # Play once
 	
 	explosion_sprite.sprite_frames = sprite_frames
@@ -165,7 +178,7 @@ func _create_fade_gradient() -> Gradient:
 
 func _load_debris_particle_texture() -> Texture2D:
 	"""Load debris particle texture or create fallback"""
-	var dust_textures = ["dust_01.png", "dust_02.png"]
+	var dust_textures = ["dust_01.png", "dust_02.png", "dust_03.png", "dust_04.png"]
 	
 	for texture_name in dust_textures:
 		var texture_path = "res://effects/sprites/particles/" + texture_name
@@ -184,7 +197,13 @@ func _create_simple_particle_texture() -> ImageTexture:
 	return ImageTexture.create_from_image(image)
 
 func _start_explosion_effect() -> void:
-	"""Start the explosion effect"""
+	"""Start the explosion effect with progressive scaling"""
+	# Update deletion tracking
+	_update_deletion_tracking()
+	
+	# Apply progressive scaling and random positioning
+	_apply_enhanced_scaling()
+	
 	# Setup explosion sprite animation
 	if explosion_sprite and use_sprites and explosion_sprite.sprite_frames != null:
 		if explosion_sprite.sprite_frames.has_animation("explode"):
@@ -197,14 +216,15 @@ func _start_explosion_effect() -> void:
 	# Create the scale animation first
 	_create_explosion_scale_animation()
 	
-	# Start particles
+	# Start particles with enhanced effects
+	_configure_particles_for_scale()
 	particles.emitting = true
 	
 	# Play scale animation
 	if animation_player and animation_player.has_animation_library("default"):
 		var library = animation_player.get_animation_library("default")
 		if library.has_animation("explosion_scale"):
-			print("Debug: Playing explosion_scale animation")
+			print("Debug: Playing explosion_scale animation at scale: ", current_deletion_scale)
 			animation_player.play("default/explosion_scale")
 		else:
 			print("Warning: explosion_scale animation not found in default library")
@@ -256,6 +276,77 @@ func _create_explosion_scale_animation() -> void:
 func _on_cleanup_timeout() -> void:
 	if destroy_on_complete:
 		queue_free()
+
+func _update_deletion_tracking() -> void:
+	"""Update tracking for consecutive deletions"""
+	var current_time = Time.get_ticks_msec() / 1000.0
+	
+	# Check if this deletion is part of a sequence
+	if current_time - last_deletion_time <= deletion_reset_time:
+		consecutive_deletions += 1
+	else:
+		consecutive_deletions = 1
+		current_deletion_scale = min_scale
+	
+	# Update scale based on consecutive deletions
+	current_deletion_scale = min(
+		min_scale + (consecutive_deletions - 1) * scale_increment,
+		max_scale
+	)
+	
+	last_deletion_time = current_time
+	
+	print("Debug: Deletion #", consecutive_deletions, " at scale: ", current_deletion_scale)
+
+func _apply_enhanced_scaling() -> void:
+	"""Apply progressive scaling and random positioning"""
+	# Apply scale to the entire effect
+	scale = Vector2(current_deletion_scale, current_deletion_scale)
+	
+	# Apply random Y position variance
+	var random_y_offset = randf_range(-position_variance, position_variance)
+	position.y += random_y_offset
+	
+	# Slightly adjust X as well for more natural variation
+	var random_x_offset = randf_range(-position_variance * 0.5, position_variance * 0.5)
+	position.x += random_x_offset
+	
+	print("Debug: Applied scaling: ", current_deletion_scale, " position offset: ", Vector2(random_x_offset, random_y_offset))
+
+func _configure_particles_for_scale() -> void:
+	"""Configure particle effects based on current deletion scale"""
+	if not particles or not particles.material:
+		return
+	
+	var particle_material = particles.material as ParticleProcessMaterial
+	if not particle_material:
+		return
+	
+	# Scale particle properties based on deletion scale
+	particles.amount = int(20 * current_deletion_scale)
+	
+	# Enhanced particle effects for larger explosions
+	if current_deletion_scale > 2.0:
+		particles.lifetime = 2.0
+		if particle_material:
+			particle_material.initial_velocity_min = 60.0 * current_deletion_scale
+			particle_material.initial_velocity_max = 120.0 * current_deletion_scale
+	elif current_deletion_scale > 1.5:
+		particles.lifetime = 1.5
+		if particle_material:
+			particle_material.initial_velocity_min = 40.0 * current_deletion_scale
+			particle_material.initial_velocity_max = 80.0 * current_deletion_scale
+	else:
+		particles.lifetime = 1.0
+		if particle_material:
+			particle_material.initial_velocity_min = 30.0
+			particle_material.initial_velocity_max = 60.0
+
+# Static method to reset deletion tracking (called when typing stops)
+static func reset_deletion_scale() -> void:
+	consecutive_deletions = 0
+	current_deletion_scale = 1.0
+	print("Debug: Deletion scale reset")
 
 # Static factory method
 static func create_deletion_effect(parent: Node, pos: Vector2) -> DeletionEffect:
