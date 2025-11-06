@@ -163,6 +163,10 @@ func _connect_signals() -> void:
 	game_controller.file_opened.connect(_on_file_opened)
 	game_controller.file_saved.connect(_on_file_saved)
 	
+	# Connect theme manager signals
+	if theme_manager:
+		theme_manager.theme_changed.connect(_on_theme_changed)
+	
 	# Connect button hover effects for audio feedback
 	_connect_button_audio_feedback()
 
@@ -537,7 +541,15 @@ func _open_theme_switcher() -> void:
 
 func _on_theme_selected(selected_theme: JuicyTheme) -> void:
 	print("Theme selected: ", selected_theme.theme_name)
-	# Theme manager will automatically apply the theme
+	if theme_manager:
+		theme_manager.set_theme(selected_theme)
+
+func _on_theme_changed(new_theme: JuicyTheme) -> void:
+	print("Theme changed to: ", new_theme.theme_name if new_theme else "null")
+	# Refresh syntax highlighting for the current file
+	if text_editor and text_editor.has_method("refresh_syntax_highlighting"):
+		text_editor.refresh_syntax_highlighting()
+	# Note: Theme manager will automatically apply theme to all registered UI elements
 
 func _toggle_word_wrap() -> void:
 	if text_editor:

@@ -22,6 +22,7 @@ var typing_effects_manager: Node
 var last_text_length: int = 0
 var last_caret_line: int = 0
 var previous_text: String = ""  # Store previous text to detect deletions
+var current_file_path: String = ""  # Store current file path for syntax highlighting refresh
 
 func _ready() -> void:
 	print("DEBUG: JuicyTextEdit _ready() starting")
@@ -146,12 +147,46 @@ func sync_to_overlay() -> void:
 
 # Syntax highlighting method (restored from original implementation)
 func set_syntax_highlighting_for_file(file_path: String) -> void:
-	"""Set syntax highlighting based on file extension"""
+	"""Set syntax highlighting based on file extension using current theme"""
+	current_file_path = file_path  # Store for theme refresh
 	var extension = file_path.get_extension().to_lower()
 	
-	if not syntax_highlighter:
-		syntax_highlighter = CodeHighlighter.new()
+	# Get theme-aware syntax highlighter from theme manager
+	var theme_manager = get_theme_manager()
+	if theme_manager and theme_manager.current_theme:
+		syntax_highlighter = theme_manager.current_theme.get_syntax_highlighter_for_file(extension)
+	else:
+		# Fallback to basic highlighting if no theme manager
+		if not syntax_highlighter:
+			syntax_highlighter = CodeHighlighter.new()
+		_setup_fallback_highlighting(extension)
+
+func refresh_syntax_highlighting() -> void:
+	"""Refresh syntax highlighting with current theme - called when theme changes"""
+	if current_file_path != "":
+		set_syntax_highlighting_for_file(current_file_path)
+
+func get_theme_manager() -> ThemeManager:
+	"""Get the theme manager from the scene tree"""
+	# Look for theme manager in the scene tree
+	var root = get_tree().current_scene
+	if root:
+		var theme_manager = root.find_child("ThemeManager", true, false)
+		if theme_manager:
+			return theme_manager
 	
+	# Fallback: look in common parent locations
+	var current = get_parent()
+	while current:
+		var theme_manager = current.get_node_or_null("ThemeManager")
+		if theme_manager:
+			return theme_manager
+		current = current.get_parent()
+	
+	return null
+
+func _setup_fallback_highlighting(extension: String) -> void:
+	"""Fallback highlighting when no theme manager is available"""
 	var highlighter = syntax_highlighter as CodeHighlighter
 	if not highlighter:
 		return

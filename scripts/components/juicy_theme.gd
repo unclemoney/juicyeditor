@@ -33,6 +33,31 @@ class_name JuicyTheme
 @export var function_color: Color
 @export var variable_color: Color
 
+# File type specific syntax colors
+@export_group("GDScript Colors")
+@export var gdscript_func_color: Color
+@export var gdscript_class_color: Color
+@export var gdscript_signal_color: Color
+@export var gdscript_builtin_color: Color
+
+@export_group("Python Colors")
+@export var python_def_color: Color
+@export var python_class_color: Color
+@export var python_import_color: Color
+@export var python_decorator_color: Color
+
+@export_group("Markdown Colors")
+@export var markdown_header_color: Color
+@export var markdown_bold_color: Color
+@export var markdown_italic_color: Color
+@export var markdown_code_color: Color
+@export var markdown_link_color: Color
+
+@export_group("JSON Colors")
+@export var json_key_color: Color
+@export var json_value_color: Color
+@export var json_bracket_color: Color
+
 # Typography
 @export_group("Typography")
 @export var editor_font: FontFile
@@ -104,6 +129,10 @@ func apply_to_text_edit(text_edit: TextEdit) -> void:
 	if editor_font:
 		text_edit.add_theme_font_override("font", editor_font)
 	text_edit.add_theme_font_size_override("font_size", editor_font_size)
+	
+	# Update syntax highlighting if this is a JuicyTextEdit with a file loaded
+	if text_edit.has_method("refresh_syntax_highlighting"):
+		text_edit.refresh_syntax_highlighting()
 	
 	print("Applied theme colors: bg=", background_color, " text=", text_color)
 
@@ -338,6 +367,135 @@ func get_syntax_highlighter() -> CodeHighlighter:
 	highlighter.number_color = number_color
 	
 	return highlighter
+
+func get_syntax_highlighter_for_file(file_extension: String) -> CodeHighlighter:
+	var highlighter = CodeHighlighter.new()
+	var extension = file_extension.to_lower()
+	
+	# Clear any existing highlighting
+	highlighter.clear_color_regions()
+	highlighter.clear_member_keyword_colors()
+	highlighter.clear_keyword_colors()
+	
+	match extension:
+		"gd":
+			_setup_gdscript_highlighting_themed(highlighter)
+		"py":
+			_setup_python_highlighting_themed(highlighter)
+		"md":
+			_setup_markdown_highlighting_themed(highlighter)
+		"json":
+			_setup_json_highlighting_themed(highlighter)
+		_:
+			# Default highlighting
+			highlighter.symbol_color = text_color
+			highlighter.function_color = function_color
+			highlighter.number_color = number_color
+	
+	return highlighter
+
+func _setup_gdscript_highlighting_themed(highlighter: CodeHighlighter) -> void:
+	# Core GDScript keywords - using traditional keyword color but theme-aware
+	var core_keywords = ["and", "as", "assert", "await", "break", "breakpoint", "class_name", 
+						"const", "continue", "elif", "else", "enum", "extends", "for", 
+						"if", "in", "is", "match", "not", "or", "pass", "return", 
+						"static", "super", "var", "void", "while", "yield"]
+	
+	for keyword in core_keywords:
+		highlighter.add_keyword_color(keyword, keyword_color)
+	
+	# Function and class specific colors
+	highlighter.add_keyword_color("func", gdscript_func_color)
+	highlighter.add_keyword_color("class", gdscript_class_color)
+	highlighter.add_keyword_color("signal", gdscript_signal_color)
+	
+	# Built-in types and functions
+	var builtins = ["bool", "int", "float", "String", "Vector2", "Vector3", "Color", 
+					"Node", "PackedStringArray", "Array", "Dictionary", "NodePath", "Resource"]
+	for builtin in builtins:
+		highlighter.add_keyword_color(builtin, gdscript_builtin_color)
+	
+	# Comments
+	highlighter.add_color_region("#", "", comment_color, true)
+	
+	# Strings
+	highlighter.add_color_region("\"", "\"", string_color)
+	highlighter.add_color_region("'", "'", string_color)
+	highlighter.add_color_region("\"\"\"", "\"\"\"", string_color)
+	
+	# Numbers
+	highlighter.number_color = number_color
+
+func _setup_python_highlighting_themed(highlighter: CodeHighlighter) -> void:
+	# Core Python keywords
+	var core_keywords = ["and", "as", "assert", "break", "continue", "del", "elif", "else", 
+						"except", "exec", "finally", "for", "from", "global", "if", "in", 
+						"is", "lambda", "not", "or", "pass", "print", "raise", "return", 
+						"try", "while", "with", "yield"]
+	
+	for keyword in core_keywords:
+		highlighter.add_keyword_color(keyword, keyword_color)
+	
+	# Python specific colors
+	highlighter.add_keyword_color("def", python_def_color)
+	highlighter.add_keyword_color("class", python_class_color)
+	highlighter.add_keyword_color("import", python_import_color)
+	highlighter.add_keyword_color("from", python_import_color)
+	
+	# Decorators (basic pattern matching)
+	highlighter.add_color_region("@", " ", python_decorator_color, true)
+	highlighter.add_color_region("@", "\n", python_decorator_color, true)
+	highlighter.add_color_region("@", "(", python_decorator_color, false)
+	
+	# Comments
+	highlighter.add_color_region("#", "", comment_color, true)
+	
+	# Strings
+	highlighter.add_color_region("\"", "\"", string_color)
+	highlighter.add_color_region("'", "'", string_color)
+	highlighter.add_color_region("\"\"\"", "\"\"\"", string_color)
+	highlighter.add_color_region("'''", "'''", string_color)
+	
+	# Numbers
+	highlighter.number_color = number_color
+
+func _setup_markdown_highlighting_themed(highlighter: CodeHighlighter) -> void:
+	# Headers
+	highlighter.add_color_region("#", "", markdown_header_color, true)
+	highlighter.add_color_region("##", "", markdown_header_color, true)
+	highlighter.add_color_region("###", "", markdown_header_color, true)
+	
+	# Bold text
+	highlighter.add_color_region("**", "**", markdown_bold_color)
+	highlighter.add_color_region("__", "__", markdown_bold_color)
+	
+	# Italic text
+	highlighter.add_color_region("*", "*", markdown_italic_color)
+	highlighter.add_color_region("_", "_", markdown_italic_color)
+	
+	# Inline code
+	highlighter.add_color_region("`", "`", markdown_code_color)
+	
+	# Links (basic pattern)
+	highlighter.add_color_region("[", "]", markdown_link_color)
+	
+	# Code blocks
+	highlighter.add_color_region("```", "```", markdown_code_color)
+
+func _setup_json_highlighting_themed(highlighter: CodeHighlighter) -> void:
+	# JSON strings (keys and values)
+	highlighter.add_color_region("\"", "\"", json_key_color)
+	
+	# Numbers
+	highlighter.number_color = number_color
+	
+	# Brackets and braces
+	highlighter.symbol_color = json_bracket_color
+	
+	# Boolean values
+	highlighter.add_keyword_color("true", json_value_color)
+	highlighter.add_keyword_color("false", json_value_color)
+	highlighter.add_keyword_color("null", json_value_color)
 
 func apply_visual_effects(effects_manager: Node) -> void:
 	# Apply visual effects using the provided VisualEffectsManager

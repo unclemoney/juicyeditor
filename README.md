@@ -11,7 +11,8 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 ### Core Functionality
 - ✅ **Text Editing**: Full-featured text editing with cursor movement and text selection
 - ✅ **File Operations**: Open, Save, Save As, and New file functionality
-- ✅ **Syntax Highlighting**: Support for GDScript, Python, JavaScript, HTML, CSS, JSON, and Markdown
+- ✅ **Syntax Highlighting**: File type-specific syntax highlighting for GDScript, Python, Markdown, and JSON with theme-aware colors
+- ✅ **Theme-Aware Highlighting**: Each theme provides unique color schemes for different programming languages and file types
 - ✅ **Find & Replace**: Comprehensive search and replace with case sensitivity and whole word options
 - ✅ **Go to Line**: Quick navigation to specific line numbers
 - ✅ **Line Numbers**: Configurable line number display
@@ -109,10 +110,69 @@ Handles shader-based visual effects:
 
 #### JuicyTextEdit
 Enhanced TextEdit component:
-- Built-in syntax highlighting
+- Built-in syntax highlighting with theme integration
+- File type-specific color schemes
 - Typing sound integration
 - Animation hooks
 - Line number management
+
+## 🎨 Syntax Highlighting System
+
+### File Type Support
+Juicy Editor provides specialized syntax highlighting for:
+
+- **GDScript (.gd)**: Complete GDScript syntax with theme-aware colors
+  - Functions (`func`) highlighted in theme-specific function colors
+  - Classes (`class`) and signals (`signal`) with distinct colors
+  - Built-in types (Vector2, Color, Node, etc.) in specialized colors
+  - Keywords, strings, comments, and numbers with traditional highlighting
+
+- **Python (.py)**: Full Python syntax support
+  - Function definitions (`def`) and classes (`class`) with unique colors
+  - Import statements (`import`, `from`) highlighted distinctly
+  - Decorators (`@property`, `@staticmethod`) with special coloring
+  - Standard keywords, strings, and comments
+
+- **Markdown (.md)**: Rich markdown formatting
+  - Headers (`#`, `##`, `###`) with header-specific colors
+  - Bold (`**text**`) and italic (`*text*`) formatting
+  - Inline code (`` `code` ``) and code blocks with distinct highlighting
+  - Links (`[text](url)`) with link-specific colors
+
+- **JSON (.json)**: Structured JSON highlighting
+  - Keys and values with distinct colors
+  - Brackets and braces with structural highlighting
+  - Boolean values (`true`, `false`, `null`) with special colors
+  - Numbers with numeric highlighting
+
+### Theme-Aware Colors
+Each theme provides unique color schemes:
+
+- **Dark Theme**: Professional dark colors with high contrast
+  - GDScript `func` in dark red, `class` in green, `signal` in pink
+  - Python `def` in muted red, decorators in lime green
+  - Markdown headers in blue, bold in yellow, code in light green
+
+- **Light Theme**: Clean bright colors optimized for daylight
+  - Traditional programming colors adapted for light backgrounds
+  - Subdued but clear color differentiation
+  - Professional appearance for office environments
+
+- **Juicy Theme**: Vibrant and playful colors
+  - Bright, saturated colors for an energetic coding experience
+  - Enhanced contrast and visual appeal
+  - Perfect for creative projects and fun coding sessions
+
+- **Super Juicy Theme**: Ultra-vibrant maximum visual impact
+  - Extreme color saturation and contrast
+  - Rainbow-like color palette
+  - Maximum visual excitement for those who love bold aesthetics
+
+### Automatic Detection
+- File type detection based on file extension
+- Automatic syntax highlighter switching when opening files
+- Live theme switching updates syntax colors instantly
+- Fallback to basic highlighting for unsupported file types
 
 ## 🎨 Design Philosophy
 

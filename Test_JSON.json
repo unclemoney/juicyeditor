@@ -1,0 +1,35 @@
+{
+  "name": "Sample JSON Configuration",
+  "version": "1.0.0",
+  "description": "A test JSON file for syntax highlighting",
+  "settings": {
+    "editor": {
+      "font_size": 14,
+      "theme": "dark",
+      "enable_syntax_highlighting": true,
+      "auto_save": false
+    },
+    "features": {
+      "typing_effects": true,
+      "sound_effects": true,
+      "animations": true
+    }
+  },
+  "themes": [
+    {
+      "name": "Dark",
+      "background": "#1a1a1a",
+      "text": "#ffffff",
+      "accent": "#4a9eff"
+    },
+    {
+      "name": "Light", 
+      "background": "#ffffff",
+      "text": "#000000",
+      "accent": "#0066cc"
+    }
+  ],
+  "file_extensions": ["gd", "py", "md", "json"],
+  "max_recent_files": 10,
+  "auto_backup": null
+}
