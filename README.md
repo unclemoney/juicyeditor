@@ -23,7 +23,9 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **Audio Feedback**: Typing sounds, button clicks, hover sounds with volume controls
 - ✅ **Visual Effects**: Shader-based text shadows, outlines, gradient backgrounds with real-time configuration
 - ✅ **Animations**: Character typing animations, cursor pulse, button interactions, smooth transitions
-- ✅ **Themes**: Dark, Light, and Juicy themes with visual effect integration
+- ✅ **Themes**: Dark, Light, and Super Juicy themes with custom National2Condensed fonts and visual effect integration
+- ✅ **Theme Switching**: Live theme switching through Settings menu with preview functionality
+- ✅ **Custom Fonts**: Integration of National2Condensed Regular and Medium fonts for enhanced typography
 
 ### Quality of Life
 - ✅ **Settings Persistence**: Comprehensive settings with tabbed interface for all preferences
@@ -43,22 +45,33 @@ juicyeditor/
 │   ├── components/           # Reusable UI and logic components
 │   │   ├── audio_manager.gd  # Audio feedback system
 │   │   ├── visual_effects_manager.gd # Shader-based visual effects
+│   │   ├── theme_manager.gd  # Theme loading and application system
+│   │   ├── juicy_theme.gd    # Theme resource definition
 │   │   └── juicy_text_edit.gd # Enhanced text editor
 │   └── ui/                   # UI-specific scripts
+│       └── theme_switcher.gd # Theme selection UI component
 ├── scenes/
 │   ├── components/           # Reusable scene components
 │   └── ui/                   # UI layouts and screens
-│       └── effects_settings_panel.tscn # Visual effects configuration
+│       ├── effects_settings_panel.tscn # Visual effects configuration
+│       └── theme_switcher.tscn # Theme selection dialog
 ├── audio/
 │   └── sfx/                  # Sound effects
 ├── effects/
 │   ├── shaders/              # Visual effect shaders
 │   └── animations/           # Animation resources
+├── fonts/                    # Custom typography
+│   ├── National2Condensed-Regular.otf
+│   └── National2Condensed-Medium.otf
 ├── shaders/                  # GLSL shader files
 │   ├── shadow.gdshader       # Text shadow effects
 │   ├── outline.gdshader      # Text outline effects
 │   └── gradient.gdshader     # Background gradient effects
 └── themes/                   # UI and color themes
+	├── super_juicy_theme.tres # Enhanced theme with custom fonts
+	├── juicy_theme.tres       # Original juicy theme
+	├── dark_theme.tres        # Dark mode
+	└── light_theme.tres       # Light mode
 ```
 
 ### Core Systems
@@ -76,6 +89,15 @@ Handles all audio feedback:
 - UI interaction sounds
 - File operation audio cues
 - Volume and preference management
+
+#### ThemeManager
+Advanced theme system with live switching:
+- Dynamic theme loading and application
+- UI element registration and management
+- Font integration with National2Condensed typography
+- Button and menu animations with theme-specific effects
+- Live preview functionality with instant application
+- Support for custom colors, fonts, shadows, outlines, and gradients
 
 #### VisualEffectsManager
 Handles shader-based visual effects:
@@ -139,6 +161,12 @@ Scenes are designed to work independently with minimal external dependencies.
   - **Audio**: Master volume, UI sounds, typing sounds, effect volume
   - **Visual Effects**: Enable/disable effects, glow, pulse, intensity control
   - **Animations**: Typing animations, cursor pulse, button animations, speed control
+- **Theme Switching**: Settings → Switch Theme...
+  - **Super Juicy Theme**: Vibrant colors with National2Condensed fonts, enhanced shadows, outlines, and animations
+  - **Classic Juicy**: Original theme with standard fonts and moderate effects
+  - **Dark Theme**: Minimal dark interface for focused writing
+  - **Light Theme**: Clean, bright interface for daytime use
+  - **Live Preview**: See theme changes immediately with font and color previews
 - **Visual Effects**: Effects → Visual Effects Settings...
   - **Text Shadow**: Color, offset, blur radius configuration
   - **Outline**: Color, width, smoothness settings
@@ -215,12 +243,12 @@ Inspired by the [ridiculous_coding](https://github.com/jotson/ridiculous_coding)
 ##### 🚧 Implementation Todos
 - [x] **Effect Scenes Creation** - Create dedicated .tscn files for typing, deletion, and newline effects
 - [x] **Flying Letter Physics** - Implement TEXTREME-inspired physics-based flying letters for deletions
-- [ ] **Visual Polish** - Add sprite-based animations, improved particle effects, and visual variety
-- [ ] **Audio Integration** - Coordinate typing effects with existing AudioManager for enhanced feedback
+- [x] **Visual Polish** - Add sprite-based animations, improved particle effects, and visual variety
+- [x] **Audio Integration** - Coordinate typing effects with existing AudioManager for enhanced feedback
 - [ ] **Performance Optimization** - Implement object pooling for effects to prevent memory issues
 - [ ] **Settings Integration** - Add typing effects controls to Settings dialog
 - [ ] **Effect Customization** - Allow users to configure effect styles, colors, and intensity
-- [ ] **Advanced Animations** - Character-specific effects, typing rhythm detection, combo effects
+- [x] **Advanced Animations** - Character-specific effects, typing rhythm detection, combo effects
 - [ ] **Screen Shake Integration** - Add subtle screen shake for impactful typing moments
 - [ ] **Effect Themes** - Multiple visual themes (minimal, explosive, magical, retro)
 - [ ] **Testing & Polish** - Comprehensive testing and performance validation

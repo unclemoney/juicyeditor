@@ -1,28 +1,32 @@
-[gd_resource type="Resource" script_class="JuicyTheme" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="JuicyTheme" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/components/juicy_theme.gd" id="1_vh8j6"]
+[ext_resource type="FontFile" uid="uid://k5o2wjxmnh5b" path="res://fonts/National2Condensed-Medium.otf" id="2_font_medium"]
+[ext_resource type="FontFile" uid="uid://cjpbg6bx7gqe4" path="res://fonts/National2Condensed-Regular.otf" id="3_font_regular"]
 
 [resource]
 script = ExtResource("1_vh8j6")
 theme_name = "Light"
-description = "Clean light theme for bright environments"
-background_color = Color(0.95, 0.95, 0.95, 1)
-text_color = Color(0.1, 0.1, 0.1, 1)
-selection_color = Color(0.6, 0.7, 1, 0.5)
-current_line_color = Color(0.9, 0.9, 0.9, 1)
-line_number_color = Color(0.6, 0.6, 0.6, 1)
+description = "Clean bright theme for daytime use with National2Condensed fonts"
+background_color = Color(0.99, 0.99, 0.99, 1)
+text_color = Color(0.05, 0.05, 0.05, 1)
+selection_color = Color(0.4, 0.6, 1, 0.3)
+current_line_color = Color(0.95, 0.95, 0.98, 1)
+line_number_color = Color(0.4, 0.4, 0.4, 1)
 caret_color = Color(0, 0, 0, 1)
-button_color = Color(0.85, 0.85, 0.85, 1)
-button_hover_color = Color(0.8, 0.8, 0.8, 1)
-button_pressed_color = Color(0.75, 0.75, 0.75, 1)
-menu_background_color = Color(0.9, 0.9, 0.9, 1)
-status_bar_color = Color(0.92, 0.92, 0.92, 1)
+button_color = Color(0.92, 0.92, 0.95, 1)
+button_hover_color = Color(0.85, 0.85, 0.9, 1)
+button_pressed_color = Color(0.78, 0.78, 0.85, 1)
+menu_background_color = Color(0.96, 0.96, 0.98, 0.98)
+status_bar_color = Color(0.94, 0.94, 0.96, 1)
 keyword_color = Color(0.2, 0.4, 0.8, 1)
 string_color = Color(0.8, 0.4, 0.1, 1)
 comment_color = Color(0.5, 0.5, 0.5, 1)
 number_color = Color(0.1, 0.6, 0.2, 1)
 function_color = Color(0.6, 0.1, 0.4, 1)
 variable_color = Color(0.3, 0.3, 0.6, 1)
+ui_font = ExtResource("2_font_medium")
+editor_font = ExtResource("3_font_regular")
 editor_font_size = 14
 ui_font_size = 12
 line_height_multiplier = 1.2

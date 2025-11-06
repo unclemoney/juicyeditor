@@ -7,7 +7,7 @@ uniform float outline_smoothness : hint_range(0.0, 1.0) = 0.1;
 void fragment() {
 	vec2 size = vec2(textureSize(TEXTURE, 0));
 	vec4 color = texture(TEXTURE, UV);
-	
+
 	if (color.a == 0.0) {
 		float alpha = 0.0;
 		for (float x = -outline_width; x <= outline_width; x += 1.0) {

@@ -9,116 +9,325 @@ class_name JuicyTheme
 
 # Color scheme
 @export_group("Colors")
-@export var background_color: Color = Color(0.1, 0.1, 0.1, 1.0)
-@export var text_color: Color = Color(0.9, 0.9, 0.9, 1.0)
-@export var selection_color: Color = Color(0.3, 0.4, 0.8, 0.5)
-@export var current_line_color: Color = Color(0.15, 0.15, 0.15, 1.0)
-@export var line_number_color: Color = Color(0.5, 0.5, 0.5, 1.0)
-@export var caret_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+@export var background_color: Color
+@export var text_color: Color
+@export var selection_color: Color
+@export var current_line_color: Color
+@export var line_number_color: Color
+@export var caret_color: Color
 
 # UI Colors
 @export_group("UI Colors")
-@export var button_color: Color = Color(0.2, 0.2, 0.2, 1.0)
-@export var button_hover_color: Color = Color(0.3, 0.3, 0.3, 1.0)
-@export var button_pressed_color: Color = Color(0.4, 0.4, 0.4, 1.0)
-@export var menu_background_color: Color = Color(0.15, 0.15, 0.15, 1.0)
-@export var status_bar_color: Color = Color(0.12, 0.12, 0.12, 1.0)
+@export var button_color: Color
+@export var button_hover_color: Color
+@export var button_pressed_color: Color
+@export var menu_background_color: Color
+@export var status_bar_color: Color
 
 # Syntax highlighting colors
 @export_group("Syntax Colors")
-@export var keyword_color: Color = Color(0.4, 0.8, 1.0, 1.0)
-@export var string_color: Color = Color(1.0, 0.8, 0.4, 1.0)
-@export var comment_color: Color = Color(0.5, 0.5, 0.5, 1.0)
-@export var number_color: Color = Color(0.8, 1.0, 0.6, 1.0)
-@export var function_color: Color = Color(1.0, 0.6, 0.8, 1.0)
-@export var variable_color: Color = Color(0.8, 0.8, 1.0, 1.0)
+@export var keyword_color: Color
+@export var string_color: Color
+@export var comment_color: Color
+@export var number_color: Color
+@export var function_color: Color
+@export var variable_color: Color
 
 # Typography
 @export_group("Typography")
-@export var editor_font_size: int = 14
-@export var ui_font_size: int = 12
-@export var line_height_multiplier: float = 1.2
+@export var editor_font: FontFile
+@export var ui_font: FontFile
+@export var editor_font_size: int
+@export var ui_font_size: int
+@export var line_height_multiplier: float
+@export var font_bold_enabled: bool
+@export var font_italic_enabled: bool
 
 # Effects
 @export_group("Effects")
-@export var enable_text_shadows: bool = false
-@export var text_shadow_color: Color = Color(0.0, 0.0, 0.0, 0.3)
-@export var text_shadow_offset: Vector2 = Vector2(1, 1)
-@export var enable_gradient_backgrounds: bool = false
-@export var gradient_start_color: Color = Color(0.1, 0.1, 0.1, 1.0)
-@export var gradient_end_color: Color = Color(0.05, 0.05, 0.05, 1.0)
-@export var enable_outline_effects: bool = false
-@export var outline_color: Color = Color(1.0, 1.0, 1.0, 0.8)
-@export var outline_width: float = 1.0
-@export var enable_pulse_effects: bool = true
-@export var enable_glow_effects: bool = true
+@export var enable_text_shadows: bool
+@export var text_shadow_color: Color
+@export var text_shadow_offset: Vector2
+@export var enable_gradient_backgrounds: bool
+@export var gradient_start_color: Color
+@export var gradient_end_color: Color
+@export var enable_outline_effects: bool
+@export var outline_color: Color
+@export var outline_width: float
+@export var enable_pulse_effects: bool
+@export var enable_glow_effects: bool
+@export var enable_rainbow_effects: bool
+@export var enable_bounce_effects: bool
+@export var button_animation_speed: float
+@export var button_scale_effect: float
+
+# Called after resource loading to ensure values are properly initialized
+func _validate_theme_data():
+	print("Theme validation for: ", theme_name)
+	print("  - editor_font before validation: ", editor_font)
+	print("  - ui_font before validation: ", ui_font)
+	
+	# Validate editor_font - copy from ui_font if null
+	if not editor_font and ui_font:
+		print("editor_font is null, copying from ui_font")
+		editor_font = ui_font
+	
+	# Validate ui_font - use fallback if needed  
+	if not ui_font:
+		print("ui_font is null, attempting to load National2Condensed-Medium")
+		ui_font = load("res://fonts/National2Condensed-Medium.otf")
+	
+	# Ensure font sizes are reasonable
+	if editor_font_size <= 0:
+		editor_font_size = 14
+	if ui_font_size <= 0:
+		ui_font_size = 12
+	
+	print("  - editor_font after validation: ", editor_font)
+	print("  - ui_font after validation: ", ui_font)
 
 func apply_to_text_edit(text_edit: TextEdit) -> void:
 	if not text_edit:
 		return
 	
-	# Create a theme for the text edit
-	var theme = Theme.new()
+	print("Applying theme '", theme_name, "' to TextEdit")
 	
-	# Apply colors to text edit
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = background_color
-	theme.set_stylebox("normal", "TextEdit", style_box)
+	# Apply theme colors
+	text_edit.add_theme_color_override("background_color", background_color)
+	text_edit.add_theme_color_override("font_color", text_color)
+	text_edit.add_theme_color_override("font_selected_color", text_color)
+	text_edit.add_theme_color_override("selection_color", selection_color)
+	text_edit.add_theme_color_override("current_line_color", current_line_color)
+	text_edit.add_theme_color_override("caret_color", caret_color)
 	
-	var style_box_focus = StyleBoxFlat.new()
-	style_box_focus.bg_color = background_color
-	style_box_focus.border_color = selection_color
-	style_box_focus.border_width_left = 2
-	style_box_focus.border_width_right = 2
-	style_box_focus.border_width_top = 2
-	style_box_focus.border_width_bottom = 2
-	theme.set_stylebox("focus", "TextEdit", style_box_focus)
+	# Apply fonts
+	if editor_font:
+		text_edit.add_theme_font_override("font", editor_font)
+	text_edit.add_theme_font_size_override("font_size", editor_font_size)
 	
-	# Apply theme
-	text_edit.theme = theme
-	
-	# Apply additional properties if available
-	if text_edit.has_method("add_theme_color_override"):
-		text_edit.add_theme_color_override("font_color", text_color)
-		text_edit.add_theme_color_override("font_selected_color", text_color)
-		text_edit.add_theme_color_override("selection_color", selection_color)
-		text_edit.add_theme_color_override("current_line_color", current_line_color)
-		text_edit.add_theme_color_override("caret_color", caret_color)
+	print("Applied theme colors: bg=", background_color, " text=", text_color)
 
 func apply_to_button(button: Button) -> void:
 	if not button:
 		return
 	
-	var theme = Theme.new()
+	print("Applying theme '", theme_name, "' to Button: ", button.name)
 	
-	# Normal state
+	# SAFETY: Clear any existing material that might interfere with text rendering
+	if button.material:
+		print("WARNING: Button ", button.name, " had existing material: ", button.material, " - clearing it")
+		button.material = null
+	
+	# Calculate appropriate text color based on button background
+	var font_color = _get_appropriate_button_font_color()
+	
+	# Create a complete theme for the button instead of using overrides
+	var button_theme = Theme.new()
+	
+	# Create StyleBoxFlat for button backgrounds
 	var style_normal = StyleBoxFlat.new()
 	style_normal.bg_color = button_color
 	style_normal.corner_radius_bottom_left = 4
 	style_normal.corner_radius_bottom_right = 4
 	style_normal.corner_radius_top_left = 4
 	style_normal.corner_radius_top_right = 4
-	theme.set_stylebox("normal", "Button", style_normal)
+	button_theme.set_stylebox("normal", "Button", style_normal)
 	
-	# Hover state
 	var style_hover = StyleBoxFlat.new()
 	style_hover.bg_color = button_hover_color
 	style_hover.corner_radius_bottom_left = 4
 	style_hover.corner_radius_bottom_right = 4
 	style_hover.corner_radius_top_left = 4
 	style_hover.corner_radius_top_right = 4
-	theme.set_stylebox("hover", "Button", style_hover)
+	button_theme.set_stylebox("hover", "Button", style_hover)
 	
-	# Pressed state
 	var style_pressed = StyleBoxFlat.new()
 	style_pressed.bg_color = button_pressed_color
 	style_pressed.corner_radius_bottom_left = 4
 	style_pressed.corner_radius_bottom_right = 4
 	style_pressed.corner_radius_top_left = 4
 	style_pressed.corner_radius_top_right = 4
-	theme.set_stylebox("pressed", "Button", style_pressed)
+	button_theme.set_stylebox("pressed", "Button", style_pressed)
 	
-	button.theme = theme
+	# Set font colors in the theme
+	button_theme.set_color("font_color", "Button", font_color)
+	button_theme.set_color("font_hover_color", "Button", font_color.lightened(0.2))
+	button_theme.set_color("font_pressed_color", "Button", font_color.darkened(0.2))
+	
+	# Set fonts in the theme
+	if ui_font:
+		button_theme.set_font("font", "Button", ui_font)
+	button_theme.set_font_size("font_size", "Button", ui_font_size)
+	
+	# Apply the complete theme to the button
+	button.theme = button_theme
+	
+	print("Applied button theme: bg=", button_color, " font_color=", font_color)
+
+# Helper function to determine appropriate font color based on background brightness
+func _get_appropriate_font_color() -> Color:
+	# Calculate background brightness (luminance)
+	var luminance = 0.299 * background_color.r + 0.587 * background_color.g + 0.114 * background_color.b
+	
+	# If background is light (luminance > 0.5), use dark text
+	if luminance > 0.5:
+		return Color.BLACK
+	else:
+		return Color.WHITE
+
+func _get_appropriate_menu_font_color() -> Color:
+	# Calculate menu background brightness
+	var luminance = 0.299 * menu_background_color.r + 0.587 * menu_background_color.g + 0.114 * menu_background_color.b
+	
+	# If background is light (luminance > 0.5), use dark text
+	if luminance > 0.5:
+		return Color.BLACK
+	else:
+		return Color.WHITE
+
+func _get_appropriate_button_font_color() -> Color:
+	# Calculate button background brightness
+	var luminance = 0.299 * button_color.r + 0.587 * button_color.g + 0.114 * button_color.b
+	
+	# If button background is light, use dark text
+	if luminance > 0.4:  # Slightly lower threshold for buttons
+		return Color.BLACK
+	else:
+		return Color.WHITE
+
+func apply_to_menu_bar(menu_bar: MenuBar) -> void:
+	if not menu_bar:
+		return
+	
+	print("Applying theme '", theme_name, "' to MenuBar")
+	
+	var theme = Theme.new()
+	
+	# Apply fonts if available
+	if ui_font:
+		theme.set_font("font", "MenuBar", ui_font)
+		theme.set_font_size("font_size", "MenuBar", ui_font_size)
+		print("Applied National2 font to MenuBar")
+	
+	# Style for menu bar
+	var style_normal = StyleBoxFlat.new()
+	style_normal.bg_color = menu_background_color
+	style_normal.corner_radius_bottom_left = 0
+	style_normal.corner_radius_bottom_right = 0
+	style_normal.corner_radius_top_left = 4
+	style_normal.corner_radius_top_right = 4
+	theme.set_stylebox("normal", "MenuBar", style_normal)
+	
+	var style_hover = StyleBoxFlat.new()
+	style_hover.bg_color = button_hover_color
+	style_hover.corner_radius_bottom_left = 4
+	style_hover.corner_radius_bottom_right = 4
+	style_hover.corner_radius_top_left = 4
+	style_hover.corner_radius_top_right = 4
+	theme.set_stylebox("hover", "MenuBar", style_hover)
+	
+	var style_pressed = StyleBoxFlat.new()
+	style_pressed.bg_color = button_pressed_color
+	style_pressed.corner_radius_bottom_left = 4
+	style_pressed.corner_radius_bottom_right = 4
+	style_pressed.corner_radius_top_left = 4
+	style_pressed.corner_radius_top_right = 4
+	theme.set_stylebox("pressed", "MenuBar", style_pressed)
+	
+	# Font colors - Use smart color based on background brightness
+	var menu_font_color = _get_appropriate_menu_font_color()
+	theme.set_color("font_color", "MenuBar", menu_font_color)
+	theme.set_color("font_hover_color", "MenuBar", menu_font_color.lightened(0.2))
+	theme.set_color("font_pressed_color", "MenuBar", menu_font_color.darkened(0.2))
+	
+	print("Applied MenuBar font color: ", menu_font_color)
+	menu_bar.theme = theme
+
+func apply_to_popup_menu(popup_menu: PopupMenu) -> void:
+	if not popup_menu:
+		return
+	
+	print("Applying theme '", theme_name, "' to PopupMenu")
+	
+	var theme = Theme.new()
+	
+	# Apply fonts if available
+	if ui_font:
+		theme.set_font("font", "PopupMenu", ui_font)
+		theme.set_font_size("font_size", "PopupMenu", ui_font_size)
+		print("Applied National2 font to PopupMenu")
+	
+	# Background panel
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = menu_background_color
+	panel_style.corner_radius_bottom_left = 8
+	panel_style.corner_radius_bottom_right = 8
+	panel_style.corner_radius_top_left = 8
+	panel_style.corner_radius_top_right = 8
+	if enable_outline_effects:
+		panel_style.border_color = outline_color
+		panel_style.border_width_left = int(outline_width)
+		panel_style.border_width_right = int(outline_width)
+		panel_style.border_width_top = int(outline_width)
+		panel_style.border_width_bottom = int(outline_width)
+	if enable_text_shadows:
+		panel_style.shadow_color = text_shadow_color
+		panel_style.shadow_offset = text_shadow_offset
+		panel_style.shadow_size = 4
+	theme.set_stylebox("panel", "PopupMenu", panel_style)
+	
+	# Hover state for menu items
+	var hover_style = StyleBoxFlat.new()
+	hover_style.bg_color = button_hover_color
+	hover_style.corner_radius_bottom_left = 4
+	hover_style.corner_radius_bottom_right = 4
+	hover_style.corner_radius_top_left = 4
+	hover_style.corner_radius_top_right = 4
+	theme.set_stylebox("hover", "PopupMenu", hover_style)
+	
+	# Font colors - Use smart color based on background brightness
+	var popup_font_color = _get_appropriate_menu_font_color()
+	theme.set_color("font_color", "PopupMenu", popup_font_color)
+	theme.set_color("font_hover_color", "PopupMenu", popup_font_color.lightened(0.2))
+	theme.set_color("font_accelerator_color", "PopupMenu", Color(popup_font_color.r, popup_font_color.g, popup_font_color.b, 0.7))
+	
+	print("Applied PopupMenu font color: ", popup_font_color)
+	popup_menu.theme = theme
+
+func apply_to_label(label: Label) -> void:
+	if not label:
+		return
+	
+	print("Applying theme '", theme_name, "' to Label: ", label.name)
+	
+	# Apply fonts and colors with proper contrast
+	if ui_font:
+		label.add_theme_font_override("font", ui_font)
+	label.add_theme_font_size_override("font_size", ui_font_size)
+	
+	# Use appropriate text color based on background
+	label.add_theme_color_override("font_color", text_color)
+	
+	print("Applied Label font color: ", text_color)
+
+func apply_to_container(container: Control) -> void:
+	if not container:
+		return
+	
+	print("Applying theme '", theme_name, "' to Container: ", container.name)
+	
+	# Create a background StyleBox for containers like Toolbar
+	var style_background = StyleBoxFlat.new()
+	style_background.bg_color = status_bar_color  # Use status bar color for toolbars
+	style_background.corner_radius_bottom_left = 0
+	style_background.corner_radius_bottom_right = 0
+	style_background.corner_radius_top_left = 0
+	style_background.corner_radius_top_right = 0
+	
+	# Apply the background style
+	container.add_theme_stylebox_override("panel", style_background)
+	
+	print("Applied Container background: ", status_bar_color)
 
 func get_syntax_highlighter() -> CodeHighlighter:
 	var highlighter = CodeHighlighter.new()

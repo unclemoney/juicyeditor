@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3 uid="uid://cj0cg6k6tmn3y"]
+
+[ext_resource type="Script" uid="uid://dsqoh2wplfpv8" path="res://scripts/emergency_test.gd" id="1_emergency"]
+
+[node name="EmergencyTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_emergency")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = -50.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TestLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "EMERGENCY TEST - THIS SHOULD BE VISIBLE"
+horizontal_alignment = 1
+
+[node name="TestButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "TEST BUTTON - CLICK ME"
+
+[node name="TestTextEdit" type="TextEdit" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Emergency test text - type here"
+
+[node name="TestRichTextLabel" type="RichTextLabel" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "[color=red]RED TEXT TEST[/color]
+[color=blue]BLUE TEXT TEST[/color]
+[color=green]GREEN TEXT TEST[/color]"

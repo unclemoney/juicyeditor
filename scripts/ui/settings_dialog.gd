@@ -25,6 +25,7 @@ var audio_manager: Node
 var visual_effects_manager: Node
 var animation_manager: Node
 var typing_effects_manager: Node
+var theme_manager: Node
 
 func _ready() -> void:
 	title = "Juicy Editor Settings"
@@ -43,6 +44,14 @@ func _initialize_node_references() -> void:
 	animation_manager = get_node("/root/AnimationManager") if has_node("/root/AnimationManager") else null
 	typing_effects_manager = get_node("/root/TypingEffectsManager") if has_node("/root/TypingEffectsManager") else null
 	
+	# Get theme manager from main scene (since it's not a global autoload)
+	var main_scene = get_tree().current_scene
+	if main_scene and main_scene.has_method("get_child"):
+		for child in main_scene.get_children():
+			if child.name == "ThemeManager":
+				theme_manager = child
+				break
+	
 	# Initialize UI references
 	tab_container = get_node_or_null(tab_container_path) if tab_container_path != NodePath() else null
 	apply_button = get_node_or_null(apply_button_path) if apply_button_path != NodePath() else null
@@ -55,7 +64,10 @@ func _create_settings_tabs() -> void:
 		# Create tab container if not referenced
 		tab_container = TabContainer.new()
 		# Use the dialog's content area instead of adding directly
-		var content_area = get_child(0)  # AcceptDialog's VBoxContainer
+		var content_area = null
+		if get_child_count() > 0:
+			content_area = get_child(0)  # AcceptDialog's VBoxContainer
+		
 		if content_area:
 			content_area.add_child(tab_container)
 		else:
@@ -107,10 +119,12 @@ func _create_text_editor_tab() -> void:
 	theme_group.add_child(theme_label)
 	
 	var theme_option = OptionButton.new()
+	theme_option.add_item("Super Juicy")
 	theme_option.add_item("Dark")
 	theme_option.add_item("Light") 
 	theme_option.add_item("Juicy")
 	theme_option.name = "theme"
+	theme_option.item_selected.connect(_on_theme_changed)
 	theme_group.add_child(theme_option)
 	text_settings["theme"] = theme_option
 	
@@ -424,9 +438,10 @@ func _load_current_settings() -> void:
 	if "theme" in game_controller.editor_settings and text_settings.has("theme"):
 		var theme_name = game_controller.editor_settings.theme
 		match theme_name:
-			"dark": text_settings["theme"].selected = 0
-			"light": text_settings["theme"].selected = 1
-			"juicy": text_settings["theme"].selected = 2
+			"Super Juicy": text_settings["theme"].selected = 0
+			"Dark": text_settings["theme"].selected = 1
+			"Light": text_settings["theme"].selected = 2
+			"Juicy": text_settings["theme"].selected = 3
 	
 	if "line_numbers" in game_controller.editor_settings and text_settings.has("line_numbers"):
 		text_settings["line_numbers"].button_pressed = game_controller.editor_settings.line_numbers
@@ -580,6 +595,17 @@ func _collect_settings() -> Dictionary:
 	return settings
 
 func _apply_settings_to_managers(settings: Dictionary) -> void:
+	# Apply theme changes
+	if "theme" in settings and theme_manager:
+		var theme_names = ["Super Juicy", "Dark", "Light", "Juicy"]
+		var theme_index = settings.theme
+		if theme_index >= 0 and theme_index < theme_names.size():
+			var theme_name = theme_names[theme_index]
+			var new_theme = theme_manager.get_theme_by_name(theme_name)
+			if new_theme:
+				theme_manager.set_theme(new_theme)
+				print("Theme changed to: ", theme_name)
+	
 	# Apply audio settings
 	if audio_manager:
 		if "master_volume" in settings:
@@ -622,7 +648,7 @@ func _reset_to_defaults() -> void:
 	if text_settings.has("font_size"):
 		text_settings["font_size"].value = 16
 	if text_settings.has("theme"):
-		text_settings["theme"].selected = 0  # Dark theme
+		text_settings["theme"].selected = 0  # Super Juicy theme (default)
 	if text_settings.has("line_numbers"):
 		text_settings["line_numbers"].button_pressed = true
 	if text_settings.has("word_wrap"):
@@ -678,6 +704,19 @@ func _on_intensity_changed(value: float, label: Label) -> void:
 
 func _on_speed_changed(value: float, label: Label) -> void:
 	label.text = str(int(value * 100)) + "%"
+
+func _on_theme_changed(index: int) -> void:
+	"""Handle real-time theme preview when user selects a different theme"""
+	if not theme_manager:
+		return
+	
+	var theme_names = ["Super Juicy", "Dark", "Light", "Juicy"]
+	if index >= 0 and index < theme_names.size():
+		var theme_name = theme_names[index]
+		var new_theme = theme_manager.get_theme_by_name(theme_name)
+		if new_theme:
+			theme_manager.set_theme(new_theme)
+			print("Theme preview changed to: ", theme_name)
 
 # Real-time preview functions for typing effects
 func _on_typing_effect_setting_changed(_enabled: bool) -> void:

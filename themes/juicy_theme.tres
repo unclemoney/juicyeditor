@@ -1,13 +1,15 @@
-[gd_resource type="Resource" script_class="JuicyTheme" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="JuicyTheme" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/components/juicy_theme.gd" id="1_vh8j6"]
+[ext_resource type="FontFile" uid="uid://k5o2wjxmnh5b" path="res://fonts/National2Condensed-Medium.otf" id="2_font_medium"]
+[ext_resource type="FontFile" uid="uid://cjpbg6bx7gqe4" path="res://fonts/National2Condensed-Regular.otf" id="3_font_regular"]
 
 [resource]
 script = ExtResource("1_vh8j6")
 theme_name = "Juicy"
-description = "Full-featured theme with all visual effects enabled"
+description = "Full-featured theme with all visual effects enabled and National2Condensed fonts"
 background_color = Color(0.08, 0.08, 0.12, 1)
-text_color = Color(0.95, 0.95, 0.98, 1)
+text_color = Color(0.95, 0.95, 1.0, 1)
 selection_color = Color(0.4, 0.6, 1, 0.6)
 current_line_color = Color(0.12, 0.12, 0.18, 1)
 line_number_color = Color(0.6, 0.6, 0.7, 1)
@@ -23,13 +25,15 @@ comment_color = Color(0.6, 0.6, 0.6, 1)
 number_color = Color(0.9, 1, 0.7, 1)
 function_color = Color(1, 0.7, 0.9, 1)
 variable_color = Color(0.9, 0.9, 1, 1)
+ui_font = ExtResource("2_font_medium")
+editor_font = ExtResource("3_font_regular")
 editor_font_size = 14
 ui_font_size = 12
 line_height_multiplier = 1.2
 enable_text_shadows = true
 text_shadow_color = Color(0, 0, 0, 0.5)
 text_shadow_offset = Vector2(2, 2)
-enable_gradient_backgrounds = true
+enable_gradient_backgrounds = false
 gradient_start_color = Color(0.08, 0.08, 0.12, 1)
 gradient_end_color = Color(0.04, 0.04, 0.08, 1)
 enable_outline_effects = true

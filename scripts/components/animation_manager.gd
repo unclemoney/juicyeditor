@@ -225,15 +225,14 @@ func _animate_text_edit_cursor(text_edit: TextEdit) -> void:
 	cursor_tween.set_ease(Tween.EASE_IN_OUT)
 	cursor_tween.set_trans(Tween.TRANS_SINE)
 	
-	# Get the current caret color
+	# Get the current caret color - don't create new theme if none exists
 	var theme_instance = text_edit.get_theme()
-	if not theme_instance:
-		theme_instance = Theme.new()
-		text_edit.set_theme(theme_instance)
+	var original_color = Color.WHITE  # Default fallback
 	
-	var original_color = theme_instance.get_color("caret_color", "TextEdit")
-	if original_color == Color.TRANSPARENT:
-		original_color = Color.WHITE  # Default fallback
+	if theme_instance:
+		var caret_color = theme_instance.get_color("caret_color", "TextEdit")
+		if caret_color != Color.TRANSPARENT:
+			original_color = caret_color
 	
 	var bright_color = Color(
 		min(original_color.r + 0.3, 1.0),

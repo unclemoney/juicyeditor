@@ -32,6 +32,7 @@ var game_controller: Node
 var audio_manager: Node
 var visual_effects_manager: Node
 var animation_manager: Node
+var theme_manager: Node
 
 # Settings dialog
 var settings_dialog: SettingsDialogScene
@@ -59,6 +60,20 @@ func _ready() -> void:
 	if animation_manager:
 		print("Animation system initialized: ", animation_manager.get_animation_info())
 	
+	# Initialize theme manager
+	var ThemeManagerScript = preload("res://scripts/components/theme_manager.gd")
+	theme_manager = ThemeManagerScript.new()
+	theme_manager.name = "ThemeManager"
+	add_child(theme_manager)
+	
+	# Load super juicy theme as default - use theme manager's validated themes
+	var super_juicy_theme = theme_manager.get_theme_by_name("Super Juicy")
+	if super_juicy_theme:
+		theme_manager.set_theme(super_juicy_theme)
+		print("Super Juicy theme loaded!")
+	else:
+		print("ERROR: Failed to find super juicy theme in theme manager!")
+	
 	# Create game controller
 	var GameControllerScript = preload("res://scripts/controllers/game_controller.gd")
 	game_controller = GameControllerScript.new()
@@ -75,18 +90,45 @@ func _ready() -> void:
 	
 	_connect_signals()
 	_setup_menus()
+	_setup_theme_ui()
+	_clean_up_scene_issues()
 	_update_ui()
 	_animate_ui_entrance()
 	
 	print("Juicy Editor ready!")
 
-func _animate_ui_entrance() -> void:
+func _animate_ui_entrance():
+	pass
+
+func _clean_up_scene_issues():
+	print("Cleaning up scene issues that could interfere with themes")
+	
+	# Remove the problematic BackgroundPanel that was covering the text editor
+	var bg_panel = get_node_or_null("VBoxContainer/MainArea/TextEditorContainer/BackgroundPanel")
+	if bg_panel:
+		bg_panel.queue_free()
+		print("Removed problematic BackgroundPanel")
+	
+	# Remove shader materials that might interfere with theming
+	var text_edit_node = get_node_or_null("VBoxContainer/MainArea/TextEditorContainer/TextEditor")
+	if text_edit_node and text_edit_node.material:
+		text_edit_node.material = null
+		print("Removed TextEditor shader material")
+	
+	print("Scene cleanup complete")
+
+func _find_all_buttons(node: Node, buttons: Array):
+	if node is Button:
+		buttons.append(node)
+	
+	for child in node.get_children():
+		_find_all_buttons(child, buttons)
 	# Animate UI elements on startup
 	if animation_manager:
 		# Animate toolbar buttons
-		var buttons = [new_button, open_button, save_button, undo_button, redo_button]
-		for i in range(buttons.size()):
-			var button = buttons[i]
+		var anim_buttons = [new_button, open_button, save_button, undo_button, redo_button]
+		for i in range(anim_buttons.size()):
+			var button = anim_buttons[i]
 			if button and animation_manager.has_method("animate_slide_in"):
 				# Delay each button slightly for a cascade effect
 				await get_tree().create_timer(i * 0.1).timeout
@@ -147,6 +189,7 @@ func _setup_menus() -> void:
 	var settings_menu = PopupMenu.new()
 	settings_menu.name = "Settings"
 	settings_menu.add_item("Preferences...", 0)
+	settings_menu.add_item("Switch Theme...", 1)
 	settings_menu.id_pressed.connect(_on_settings_menu_selected)
 	
 	# Setup menu bar (menus already exist in scene, just set titles)
@@ -191,6 +234,35 @@ func _setup_file_dialogs() -> void:
 	save_file_dialog.add_filter("*.css", "CSS Files")
 	save_file_dialog.add_filter("*.json", "JSON Files")
 	save_file_dialog.add_filter("*", "All Files")
+
+func _setup_theme_ui() -> void:
+	if not theme_manager:
+		return
+	
+	# Register all UI elements with the theme manager
+	theme_manager.register_ui_element("text_editor", text_editor)
+	theme_manager.register_ui_element("menu_bar", menu_bar)
+	theme_manager.register_ui_element("file_menu", file_menu)
+	theme_manager.register_ui_element("edit_menu", edit_menu)
+	
+	# Register toolbar container and buttons
+	theme_manager.register_ui_element("toolbar", toolbar_buttons)
+	theme_manager.register_ui_element("new_button", new_button)
+	theme_manager.register_ui_element("open_button", open_button)
+	theme_manager.register_ui_element("save_button", save_button)
+	theme_manager.register_ui_element("undo_button", undo_button)
+	theme_manager.register_ui_element("redo_button", redo_button)
+	
+	# Register status bar container and labels
+	theme_manager.register_ui_element("status_bar", get_node("VBoxContainer/StatusBar"))
+	theme_manager.register_ui_element("line_label", line_label)
+	theme_manager.register_ui_element("column_label", column_label)
+	theme_manager.register_ui_element("filename_label", filename_label)
+	
+	# Apply the current theme to all registered elements
+	theme_manager.apply_current_theme()
+	
+	print("Theme UI setup complete!")
 
 func _connect_button_audio_feedback() -> void:
 	# Connect all buttons for audio and visual feedback
@@ -377,6 +449,8 @@ func _on_settings_menu_selected(id: int) -> void:
 	match id:
 		0:  # Preferences
 			_open_settings_dialog()
+		1:  # Switch Theme
+			_open_theme_switcher()
 
 func _on_edit_menu_selected(id: int) -> void:
 	match id:
@@ -435,6 +509,35 @@ func _open_goto_line_dialog() -> void:
 		goto_line_dialog.goto_line_requested.connect(_on_goto_line_requested)
 	
 	goto_line_dialog.popup_centered_for_editor(text_editor)
+
+func _open_theme_switcher() -> void:
+	# Create and show theme switcher dialog
+	var ThemeSwitcherScene = preload("res://scenes/ui/theme_switcher.tscn")
+	var theme_switcher = ThemeSwitcherScene.instantiate()
+	
+	# Set the theme manager reference
+	theme_switcher.theme_manager = theme_manager
+	
+	# Create a dialog to contain the theme switcher
+	var dialog = AcceptDialog.new()
+	dialog.title = "Theme Selection"
+	dialog.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_MAIN_WINDOW_SCREEN
+	dialog.size = Vector2i(400, 300)
+	dialog.add_child(theme_switcher)
+	
+	# Connect theme selection signal
+	theme_switcher.theme_selected.connect(_on_theme_selected)
+	
+	# Show the dialog
+	add_child(dialog)
+	dialog.popup_centered()
+	
+	# Clean up when dialog closes
+	dialog.close_requested.connect(func(): dialog.queue_free())
+
+func _on_theme_selected(selected_theme: JuicyTheme) -> void:
+	print("Theme selected: ", selected_theme.theme_name)
+	# Theme manager will automatically apply the theme
 
 func _toggle_word_wrap() -> void:
 	if text_editor:
@@ -544,51 +647,42 @@ func _on_goto_line_requested(line_number: int) -> void:
 
 # Zoom functionality
 func _zoom_in() -> void:
-	if text_editor:
-		var theme_resource = text_editor.get_theme()
-		if not theme_resource:
-			theme_resource = Theme.new()
-			text_editor.set_theme(theme_resource)
+	if text_editor and theme_manager and theme_manager.current_theme:
+		# Update the theme's font size and reapply
+		var current_theme = theme_manager.current_theme
+		var new_size = min(current_theme.editor_font_size + 2, 72)  # Max size 72
+		current_theme.editor_font_size = new_size
 		
-		var current_size = theme_resource.get_font_size("font_size", "TextEdit")
-		if current_size == 0:
-			current_size = 16  # Default size
-		
-		var new_size = min(current_size + 2, 72)  # Max size 72
-		theme_resource.set_font_size("font_size", "TextEdit", new_size)
+		# Reapply the theme to maintain all styling
+		theme_manager.apply_theme_to_element(text_editor)
 		
 		if game_controller:
 			game_controller.set_setting("font_size", new_size)
 
 func _zoom_out() -> void:
-	if text_editor:
-		var theme_resource = text_editor.get_theme()
-		if not theme_resource:
-			theme_resource = Theme.new()
-			text_editor.set_theme(theme_resource)
+	if text_editor and theme_manager and theme_manager.current_theme:
+		# Update the theme's font size and reapply
+		var current_theme = theme_manager.current_theme
+		var new_size = max(current_theme.editor_font_size - 2, 8)  # Min size 8
+		current_theme.editor_font_size = new_size
 		
-		var current_size = theme_resource.get_font_size("font_size", "TextEdit")
-		if current_size == 0:
-			current_size = 16  # Default size
-		
-		var new_size = max(current_size - 2, 8)  # Min size 8
-		theme_resource.set_font_size("font_size", "TextEdit", new_size)
+		# Reapply the theme to maintain all styling
+		theme_manager.apply_theme_to_element(text_editor)
 		
 		if game_controller:
 			game_controller.set_setting("font_size", new_size)
 
 func _reset_zoom() -> void:
-	if text_editor:
-		var theme_resource = text_editor.get_theme()
-		if not theme_resource:
-			theme_resource = Theme.new()
-			text_editor.set_theme(theme_resource)
+	if text_editor and theme_manager and theme_manager.current_theme:
+		# Reset the theme's font size and reapply
+		var current_theme = theme_manager.current_theme
+		current_theme.editor_font_size = 16  # Default size
 		
-		var default_size = 16
-		theme_resource.set_font_size("font_size", "TextEdit", default_size)
+		# Reapply the theme to maintain all styling
+		theme_manager.apply_theme_to_element(text_editor)
 		
 		if game_controller:
-			game_controller.set_setting("font_size", default_size)
+			game_controller.set_setting("font_size", 16)
 
 # Text statistics
 func get_text_statistics() -> Dictionary:
@@ -681,5 +775,27 @@ func _on_effects_reset_settings() -> void:
 		game_controller.set_setting("rich_gradient_backgrounds", false)
 		game_controller.set_setting("rich_effects", true)
 	print("Effects settings reset to defaults")
+
+# Theme testing function for debugging
+func test_cycle_themes() -> void:
+	"""Cycle through all available themes for testing purposes"""
+	if not theme_manager:
+		print("No theme manager available")
+		return
+	
+	var theme_names = ["Super Juicy", "Dark", "Light", "Juicy"]
+	for theme_name in theme_names:
+		var juicy_theme = theme_manager.get_theme_by_name(theme_name)
+		if juicy_theme:
+			theme_manager.set_theme(juicy_theme)
+			print("Switched to theme: ", theme_name)
+			await get_tree().create_timer(2.0).timeout  # Wait 2 seconds between theme changes
+
+# Input handler for theme testing
+func _unhandled_input(event: InputEvent) -> void:
+	# Press F1 to cycle through themes for testing
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_F1:
+			test_cycle_themes()
 
 # End of MainScene class
