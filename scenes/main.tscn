@@ -1,16 +1,25 @@
-[gd_scene load_steps=8 format=3 uid="uid://bt74kgu67tnxg"]
+[gd_scene load_steps=10 format=3 uid="uid://bt74kgu67tnxg"]
 
 [ext_resource type="Script" uid="uid://dhfhsla164f80" path="res://scripts/ui/main_scene.gd" id="1_51l7b"]
 [ext_resource type="Script" uid="uid://cs73sg5vom7ql" path="res://scripts/components/juicy_text_edit.gd" id="2_h3n2m"]
 [ext_resource type="Shader" uid="uid://cvcqfj50imfxw" path="res://shaders/gradient.gdshader" id="2_jyhfs"]
+[ext_resource type="Script" uid="uid://c70qaxxo05ucq" path="res://scripts/components/line_numbers.gd" id="3_line_numbers"]
 [ext_resource type="Script" uid="uid://bxg7hdo3st8ji" path="res://scripts/components/visual_effects_manager.gd" id="4_tbgi4"]
+[ext_resource type="Script" uid="uid://bsm3t74ppu58m" path="res://scripts/components/file_tab_container.gd" id="6_tab_container"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tbgi4"]
 shader = ExtResource("2_jyhfs")
-shader_parameter/start_color = Color(0.91, 0.91, 0.1, 1)
-shader_parameter/end_color = Color(0.05, 0.05, 0.05, 1)
-shader_parameter/gradient_direction_x = 0.0
-shader_parameter/gradient_direction_y = 1.0
+shader_parameter/spin_rotation_speed = 2.0
+shader_parameter/move_speed = 7.0
+shader_parameter/offset = Vector2(0, 0)
+shader_parameter/colour_1 = Color(0.871, 0.267, 0.231, 1)
+shader_parameter/colour_2 = Color(0, 0.42, 0.706, 1)
+shader_parameter/colour_3 = Color(0.086, 0.137, 0.145, 1)
+shader_parameter/contrast = 3.5
+shader_parameter/lighting = 0.4
+shader_parameter/spin_amount = 0.25
+shader_parameter/pixel_filter = 740.0
+shader_parameter/is_rotating = false
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_o6xl0"]
 
@@ -39,10 +48,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MenuBar" type="MenuBar" parent="VBoxContainer"]
+[node name="TopBar" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
-[node name="File" type="PopupMenu" parent="VBoxContainer/MenuBar"]
+[node name="MenuBar" type="MenuBar" parent="VBoxContainer/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="File" type="PopupMenu" parent="VBoxContainer/TopBar/MenuBar"]
 item_count = 4
 item_0/text = "New"
 item_0/id = 0
@@ -53,7 +66,7 @@ item_2/id = 2
 item_3/text = "Save As"
 item_3/id = 3
 
-[node name="Edit" type="PopupMenu" parent="VBoxContainer/MenuBar"]
+[node name="Edit" type="PopupMenu" parent="VBoxContainer/TopBar/MenuBar"]
 item_count = 4
 item_0/text = "Undo"
 item_0/id = 0
@@ -64,7 +77,7 @@ item_2/id = 2
 item_3/text = "Replace"
 item_3/id = 3
 
-[node name="Effects" type="PopupMenu" parent="VBoxContainer/MenuBar"]
+[node name="Effects" type="PopupMenu" parent="VBoxContainer/TopBar/MenuBar"]
 item_count = 5
 item_0/text = "Visual Effects Settings..."
 item_0/id = 0
@@ -81,31 +94,37 @@ item_4/text = "Enable Background Gradient"
 item_4/checkable = 1
 item_4/id = 4
 
-[node name="Toolbar" type="HBoxContainer" parent="VBoxContainer"]
+[node name="Toolbar" type="HBoxContainer" parent="VBoxContainer/TopBar"]
 layout_mode = 2
 
-[node name="NewButton" type="Button" parent="VBoxContainer/Toolbar"]
+[node name="NewButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
 layout_mode = 2
 text = "New"
 
-[node name="OpenButton" type="Button" parent="VBoxContainer/Toolbar"]
+[node name="OpenButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
 layout_mode = 2
 text = "Open"
 
-[node name="SaveButton" type="Button" parent="VBoxContainer/Toolbar"]
+[node name="SaveButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
 layout_mode = 2
 text = "Save"
 
-[node name="VSeparator" type="VSeparator" parent="VBoxContainer/Toolbar"]
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/TopBar/Toolbar"]
 layout_mode = 2
 
-[node name="UndoButton" type="Button" parent="VBoxContainer/Toolbar"]
+[node name="UndoButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
 layout_mode = 2
 text = "Undo"
 
-[node name="RedoButton" type="Button" parent="VBoxContainer/Toolbar"]
+[node name="RedoButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
 layout_mode = 2
 text = "Redo"
+
+[node name="FileTabContainer" type="VBoxContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_vertical = 0
+script = ExtResource("6_tab_container")
 
 [node name="MainArea" type="HSplitContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -115,7 +134,25 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="BackgroundPanel" type="ColorRect" parent="VBoxContainer/MainArea/TextEditorContainer"]
+[node name="EditorHBox" type="HBoxContainer" parent="VBoxContainer/MainArea/TextEditorContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LineNumbers" type="Control" parent="VBoxContainer/MainArea/TextEditorContainer/EditorHBox"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+script = ExtResource("3_line_numbers")
+
+[node name="TextEditorArea" type="Control" parent="VBoxContainer/MainArea/TextEditorContainer/EditorHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BackgroundPanel" type="ColorRect" parent="VBoxContainer/MainArea/TextEditorContainer/EditorHBox/TextEditorArea"]
 material = SubResource("ShaderMaterial_o6xl0")
 layout_mode = 1
 anchors_preset = 15
@@ -126,7 +163,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.717749, 0.000113781, 0.613139, 1)
 
-[node name="TextEditor" type="TextEdit" parent="VBoxContainer/MainArea/TextEditorContainer"]
+[node name="TextEditor" type="TextEdit" parent="VBoxContainer/MainArea/TextEditorContainer/EditorHBox/TextEditorArea"]
 material = SubResource("ShaderMaterial_tefeu")
 layout_mode = 1
 anchors_preset = 15

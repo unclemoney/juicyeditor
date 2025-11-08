@@ -1,3 +1,12 @@
 {
-    "godotTools.editorPath.godot4": "c:\\Users\\danie\\OneDrive\\Documents\\GODOT\\Godot_v4.4.1-stable_win64.exe"
+    "godotTools.editorPath.godot4": "c:\\Users\\danie\\OneDrive\\Documents\\GODOT\\Godot_v4.4.1-stable_win64.exe",
+    "chat.mcp.serverSampling": {
+        "juicyeditor/.vscode/mcp.json: godot-mcp": {
+            "allowedModels": [
+                "copilot/gpt-5-mini",
+                "copilot/claude-sonnet-4",
+                "copilot/gpt-5"
+            ]
+        }
+    }
 }

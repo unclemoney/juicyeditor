@@ -10,17 +10,19 @@ const FindReplaceDialogScene = preload("res://scripts/ui/find_replace_dialog.gd"
 const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 
 # Node references
-@onready var text_editor: TextEdit = $VBoxContainer/MainArea/TextEditorContainer/TextEditor
-@onready var background_panel: ColorRect = $VBoxContainer/MainArea/TextEditorContainer/BackgroundPanel
-@onready var menu_bar: MenuBar = $VBoxContainer/MenuBar
-@onready var file_menu: PopupMenu = $VBoxContainer/MenuBar/File
-@onready var edit_menu: PopupMenu = $VBoxContainer/MenuBar/Edit
-@onready var toolbar_buttons: HBoxContainer = $VBoxContainer/Toolbar
-@onready var new_button: Button = $VBoxContainer/Toolbar/NewButton
-@onready var open_button: Button = $VBoxContainer/Toolbar/OpenButton
-@onready var save_button: Button = $VBoxContainer/Toolbar/SaveButton
-@onready var undo_button: Button = $VBoxContainer/Toolbar/UndoButton
-@onready var redo_button: Button = $VBoxContainer/Toolbar/RedoButton
+@onready var text_editor: TextEdit = $VBoxContainer/MainArea/TextEditorContainer/EditorHBox/TextEditorArea/TextEditor
+@onready var background_panel: ColorRect = $VBoxContainer/MainArea/TextEditorContainer/EditorHBox/TextEditorArea/BackgroundPanel
+@onready var line_numbers: Control = $VBoxContainer/MainArea/TextEditorContainer/EditorHBox/LineNumbers
+@onready var menu_bar: MenuBar = $VBoxContainer/TopBar/MenuBar
+@onready var file_menu: PopupMenu = $VBoxContainer/TopBar/MenuBar/File
+@onready var edit_menu: PopupMenu = $VBoxContainer/TopBar/MenuBar/Edit
+@onready var file_tab_container: Control = $VBoxContainer/FileTabContainer
+@onready var toolbar_buttons: HBoxContainer = $VBoxContainer/TopBar/Toolbar
+@onready var new_button: Button = $VBoxContainer/TopBar/Toolbar/NewButton
+@onready var open_button: Button = $VBoxContainer/TopBar/Toolbar/OpenButton
+@onready var save_button: Button = $VBoxContainer/TopBar/Toolbar/SaveButton
+@onready var undo_button: Button = $VBoxContainer/TopBar/Toolbar/UndoButton
+@onready var redo_button: Button = $VBoxContainer/TopBar/Toolbar/RedoButton
 @onready var line_label: Label = $VBoxContainer/StatusBar/LineLabel
 @onready var column_label: Label = $VBoxContainer/StatusBar/ColumnLabel
 @onready var filename_label: Label = $VBoxContainer/StatusBar/FilenameLabel
@@ -84,9 +86,13 @@ func _ready() -> void:
 	game_controller.menu_bar_path = menu_bar.get_path()
 	game_controller.status_bar_path = get_node("VBoxContainer/StatusBar").get_path()
 	game_controller.file_dialog_path = file_dialog.get_path()
+	game_controller.file_tab_container_path = file_tab_container.get_path()
 	
 	# Initialize node references in game controller
 	game_controller.initialize_node_references()
+	
+	# Setup line numbers component
+	_setup_line_numbers()
 	
 	_connect_signals()
 	_setup_menus()
@@ -100,19 +106,52 @@ func _ready() -> void:
 func _animate_ui_entrance():
 	pass
 
+func _setup_line_numbers() -> void:
+	"""Setup the line numbers component"""
+	print("DEBUG: Setting up line numbers...")
+	print("DEBUG: line_numbers is: ", line_numbers)
+	print("DEBUG: text_editor is: ", text_editor)
+	
+	if line_numbers and text_editor:
+		# Connect the line numbers to the text editor
+		line_numbers.setup_text_editor(text_editor)
+		
+		# Connect line number signals for additional effects
+		if line_numbers.has_signal("line_number_animation_requested"):
+			line_numbers.line_number_animation_requested.connect(_on_line_number_animation_requested)
+		if line_numbers.has_signal("racing_light_effect_triggered"):
+			line_numbers.racing_light_effect_triggered.connect(_on_racing_light_effect_triggered)
+		
+		print("Line numbers component setup complete")
+	else:
+		print("ERROR: Could not setup line numbers - missing components")
+		print("  line_numbers: ", line_numbers)
+		print("  text_editor: ", text_editor)
+
+func _on_line_number_animation_requested(line_number: int) -> void:
+	"""Handle line number animation requests"""
+	# Could trigger additional visual effects here
+	if visual_effects_manager and visual_effects_manager.has_method("trigger_line_highlight_effect"):
+		visual_effects_manager.trigger_line_highlight_effect(line_number)
+
+func _on_racing_light_effect_triggered() -> void:
+	"""Handle racing light effect from line numbers"""
+	# Could trigger additional audio/visual feedback
+	if audio_manager and audio_manager.has_method("play_racing_light_sound"):
+		audio_manager.play_racing_light_sound()
+
 func _clean_up_scene_issues():
 	print("Cleaning up scene issues that could interfere with themes")
 	
 	# Remove the problematic BackgroundPanel that was covering the text editor
-	var bg_panel = get_node_or_null("VBoxContainer/MainArea/TextEditorContainer/BackgroundPanel")
+	var bg_panel = get_node_or_null("VBoxContainer/MainArea/TextEditorContainer/EditorHBox/TextEditorArea/BackgroundPanel")
 	if bg_panel:
 		bg_panel.queue_free()
 		print("Removed problematic BackgroundPanel")
 	
 	# Remove shader materials that might interfere with theming
-	var text_edit_node = get_node_or_null("VBoxContainer/MainArea/TextEditorContainer/TextEditor")
-	if text_edit_node and text_edit_node.material:
-		text_edit_node.material = null
+	if text_editor and text_editor.material:
+		text_editor.material = null
 		print("Removed TextEditor shader material")
 	
 	print("Scene cleanup complete")
@@ -152,6 +191,11 @@ func _connect_signals() -> void:
 	# Connect file dialogs
 	file_dialog.file_selected.connect(_on_file_selected)
 	save_file_dialog.file_selected.connect(_on_save_file_selected)
+	
+	# Connect tab container signals
+	if file_tab_container:
+		if file_tab_container.has_signal("tab_changed_to"):
+			file_tab_container.tab_changed_to.connect(_on_tab_changed)
 	
 	# Connect text editor signals
 	text_editor.text_changed.connect(_on_text_changed)
@@ -266,6 +310,10 @@ func _setup_theme_ui() -> void:
 	# Apply the current theme to all registered elements
 	theme_manager.apply_current_theme()
 	
+	# Refresh line numbers synchronization after theme is applied
+	if line_numbers and line_numbers.has_method("refresh_line_height_sync"):
+		line_numbers.refresh_line_height_sync()
+	
 	print("Theme UI setup complete!")
 
 func _connect_button_audio_feedback() -> void:
@@ -359,6 +407,23 @@ func _on_save_file_selected(path: String) -> void:
 	if game_controller:
 		game_controller.save_file(path)
 
+func _on_tab_changed(_tab_index: int) -> void:
+	"""Handle tab change - update file information"""
+	if file_tab_container and file_tab_container.has_method("get_current_file_data"):
+		var file_data = file_tab_container.get_current_file_data()
+		if file_data:
+			current_file_path = file_data.file_path
+			is_file_modified = file_data.is_modified
+			_update_ui()
+			
+			# Set syntax highlighting for the new file
+			if text_editor and file_data.file_path != "":
+				text_editor.set_syntax_highlighting_for_file(file_data.file_path)
+			
+			# Force update line numbers for the new content
+			if line_numbers and line_numbers.has_method("force_update"):
+				line_numbers.force_update()
+
 func _on_text_changed() -> void:
 	is_file_modified = true
 	_update_window_title()
@@ -375,11 +440,20 @@ func _on_file_opened(file_path: String) -> void:
 	# Set syntax highlighting based on file extension
 	if text_editor:
 		text_editor.set_syntax_highlighting_for_file(file_path)
+	
+	# Force update line numbers for the new file content
+	if line_numbers and line_numbers.has_method("force_update"):
+		print("🔄 Forcing line numbers update after file load")
+		line_numbers.force_update()
 
 func _on_file_saved(file_path: String) -> void:
 	current_file_path = file_path
 	is_file_modified = false
 	_update_ui()
+	
+	# Update line numbers after save (in case of any formatting changes)
+	if line_numbers and line_numbers.has_method("force_update"):
+		line_numbers.force_update()
 
 func _update_ui() -> void:
 	_update_window_title()
@@ -549,6 +623,12 @@ func _on_theme_changed(new_theme: JuicyTheme) -> void:
 	# Refresh syntax highlighting for the current file
 	if text_editor and text_editor.has_method("refresh_syntax_highlighting"):
 		text_editor.refresh_syntax_highlighting()
+	
+	# Refresh line numbers for theme change
+	if line_numbers and line_numbers.has_method("refresh_for_theme_change"):
+		print("🎨 Refreshing line numbers for theme change")
+		line_numbers.refresh_for_theme_change()
+	
 	# Note: Theme manager will automatically apply theme to all registered UI elements
 
 func _toggle_word_wrap() -> void:

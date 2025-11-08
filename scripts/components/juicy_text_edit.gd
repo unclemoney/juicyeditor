@@ -81,12 +81,8 @@ func _configure_editor() -> void:
 	scroll_smooth = true
 	scroll_v_scroll_speed = 50
 	
-	# Enable basic features
-	if enable_line_numbers:
-		add_gutter()
-		set_gutter_type(0, TextEdit.GUTTER_TYPE_ICON)
-		set_gutter_draw(0, true)
-		set_gutter_width(0, 50)
+	# Note: Line numbers are now handled by the LineNumbers component
+	# No need to setup gutters here anymore
 	
 	# Set up syntax highlighting (basic)
 	syntax_highlighter = CodeHighlighter.new()

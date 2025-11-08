@@ -11,6 +11,10 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 ### Core Functionality
 - ✅ **Text Editing**: Full-featured text editing with cursor movement and text selection
 - ✅ **File Operations**: Open, Save, Save As, and New file functionality
+- ✅ **Multi-File Tabs**: Open and switch between multiple files using a tab system with file name display
+- ✅ **Tab Management**: Close individual tabs, create new tabs, and switch between open files seamlessly
+- ✅ **File Association Support**: Open files directly from Windows file association and command line arguments
+- ✅ **Multiple File Opening**: Support for opening multiple files simultaneously via command line or file association
 - ✅ **Syntax Highlighting**: File type-specific syntax highlighting for GDScript, Python, Markdown, and JSON with theme-aware colors
 - ✅ **Theme-Aware Highlighting**: Each theme provides unique color schemes for different programming languages and file types
 - ✅ **Find & Replace**: Comprehensive search and replace with case sensitivity and whole word options
@@ -35,6 +39,68 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **Error Handling**: Robust file operation error handling
 - ✅ **Animation Controls**: Scale reset functionality and proper state management
 
+## 🖥️ User Interface
+
+### Layout Design
+The Juicy Editor features a clean, efficient layout optimized for productivity:
+
+- **Top Bar**: Menu bar and toolbar are combined in a single horizontal row to save vertical space
+- **Tab System**: File tabs are prominently displayed below the top bar, showing the name of each open file
+- **Main Area**: The text editor takes up the majority of the screen space with line numbers on the left
+- **Status Bar**: Current cursor position and file information displayed at the bottom
+
+### Tab System Features
+- **Multiple Files**: Open and edit multiple files simultaneously
+- **Visual Indicators**: Modified files are marked with an asterisk (*) in the tab title
+- **Easy Navigation**: Click on tabs to switch between files instantly
+- **Close Buttons**: Each tab has a close button (×) for easy tab management
+- **File State Preservation**: Each tab remembers its cursor position, scroll location, and content
+
+### File Association Features
+- **Windows Integration**: Associate file types with Juicy Editor to open files directly from Windows Explorer
+- **Command Line Support**: Open files by passing them as command line arguments
+- **Multiple File Opening**: Select multiple files and open them all at once - each opens in its own tab
+- **Automatic Tab Management**: When files are opened via file association, empty default tabs are automatically closed
+
+## 🚀 Usage
+
+### Opening Files
+- **Menu/Toolbar**: Use File → Open or click the Open button
+- **File Association**: Double-click associated file types in Windows Explorer
+- **Command Line**: `juicyeditor.exe file1.txt file2.py file3.md` opens all files in separate tabs
+- **Drag & Drop**: (Future enhancement)
+
+## ⚙️ Setup & File Association
+
+### Windows File Association
+To associate file types with Juicy Editor on Windows:
+
+1. **Right-click** on a file you want to associate (e.g., `.txt`, `.py`, `.md`)
+2. Select **"Open with" → "Choose another app"**
+3. Click **"More apps"** → **"Look for another app on this PC"**
+4. Navigate to your Juicy Editor executable (`juicyeditor.exe`)
+5. Check **"Always use this app"** to make it the default
+6. Click **"OK"**
+
+### Command Line Usage
+```bash
+# Open single file
+juicyeditor.exe myfile.txt
+
+# Open multiple files (each opens in a new tab)
+juicyeditor.exe file1.txt file2.py notes.md
+
+# Files can be relative or absolute paths
+juicyeditor.exe C:\path\to\file.txt relative-file.md
+```
+
+### Supported File Types
+Juicy Editor can open any text-based file, with enhanced support for:
+- **Text Files**: `.txt`, `.log`, `.cfg`, `.ini`
+- **Programming**: `.py`, `.js`, `.gd`, `.html`, `.css`
+- **Documentation**: `.md`, `.json`, `.xml`, `.yml`, `.yaml`
+- **And many more!**
+
 ## 🏗️ Architecture
 
 ### Project Structure
@@ -47,6 +113,7 @@ juicyeditor/
 │   │   ├── audio_manager.gd  # Audio feedback system
 │   │   ├── visual_effects_manager.gd # Shader-based visual effects
 │   │   ├── theme_manager.gd  # Theme loading and application system
+│   │   ├── file_tab_container.gd # Multi-file tab management
 │   │   ├── juicy_theme.gd    # Theme resource definition
 │   │   └── juicy_text_edit.gd # Enhanced text editor
 │   └── ui/                   # UI-specific scripts

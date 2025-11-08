@@ -12,11 +12,13 @@ signal settings_changed(settings: Dictionary)
 @export var menu_bar_path: NodePath
 @export var status_bar_path: NodePath
 @export var file_dialog_path: NodePath
+@export var file_tab_container_path: NodePath
 
 var text_editor: TextEdit
 var menu_bar: Control
 var status_bar: Control
 var file_dialog: FileDialog
+var file_tab_container: Control
 var visual_effects_manager: Node
 var animation_manager: Node
 
@@ -31,6 +33,9 @@ func _ready() -> void:
 	_initialize_systems()
 	_connect_signals()
 	_load_settings()
+	
+	# Process command line arguments after everything is set up
+	call_deferred("_process_command_line_arguments")
 
 func initialize_node_references() -> void:
 	# Initialize node references from paths
@@ -38,6 +43,7 @@ func initialize_node_references() -> void:
 	menu_bar = get_node_or_null(menu_bar_path) if menu_bar_path != NodePath() else null
 	status_bar = get_node_or_null(status_bar_path) if status_bar_path != NodePath() else null
 	file_dialog = get_node_or_null(file_dialog_path) if file_dialog_path != NodePath() else null
+	file_tab_container = get_node_or_null(file_tab_container_path) if file_tab_container_path != NodePath() else null
 	
 	# Get visual effects manager from main scene
 	visual_effects_manager = get_node_or_null("/root/Main/VisualEffectsManager")
@@ -50,8 +56,16 @@ func initialize_node_references() -> void:
 	print("  menu_bar: ", menu_bar)
 	print("  status_bar: ", status_bar)
 	print("  file_dialog: ", file_dialog)
+	print("  file_tab_container: ", file_tab_container)
 	print("  visual_effects_manager: ", visual_effects_manager)
 	print("  animation_manager: ", animation_manager)
+	
+	# Setup tab container with text editor reference
+	if file_tab_container and text_editor and file_tab_container.has_method("setup_text_editor"):
+		file_tab_container.setup_text_editor(text_editor)
+	
+	# Connect tab container signals
+	_connect_tab_container_signals()
 	
 	# Connect signals after node references are set
 	_connect_text_editor_signals()
@@ -139,6 +153,13 @@ func _connect_text_editor_signals() -> void:
 		
 		print("Text editor signals connected and settings applied")
 
+func _connect_tab_container_signals() -> void:
+	# Connect file tab container signals
+	if file_tab_container:
+		if file_tab_container.has_signal("tab_changed_to"):
+			file_tab_container.tab_changed_to.connect(_on_tab_changed)
+		print("Tab container signals connected")
+
 func _connect_signals() -> void:
 	# Connect UI signals when nodes are available
 	pass
@@ -196,6 +217,11 @@ func _save_settings() -> void:
 
 func _on_text_changed() -> void:
 	is_file_modified = true
+	
+	# Update current tab as modified
+	if file_tab_container and file_tab_container.has_method("set_current_file_modified"):
+		file_tab_container.set_current_file_modified(true)
+	
 	_update_window_title()
 
 func _on_caret_changed() -> void:
@@ -204,6 +230,19 @@ func _on_caret_changed() -> void:
 		var _line = text_editor.get_caret_line() + 1
 		var _column = text_editor.get_caret_column() + 1
 		# Status bar update will be implemented when status bar exists
+
+func _on_tab_changed(_tab_index: int) -> void:
+	# Handle tab change - update current file path and window title
+	if file_tab_container and file_tab_container.has_method("get_current_file_data"):
+		var file_data = file_tab_container.get_current_file_data()
+		if file_data:
+			current_file_path = file_data.file_path
+			is_file_modified = file_data.is_modified
+			_update_window_title()
+			
+			# Emit file opened signal if this is a valid file
+			if current_file_path != "":
+				file_opened.emit(current_file_path)
 
 func _update_window_title() -> void:
 	var title = "Juicy Editor"
@@ -218,6 +257,12 @@ func _update_window_title() -> void:
 	get_window().title = title
 
 func open_file(file_path: String) -> void:
+	# Check if file is already open in a tab
+	if file_tab_container and file_tab_container.has_method("switch_to_file"):
+		if file_tab_container.switch_to_file(file_path):
+			print("File already open, switched to tab: ", file_path)
+			return
+	
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if file:
 		var content = file.get_as_text()
@@ -228,11 +273,17 @@ func open_file(file_path: String) -> void:
 			print("Error reading file: ", file_path, " Error code: ", error)
 			return
 		
-		if text_editor:
+		# Add new tab for this file
+		if file_tab_container and file_tab_container.has_method("add_new_tab"):
+			var tab_index = file_tab_container.add_new_tab(file_path, content)
+			print("Added new tab for file: ", file_path, " at index: ", tab_index)
+		elif text_editor:
+			# Fallback if no tab container
 			text_editor.text = content
-			# Reset text editor scale when loading new content
-			if animation_manager and animation_manager.has_method("reset_control_scale"):
-				animation_manager.reset_control_scale(text_editor)
+		
+		# Reset text editor scale when loading new content
+		if animation_manager and animation_manager.has_method("reset_control_scale"):
+			animation_manager.reset_control_scale(text_editor)
 		
 		current_file_path = file_path
 		is_file_modified = false
@@ -252,7 +303,11 @@ func open_file(file_path: String) -> void:
 func save_file(file_path: String = "") -> bool:
 	var path_to_save = file_path
 	if path_to_save == "":
-		path_to_save = current_file_path
+		# Get current file path from tab container
+		if file_tab_container and file_tab_container.has_method("get_current_file_data"):
+			var file_data = file_tab_container.get_current_file_data()
+			if file_data:
+				path_to_save = file_data.file_path
 	
 	if path_to_save == "":
 		print("Error: No file path specified for saving")
@@ -272,6 +327,13 @@ func save_file(file_path: String = "") -> bool:
 			print("Error writing file: ", path_to_save, " Error code: ", error)
 			return false
 		
+		# Update tab container with saved file info
+		if file_tab_container:
+			if file_tab_container.has_method("set_current_file_path"):
+				file_tab_container.set_current_file_path(path_to_save)
+			if file_tab_container.has_method("set_current_file_modified"):
+				file_tab_container.set_current_file_modified(false)
+		
 		current_file_path = path_to_save
 		is_file_modified = false
 		_update_window_title()
@@ -290,11 +352,17 @@ func save_file(file_path: String = "") -> bool:
 		return false
 
 func new_file() -> void:
-	if text_editor:
+	# Create new tab for untitled file
+	if file_tab_container and file_tab_container.has_method("add_new_tab"):
+		var tab_index = file_tab_container.add_new_tab("", "")
+		print("Created new untitled tab at index: ", tab_index)
+	elif text_editor:
+		# Fallback if no tab container
 		text_editor.text = ""
-		# Reset text editor scale when creating new file
-		if animation_manager and animation_manager.has_method("reset_control_scale"):
-			animation_manager.reset_control_scale(text_editor)
+	
+	# Reset text editor scale when creating new file
+	if animation_manager and animation_manager.has_method("reset_control_scale"):
+		animation_manager.reset_control_scale(text_editor)
 	
 	current_file_path = ""
 	is_file_modified = false
@@ -481,3 +549,89 @@ func get_file_info(file_path: String) -> Dictionary:
 	file_info["basename"] = file_path.get_file()
 	
 	return file_info
+
+func _process_command_line_arguments() -> void:
+	"""Process command line arguments to open files passed to the application"""
+	var args = OS.get_cmdline_args()
+	print("DEBUG: Command line arguments: ", args)
+	print("DEBUG: Executable path: ", OS.get_executable_path())
+	print("DEBUG: Working directory: ", OS.get_environment("PWD"))
+	
+	# Filter out Godot-specific arguments and find file paths
+	var files_to_open: Array[String] = []
+	
+	for arg in args:
+		# Skip Godot engine arguments
+		if arg.begins_with("--") or arg.begins_with("-"):
+			print("DEBUG: Skipping engine argument: ", arg)
+			continue
+		
+		# Skip the executable path (first argument is usually the executable)
+		if arg.ends_with(".exe") or arg.ends_with("juicyeditor"):
+			print("DEBUG: Skipping executable path: ", arg)
+			continue
+		
+		# Check if the argument is a valid file path and get absolute path
+		var absolute_path = _get_absolute_file_path(arg)
+		if absolute_path != "":
+			files_to_open.append(absolute_path)
+			print("DEBUG: Found file argument: ", absolute_path)
+	
+	# Open all the files found in command line arguments
+	if files_to_open.size() > 0:
+		print("Opening ", files_to_open.size(), " file(s) from command line...")
+		
+		# Clear the default empty tab if it exists and is empty
+		_clear_default_empty_tab()
+		
+		# Open each file in a new tab
+		for file_path in files_to_open:
+			print("DEBUG: Opening file: ", file_path)
+			open_file(file_path)
+	else:
+		print("No valid file arguments found in command line")
+
+func _get_absolute_file_path(arg: String) -> String:
+	"""Convert argument to absolute file path if it's a valid file, return empty string if not"""
+	var file_path = arg
+	
+	# If already absolute, check if it exists
+	if file_path.is_absolute_path():
+		if FileAccess.file_exists(file_path):
+			return file_path
+		else:
+			return ""
+	
+	# Try relative to working directory first
+	var working_dir = OS.get_environment("PWD") if OS.get_environment("PWD") != "" else OS.get_executable_path().get_base_dir()
+	var absolute_path = working_dir.path_join(arg)
+	
+	if FileAccess.file_exists(absolute_path):
+		return absolute_path
+	
+	# Try relative to executable directory
+	absolute_path = OS.get_executable_path().get_base_dir().path_join(arg)
+	if FileAccess.file_exists(absolute_path):
+		return absolute_path
+	
+	# File not found
+	print("DEBUG: File does not exist: ", arg)
+	return ""
+
+func _is_valid_file_argument(arg: String) -> bool:
+	"""Check if a command line argument is a valid file to open"""
+	# This method is now replaced by _get_absolute_file_path
+	return _get_absolute_file_path(arg) != ""
+
+func _clear_default_empty_tab() -> void:
+	"""Clear the default empty tab if it exists and is truly empty"""
+	if not file_tab_container or not file_tab_container.has_method("get_current_file_data"):
+		return
+	
+	var file_data = file_tab_container.get_current_file_data()
+	if file_data and file_data.file_path == "" and file_data.content == "" and not file_data.is_modified:
+		# This is the default empty tab, we can close it
+		if file_tab_container.has_method("close_tab"):
+			var current_tab = file_tab_container.current_tab_index
+			file_tab_container.close_tab(current_tab)
+			print("DEBUG: Cleared default empty tab")

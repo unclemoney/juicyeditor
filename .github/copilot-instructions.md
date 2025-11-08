@@ -29,3 +29,6 @@ We are making a simple text editor for Godot called Juicy Editor. It is a simple
 - Root Logic Node: keep your GameController at the scene root.
 - Typed Paths: export NodePaths for everything you need from another scene, assign them in the inspector, and guard with get_node_or_null() in _ready().
 - Avoid Global State when possible and use node trees and signals.
+
+## MCP Servers
+- Do not try to get_scene_tree, is is currently not available.
