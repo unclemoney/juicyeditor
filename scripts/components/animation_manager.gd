@@ -59,8 +59,8 @@ var explosion_config: Dictionary = {
 	"vertical_drag": 0.99,
 	"rotation_speed_min": -5.0,
 	"rotation_speed_max": 5.0,
-	"lifetime": 3.0,
-	"fade_start_ratio": 0.5
+	"lifetime": 0.8,            # shortened default (was 1.0)
+	"fade_start_ratio": 0.4    # start fading at 40% of lifetime (was 0.005)
 }
 
 func _ready() -> void:
@@ -521,13 +521,7 @@ func _setup_text_explosion_physics(label: Label, initial_velocity: Vector2, rota
 	label.add_child(physics_timer)
 	physics_timer.start()
 	
-	# Create cleanup timer
-	var cleanup_timer = Timer.new()
-	cleanup_timer.wait_time = explosion_config.lifetime
-	cleanup_timer.one_shot = true
-	cleanup_timer.timeout.connect(_cleanup_explosion_text.bind(label))
-	label.add_child(cleanup_timer)
-	cleanup_timer.start()
+	# Don't create cleanup timer - let physics timer handle cleanup via fade logic
 
 func _update_explosion_physics(label: Label) -> void:
 	"""Update physics for a single explosion text label"""
@@ -554,11 +548,26 @@ func _update_explosion_physics(label: Label) -> void:
 	# Update rotation
 	label.rotation += rotation_speed * delta
 	
-	# Update lifetime and fade
+	# Update lifetime
 	lifetime += delta
-	if lifetime > explosion_config.lifetime * explosion_config.fade_start_ratio:
-		var fade_factor = 1.0 - ((lifetime - explosion_config.lifetime * explosion_config.fade_start_ratio) / (explosion_config.lifetime * (1.0 - explosion_config.fade_start_ratio)))
-		label.modulate.a = fade_factor
+
+	# Fade handling - robust, clamped calculation
+	var total_life = explosion_config.lifetime
+	var fade_start = total_life * explosion_config.fade_start_ratio
+	var fade_duration = total_life - fade_start
+	if lifetime >= fade_start and fade_duration > 0.0:
+		var fade_progress = clamp((lifetime - fade_start) / fade_duration, 0.0, 1.0)
+		var new_alpha = clamp(1.0 - fade_progress, 0.0, 1.0)
+		label.modulate.a = new_alpha
+
+		# Clean up as soon as fade is complete or nearly complete
+		if fade_progress >= 0.95 or label.modulate.a <= 0.1:
+			_cleanup_explosion_text(label)
+			return
+	elif lifetime >= total_life:
+		# Safety: if somehow past lifetime, ensure cleanup
+		_cleanup_explosion_text(label)
+		return
 	
 	# Store updated values
 	label.set_meta("explosion_velocity", velocity)
@@ -566,7 +575,7 @@ func _update_explosion_physics(label: Label) -> void:
 	
 	# Check if off screen or too old
 	var viewport_size = label.get_viewport().get_visible_rect().size
-	if label.position.y > viewport_size.y + 100 or lifetime > explosion_config.lifetime:
+	if label.position.y > viewport_size.y + 100 or lifetime > total_life:
 		_cleanup_explosion_text(label)
 
 func _cleanup_explosion_text(label: Label) -> void:

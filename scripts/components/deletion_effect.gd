@@ -12,10 +12,10 @@ class_name DeletionEffect
 
 # Enhanced deletion scaling properties
 @export var min_scale: float = 1.0
-@export var max_scale: float = 3.0
-@export var scale_increment: float = 0.2
+@export var max_scale: float = 15.0
+@export var scale_increment: float = 0.05
 @export var position_variance: float = 15.0  # Random Y position variance
-@export var deletion_reset_time: float = 1.0  # Time before resetting scale
+@export var deletion_reset_time: float = 0.5  # Time before resetting scale
 
 # Core components
 var explosion_sprite: AnimatedSprite2D
@@ -55,7 +55,7 @@ func _setup_components() -> void:
 	# Create cleanup timer
 	cleanup_timer = Timer.new()
 	cleanup_timer.timeout.connect(_on_cleanup_timeout)
-	cleanup_timer.wait_time = effect_duration + 0.5
+	cleanup_timer.wait_time = 0.35 #effect_duration + 0.05  # Cleanup right after fade completes
 	cleanup_timer.one_shot = true
 	add_child(cleanup_timer)
 
@@ -94,7 +94,7 @@ func _setup_explosion_animation() -> void:
 		sprite_frames.add_frame("explode", texture)
 	
 	# Configure animation
-	sprite_frames.set_animation_speed("explode", 35.0)  # Fast explosion
+	sprite_frames.set_animation_speed("explode", 75.0)  # Fast explosion
 	sprite_frames.set_animation_loop("explode", false)  # Play once
 	
 	explosion_sprite.sprite_frames = sprite_frames

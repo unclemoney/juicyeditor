@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://be3h8v7j1qr6f"]
+[gd_scene load_steps=3 format=3 uid="uid://be3h8v7j1qr6f"]
 
-[ext_resource type="Script" path="res://scripts/components/flying_letter.gd" id="1_x7k9l"]
+[ext_resource type="Script" uid="uid://c07bbu8i74x8" path="res://scripts/components/flying_letter.gd" id="1_x7k9l"]
+[ext_resource type="FontFile" uid="uid://k5o2wjxmnh5b" path="res://fonts/National2Condensed-Medium.otf" id="2_igfye"]
 
 [node name="FlyingLetter" type="Node2D"]
 script = ExtResource("1_x7k9l")
@@ -15,12 +16,13 @@ offset_left = -20.0
 offset_top = -11.5
 offset_right = 20.0
 offset_bottom = 11.5
+theme_override_fonts/font = ExtResource("2_igfye")
+theme_override_font_sizes/font_size = 48
+text = "A"
 horizontal_alignment = 1
 vertical_alignment = 1
-text = "A"
 
 [node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
-rect = Rect2(-10, -10, 20, 20)
 
 [node name="Timer" type="Timer" parent="."]
 wait_time = 3.0

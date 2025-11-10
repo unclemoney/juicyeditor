@@ -88,6 +88,7 @@ func _setup_components() -> void:
 	label = Label.new()
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.set("custom_fonts/font", "fonts/National2Condensed-Medium.otf")
 	add_child(label)
 	
 	# Create AnimatedSprite2D for enhanced visual effects
@@ -113,7 +114,7 @@ func _setup_components() -> void:
 	
 	# Create cleanup timer
 	cleanup_timer = Timer.new()
-	cleanup_timer.wait_time = effect_duration
+	cleanup_timer.wait_time = 0.25 #effect_duration
 	cleanup_timer.one_shot = true
 	cleanup_timer.timeout.connect(_on_cleanup_timer_timeout)
 	add_child(cleanup_timer)
@@ -438,7 +439,7 @@ func _configure_particles_for_animation() -> void:
 		"combo":
 			particles.amount = 10
 			particle_material.initial_velocity_max = 60.0
-			particle_material.scale_max = max_scale * 1.5
+			particle_material.scale_max = max_scale * 7.5
 		"rhythm":
 			particles.amount = 8
 			particle_material.initial_velocity_max = 45.0
@@ -613,7 +614,9 @@ static func reset_typing_combo() -> void:
 # Static factory method to create typing effects
 static func create_typing_effect(parent: Node, pos: Vector2, character: String) -> TypingEffect:
 	var effect = TypingEffect.new()
+	var typing_effect_offset: Vector2 = Vector2(888, -88)
 	effect.character_typed = character
-	effect.position = pos
+	effect.position = pos + typing_effect_offset
 	parent.add_child(effect)
+	print("Debug: Created TypingEffect for character '", character, "' at position ", effect.position)
 	return effect

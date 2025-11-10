@@ -169,9 +169,10 @@ func _spawn_typing_effect(pos: Vector2, character: String) -> void:
 	# Create typing effect using script
 	var effect_script = preload("res://scripts/components/typing_effect.gd")
 	var effect = Node2D.new()
+	var typing_effect_offset: Vector2 = Vector2(10, 8)
 	effect.set_script(effect_script)
 	effect.character_typed = character
-	effect.position = pos
+	effect.position = pos + typing_effect_offset
 	effect.destroy_on_complete = true
 	
 	# Add to text editor as overlay
@@ -197,8 +198,9 @@ func _spawn_deletion_effect(pos: Vector2, deleted_char: String = "") -> void:
 	# Create enhanced explosion effect using new DeletionEffect component
 	var deletion_script = preload("res://scripts/components/deletion_effect.gd")
 	var explosion = Node2D.new()
+	var typing_effect_offset: Vector2 = Vector2(0, -8)
 	explosion.set_script(deletion_script)
-	explosion.position = pos
+	explosion.position = pos + typing_effect_offset
 	explosion.destroy_on_complete = true
 	
 	text_editor.add_child(explosion)
