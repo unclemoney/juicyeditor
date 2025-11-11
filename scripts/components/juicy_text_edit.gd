@@ -48,6 +48,51 @@ func _ready() -> void:
 	print("  Animation manager: ", animation_manager != null)
 	print("  Typing effects: ", typing_effects_manager != null)
 
+func _gui_input(event: InputEvent) -> void:
+	## Handle custom input for tab indentation
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_TAB:
+			if has_selection():
+				if event.shift_pressed:
+					_unindent_selection()
+				else:
+					_indent_selection()
+				accept_event()
+				return
+
+func _indent_selection() -> void:
+	## Indent all lines in the current selection
+	var from_line = get_selection_from_line()
+	var to_line = get_selection_to_line()
+	
+	begin_complex_operation()
+	
+	for line in range(from_line, to_line + 1):
+		var line_text = get_line(line)
+		set_line(line, "\t" + line_text)
+	
+	end_complex_operation()
+	
+	select(from_line, 0, to_line + 1, 0)
+
+func _unindent_selection() -> void:
+	## Unindent all lines in the current selection
+	var from_line = get_selection_from_line()
+	var to_line = get_selection_to_line()
+	
+	begin_complex_operation()
+	
+	for line in range(from_line, to_line + 1):
+		var line_text = get_line(line)
+		if line_text.begins_with("\t"):
+			set_line(line, line_text.substr(1))
+		elif line_text.begins_with("    "):
+			set_line(line, line_text.substr(4))
+	
+	end_complex_operation()
+	
+	select(from_line, 0, to_line + 1, 0)
+
 func _setup_typing_effects() -> void:
 	"""Create and setup the new node-based typing effects manager"""
 	var typing_effects_script = preload("res://scripts/components/typing_effects_manager.gd")

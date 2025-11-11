@@ -32,6 +32,7 @@ class_name JuicyTheme
 @export var number_color: Color
 @export var function_color: Color
 @export var variable_color: Color
+@export var symbol_color: Color  # For punctuation and operators
 
 # File type specific syntax colors
 @export_group("GDScript Colors")
@@ -362,7 +363,7 @@ func get_syntax_highlighter() -> CodeHighlighter:
 	var highlighter = CodeHighlighter.new()
 	
 	# Set colors
-	highlighter.symbol_color = text_color
+	highlighter.symbol_color = symbol_color
 	highlighter.function_color = function_color
 	highlighter.number_color = number_color
 	
@@ -388,7 +389,7 @@ func get_syntax_highlighter_for_file(file_extension: String) -> CodeHighlighter:
 			_setup_json_highlighting_themed(highlighter)
 		_:
 			# Default highlighting
-			highlighter.symbol_color = text_color
+			highlighter.symbol_color = symbol_color
 			highlighter.function_color = function_color
 			highlighter.number_color = number_color
 	
@@ -423,8 +424,9 @@ func _setup_gdscript_highlighting_themed(highlighter: CodeHighlighter) -> void:
 	highlighter.add_color_region("'", "'", string_color)
 	highlighter.add_color_region("\"\"\"", "\"\"\"", string_color)
 	
-	# Numbers
+	# Numbers and symbols
 	highlighter.number_color = number_color
+	highlighter.symbol_color = symbol_color
 
 func _setup_python_highlighting_themed(highlighter: CodeHighlighter) -> void:
 	# Core Python keywords
@@ -456,8 +458,9 @@ func _setup_python_highlighting_themed(highlighter: CodeHighlighter) -> void:
 	highlighter.add_color_region("\"\"\"", "\"\"\"", string_color)
 	highlighter.add_color_region("'''", "'''", string_color)
 	
-	# Numbers
+	# Numbers and symbols
 	highlighter.number_color = number_color
+	highlighter.symbol_color = symbol_color
 
 func _setup_markdown_highlighting_themed(highlighter: CodeHighlighter) -> void:
 	# Headers
@@ -481,6 +484,9 @@ func _setup_markdown_highlighting_themed(highlighter: CodeHighlighter) -> void:
 	
 	# Code blocks
 	highlighter.add_color_region("```", "```", markdown_code_color)
+	
+	# Symbols
+	highlighter.symbol_color = symbol_color
 
 func _setup_json_highlighting_themed(highlighter: CodeHighlighter) -> void:
 	# JSON strings (keys and values)

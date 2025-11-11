@@ -30,5 +30,13 @@ We are making a simple text editor for Godot called Juicy Editor. It is a simple
 - Typed Paths: export NodePaths for everything you need from another scene, assign them in the inspector, and guard with get_node_or_null() in _ready().
 - Avoid Global State when possible and use node trees and signals.
 
-## MCP Servers
-- Do not try to get_scene_tree, is is currently not available.
+
+## Documentation Standards
+- Use Godot doc comments ## for any function header or documentation you want editors/IDE to surface.
+- Keep the top line the function signature (as a doc title): e.g. ## _on_game_start() then ## blank line, then description lines.
+- Put parameter descriptions only when the function's behavior depends on non-obvious args. Use _arg for unused signal params to avoid lint warnings.
+- Use short “Notes” or “Side-effects” sections when the function interacts with other systems (UI, signals, economy, scene tree).
+- Keep single responsibility per function; if a function needs long doc blocks (>8 lines), consider splitting it.
+- For lifecycle functions (_ready, _process, _on_tree_exiting) state side-effects clearly (what they connect, what they start).
+- For public API functions (used by other scripts), document the contract: inputs, outputs, error modes, and expected object types.
+- Keep dev TODOs as # TODO: or ## TODO: lines so they’re searchable; prefer issue links for long tasks.

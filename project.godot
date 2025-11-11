@@ -23,6 +23,15 @@ VisualEffectsManager="*res://scripts/components/visual_effects_manager.gd"
 AnimationManager="*res://scripts/components/animation_manager.gd"
 TypingEffectsManager="*res://scripts/components/typing_effects_manager.gd"
 
+[display]
+
+window/size/viewport_width=800
+window/size/viewport_height=2000
+window/size/mode=2
+window/size/resizable=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gdai-mcp-plugin-godot/plugin.cfg")

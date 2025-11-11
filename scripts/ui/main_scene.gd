@@ -76,6 +76,9 @@ func _ready() -> void:
 	else:
 		print("ERROR: Failed to find super juicy theme in theme manager!")
 	
+	# Position window on the side of the desktop (assuming 4000x2000 desktop)
+	_position_window()
+	
 	# Create game controller
 	var GameControllerScript = preload("res://scripts/controllers/game_controller.gd")
 	game_controller = GameControllerScript.new()
@@ -102,6 +105,24 @@ func _ready() -> void:
 	_animate_ui_entrance()
 	
 	print("Juicy Editor ready!")
+
+func _position_window() -> void:
+	## Position the window on the side of the desktop
+	## For a 4000x2000 desktop, position the 800x2000 window on the left side
+	await get_tree().process_frame
+	
+	var window = get_window()
+	if window:
+		var screen_size = DisplayServer.screen_get_size()
+		var window_size = window.size
+		
+		var x_position = 0
+		var y_position = 0
+		
+		window.position = Vector2i(x_position, y_position)
+		print("Window positioned at: ", window.position)
+		print("Screen size: ", screen_size)
+		print("Window size: ", window_size)
 
 func _animate_ui_entrance():
 	pass
