@@ -25,10 +25,9 @@ TypingEffectsManager="*res://scripts/components/typing_effects_manager.gd"
 
 [display]
 
-window/size/viewport_width=800
-window/size/viewport_height=2000
+window/size/viewport_width=1000
+window/size/viewport_height=800
 window/size/mode=2
-window/size/resizable=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
@@ -43,3 +42,7 @@ folder_colors={
 "res://scenes/": "blue",
 "res://scripts/": "purple"
 }
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0

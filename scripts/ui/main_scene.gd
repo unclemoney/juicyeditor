@@ -308,19 +308,13 @@ func _setup_theme_ui() -> void:
 	if not theme_manager:
 		return
 	
-	# Register all UI elements with the theme manager
+	# Register text editor with theme manager for syntax highlighting themes
 	theme_manager.register_ui_element("text_editor", text_editor)
-	theme_manager.register_ui_element("menu_bar", menu_bar)
-	theme_manager.register_ui_element("file_menu", file_menu)
-	theme_manager.register_ui_element("edit_menu", edit_menu)
 	
-	# Register toolbar container and buttons
-	theme_manager.register_ui_element("toolbar", toolbar_buttons)
-	theme_manager.register_ui_element("new_button", new_button)
-	theme_manager.register_ui_element("open_button", open_button)
-	theme_manager.register_ui_element("save_button", save_button)
-	theme_manager.register_ui_element("undo_button", undo_button)
-	theme_manager.register_ui_element("redo_button", redo_button)
+	# NOTE: MenuBar, PopupMenus, and Toolbar buttons are NOT registered with theme manager
+	# They will always use the Balatro UI theme from the root Control node
+	# This keeps the juicy button textures and consistent menu styling
+	# regardless of which text editor theme is selected
 	
 	# Register status bar container and labels
 	theme_manager.register_ui_element("status_bar", get_node("VBoxContainer/StatusBar"))

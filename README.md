@@ -28,7 +28,8 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **Audio Feedback**: Typing sounds, button clicks, hover sounds with volume controls
 - ✅ **Visual Effects**: Shader-based text shadows, outlines, gradient backgrounds with real-time configuration
 - ✅ **Animations**: Character typing animations, cursor pulse, button interactions, smooth transitions
-- ✅ **Themes**: Dark, Light, and Super Juicy themes with custom National2Condensed fonts and visual effect integration
+- ✅ **Themes**: Dark, Light, Super Juicy, and Balatro UI themes with custom National2Condensed fonts and visual effect integration
+- ✅ **Balatro UI Theme**: Cartoonishly large, juicy buttons with poker-game aesthetics featuring Juicy Lucy the hamburger mascot
 - ✅ **Theme Switching**: Live theme switching through Settings menu with preview functionality
 - ✅ **Custom Fonts**: Integration of National2Condensed Regular and Medium fonts for enhanced typography
 
@@ -289,6 +290,7 @@ Scenes are designed to work independently with minimal external dependencies.
   - **Visual Effects**: Enable/disable effects, glow, pulse, intensity control
   - **Animations**: Typing animations, cursor pulse, button animations, speed control
 - **Theme Switching**: Settings → Switch Theme...
+  - **Balatro UI Theme**: NEW! Cartoonishly large buttons with poker-game aesthetics, featuring Juicy Lucy the hamburger mascot
   - **Super Juicy Theme**: Vibrant colors with National2Condensed fonts, enhanced shadows, outlines, and animations
   - **Classic Juicy**: Original theme with standard fonts and moderate effects
   - **Dark Theme**: Minimal dark interface for focused writing
@@ -435,6 +437,33 @@ Juicy Editor is transitioning to a simplified node-based typing effects system. 
 ## 🎵 Audio Credits
 
 Audio system inspired by [Godot-Fancy-Editor-Sounds](https://github.com/Aventero/Godot-Fancy-Editor-Sounds) by Aventero.
+
+## 🍔 Meet Juicy Lucy - The Official Mascot
+
+**Juicy Lucy** is the adorable anthropomorphic hamburger mascot of Juicy Editor! 
+
+### About Lucy
+- **Species**: Anthropomorphic Hamburger
+- **Appearance**: 
+  - Sesame seed bun for a head
+  - Lettuce "hair" 
+  - Cheese eyes with ketchup pupils
+  - Friendly, welcoming smile
+  - Editor's visor cap (because she's professional!)
+- **Role**: UI icon and branding element for the Balatro UI Theme
+
+### Where to Find Lucy
+- Featured prominently in the **Balatro UI Theme**
+- Icon assets in `assets/ui/icons/`
+- Future appearances in splash screens, about dialogs, and status indicators
+
+### Future Plans for Lucy
+- Animated idle states for the status bar
+- Different expressions for various editor states (saving, errors, success)
+- Seasonal costume variations
+- Mascot animations for the splash screen
+
+Lucy represents the fun, juicy spirit of the editor - making text editing delightful!
 
 ## 📄 License
 

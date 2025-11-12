@@ -1,0 +1,154 @@
+[gd_resource type="Theme" load_steps=16 format=3 uid="uid://gwjtp8avnct"]
+
+[ext_resource type="Texture2D" uid="uid://bqw8x7fy4nj3v" path="res://assets/ui/buttons/button_normal.png" id="1_button_normal"]
+[ext_resource type="Texture2D" uid="uid://cn5qak2xm8w4r" path="res://assets/ui/buttons/button_hover.png" id="2_button_hover"]
+[ext_resource type="Texture2D" uid="uid://ek7y3p03u3gy" path="res://assets/ui/buttons/button_pressed.png" id="3_button_pressed"]
+[ext_resource type="Texture2D" uid="uid://bj4x8p2wak5n3" path="res://assets/ui/panels/panel_background.png" id="4_panel_bg"]
+[ext_resource type="FontFile" uid="uid://k5o2wjxmnh5b" path="res://fonts/National2Condensed-Medium.otf" id="5_font_medium"]
+[ext_resource type="FontFile" uid="uid://dyauv5sly2e4r" path="res://fonts/National2Condensed-Regular.otf" id="6_font_regular"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dbmuc"]
+texture = ExtResource("2_button_hover")
+texture_margin_left = 18.0
+texture_margin_top = 11.0
+texture_margin_right = 18.0
+texture_margin_bottom = 21.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mkfmu"]
+texture = ExtResource("1_button_normal")
+texture_margin_left = 18.0
+texture_margin_top = 11.0
+texture_margin_right = 18.0
+texture_margin_bottom = 21.0
+region_rect = Rect2(0, 0, 128, 64)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_exfcn"]
+texture = ExtResource("3_button_pressed")
+texture_margin_left = 20.0
+texture_margin_top = 11.0
+texture_margin_right = 19.0
+texture_margin_bottom = 21.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_line_edit"]
+bg_color = Color(0.08, 0.05, 0.15, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.2, 0.4, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = ExtResource("4_panel_bg")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+region_rect = Rect2(0, 0, 48, 48)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_container"]
+bg_color = Color(0.15, 0.1, 0.2, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.25, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_selected"]
+bg_color = Color(0.25, 0.2, 0.35, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_color = Color(0.6, 0.35, 0.8, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_popup"]
+bg_color = Color(0.12, 0.08, 0.25, 0.98)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.5, 0.3, 0.7, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_unselected"]
+bg_color = Color(0.15, 0.1, 0.2, 0.7)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_color = Color(0.3, 0.2, 0.4, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+
+[resource]
+default_font = ExtResource("6_font_regular")
+default_font_size = 18
+Button/colors/font_color = Color(0.95, 0.9, 1, 1)
+Button/colors/font_disabled_color = Color(0.5, 0.5, 0.5, 0.6)
+Button/colors/font_focus_color = Color(1, 1, 1, 1)
+Button/colors/font_hover_color = Color(1, 0.95, 1, 1)
+Button/colors/font_pressed_color = Color(1, 1, 0.8, 1)
+Button/colors/icon_disabled_color = Color(0.5, 0.5, 0.5, 0.6)
+Button/colors/icon_hover_color = Color(1, 1, 1, 1)
+Button/colors/icon_normal_color = Color(0.95, 0.9, 1, 1)
+Button/colors/icon_pressed_color = Color(1, 1, 0.8, 1)
+Button/constants/h_separation = 4
+Button/constants/outline_size = 2
+Button/font_sizes/font_size = 20
+Button/fonts/font = ExtResource("5_font_medium")
+Button/styles/focus = null
+Button/styles/hover = SubResource("StyleBoxTexture_dbmuc")
+Button/styles/normal = SubResource("StyleBoxTexture_mkfmu")
+Button/styles/pressed = SubResource("StyleBoxTexture_exfcn")
+Label/colors/font_color = Color(0.95, 0.9, 1, 1)
+Label/colors/font_shadow_color = Color(0, 0, 0, 0.5)
+Label/constants/line_spacing = 4
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1
+Label/font_sizes/font_size = 18
+Label/fonts/font = ExtResource("5_font_medium")
+LineEdit/colors/caret_color = Color(1, 0.8, 0.2, 1)
+LineEdit/colors/font_color = Color(0.95, 0.9, 1, 1)
+LineEdit/colors/font_placeholder_color = Color(0.6, 0.6, 0.8, 0.6)
+LineEdit/colors/font_selected_color = Color(1, 1, 1, 1)
+LineEdit/colors/selection_color = Color(0.6, 0.35, 0.8, 0.5)
+LineEdit/font_sizes/font_size = 18
+LineEdit/fonts/font = ExtResource("6_font_regular")
+LineEdit/styles/focus = SubResource("StyleBoxFlat_line_edit")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_line_edit")
+MenuBar/colors/font_color = Color(0.95, 0.9, 1, 1)
+MenuBar/colors/font_hover_color = Color(1, 1, 0.745098, 1)
+MenuBar/font_sizes/font_size = 24
+MenuBar/fonts/font = ExtResource("5_font_medium")
+Panel/styles/panel = SubResource("StyleBoxTexture_panel")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_panel_container")
+PopupMenu/colors/font_color = Color(0.95, 0.9, 1, 1)
+PopupMenu/colors/font_hover_color = Color(1, 1, 1, 1)
+PopupMenu/colors/font_separator_color = Color(0.5, 0.4, 0.7, 1)
+PopupMenu/constants/h_separation = 8
+PopupMenu/constants/v_separation = 4
+PopupMenu/font_sizes/font_size = 24
+PopupMenu/fonts/font = ExtResource("5_font_medium")
+PopupMenu/styles/hover = SubResource("StyleBoxFlat_tab_selected")
+PopupMenu/styles/panel = SubResource("StyleBoxFlat_popup")
+TabBar/colors/font_selected_color = Color(1, 1, 1, 1)
+TabBar/colors/font_unselected_color = Color(0.7, 0.7, 0.9, 0.8)
+TabBar/constants/h_separation = 8
+TabBar/font_sizes/font_size = 18
+TabBar/fonts/font = ExtResource("5_font_medium")
+TabBar/styles/tab_selected = SubResource("StyleBoxFlat_tab_selected")
+TabBar/styles/tab_unselected = SubResource("StyleBoxFlat_tab_unselected")

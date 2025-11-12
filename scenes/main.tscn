@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bt74kgu67tnxg"]
+[gd_scene load_steps=11 format=3 uid="uid://bt74kgu67tnxg"]
 
 [ext_resource type="Script" uid="uid://dhfhsla164f80" path="res://scripts/ui/main_scene.gd" id="1_51l7b"]
 [ext_resource type="Script" uid="uid://cs73sg5vom7ql" path="res://scripts/components/juicy_text_edit.gd" id="2_h3n2m"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://c70qaxxo05ucq" path="res://scripts/components/line_numbers.gd" id="3_line_numbers"]
 [ext_resource type="Script" uid="uid://bxg7hdo3st8ji" path="res://scripts/components/visual_effects_manager.gd" id="4_tbgi4"]
 [ext_resource type="Script" uid="uid://bsm3t74ppu58m" path="res://scripts/components/file_tab_container.gd" id="6_tab_container"]
+[ext_resource type="Theme" uid="uid://gwjtp8avnct" path="res://themes/balatro_ui_theme.tres" id="7_balatro_theme"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tbgi4"]
 shader = ExtResource("2_jyhfs")
@@ -32,6 +33,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("7_balatro_theme")
 script = ExtResource("1_51l7b")
 
 [node name="ColorRect" type="ColorRect" parent="."]
@@ -162,6 +164,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -3.0
+offset_right = -14.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -173,6 +177,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -3.0
+offset_right = -14.0
 grow_horizontal = 2
 grow_vertical = 2
 placeholder_text = "Start typing to create your document..."
