@@ -21,7 +21,9 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **Go to Line**: Quick navigation to specific line numbers
 - ✅ **Line Numbers**: Configurable line number display
 - ✅ **Word Wrap**: Toggle word wrapping on/off
-- ✅ **Zoom Controls**: Zoom in/out and reset zoom functionality
+- ✅ **Zoom Controls**: Zoom in/out and reset zoom functionality with 10% increments (20%-300% range)
+- ✅ **Dynamic Zoom Buttons**: Toolbar buttons for Zoom In, Zoom Out, and percentage reset (100%) with live percentage display
+- ✅ **Synchronized Scaling**: Line numbers automatically scale with text editor zoom for perfect alignment
 - ✅ **Text Statistics**: Character, word, line, and paragraph counting
 
 ### Juicy Elements
@@ -301,6 +303,22 @@ Scenes are designed to work independently with minimal external dependencies.
   - **Outline**: Color, width, smoothness settings
   - **Background Gradient**: Start/end colors, gradient direction
   - **Quick Toggles**: Use Effects menu for instant on/off switching
+
+### Zoom Controls
+Juicy Editor features a powerful zoom system that scales the entire text editing area:
+
+- **Toolbar Buttons**: 
+  - **Zoom Out**: Decrease view size by 10%
+  - **Percentage Button**: Shows current zoom level (e.g., "100%") and resets to 100% when clicked
+  - **Zoom In**: Increase view size by 10%
+- **Range**: 20% minimum to 300% maximum zoom
+- **Synchronized Scaling**: Line numbers automatically scale and align perfectly with text
+- **Menu Access**: Edit → Zoom In/Out/Reset
+- **Keyboard Shortcuts**: Ctrl+= (zoom in), Ctrl+- (zoom out), Ctrl+0 (reset)
+- **Use Cases**: 
+  - Make text larger when window is resized to smaller dimensions
+  - Zoom out for overview of long documents
+  - Accessibility support for users who need larger text
 
 ### Keyboard Shortcuts
 | Action | Shortcut |

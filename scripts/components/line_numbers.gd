@@ -384,6 +384,24 @@ func force_update() -> void:
 		_update_active_line()
 		print("✅ Force update complete")
 
+func set_font_size(new_font_size: int) -> void:
+	"""Set the font size for line numbers and refresh display"""
+	font_size = new_font_size
+	
+	# Resync line height with new font size
+	if text_editor:
+		_sync_line_height_with_editor()
+	
+	# Update all existing labels with new font size
+	for label in line_labels:
+		if is_instance_valid(label):
+			label.add_theme_font_size_override("font_size", font_size)
+			label.size.y = line_height
+	
+	# Force refresh positions
+	call_deferred("_force_refresh_all_positions")
+	print("✅ Font size updated to:", font_size)
+
 func _force_refresh_all_positions() -> void:
 	"""Force refresh all line number positions to their correct locations"""
 	print("🔄 Force refreshing all line positions...")

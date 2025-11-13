@@ -13,6 +13,7 @@ const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 @onready var text_editor: TextEdit = $VBoxContainer/MainArea/TextEditorContainer/EditorHBox/TextEditorArea/TextEditor
 @onready var background_panel: ColorRect = $VBoxContainer/MainArea/TextEditorContainer/EditorHBox/TextEditorArea/BackgroundPanel
 @onready var line_numbers: Control = $VBoxContainer/MainArea/TextEditorContainer/EditorHBox/LineNumbers
+@onready var main_area: HSplitContainer = $VBoxContainer/MainArea
 @onready var menu_bar: MenuBar = $VBoxContainer/TopBar/MenuBar
 @onready var file_menu: PopupMenu = $VBoxContainer/TopBar/MenuBar/File
 @onready var edit_menu: PopupMenu = $VBoxContainer/TopBar/MenuBar/Edit
@@ -23,6 +24,9 @@ const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 @onready var save_button: Button = $VBoxContainer/TopBar/Toolbar/SaveButton
 @onready var undo_button: Button = $VBoxContainer/TopBar/Toolbar/UndoButton
 @onready var redo_button: Button = $VBoxContainer/TopBar/Toolbar/RedoButton
+@onready var zoom_out_button: Button = $VBoxContainer/TopBar/Toolbar/ZoomOutButton
+@onready var zoom_reset_button: Button = $VBoxContainer/TopBar/Toolbar/ZoomResetButton
+@onready var zoom_in_button: Button = $VBoxContainer/TopBar/Toolbar/ZoomInButton
 @onready var line_label: Label = $VBoxContainer/StatusBar/LineLabel
 @onready var column_label: Label = $VBoxContainer/StatusBar/ColumnLabel
 @onready var filename_label: Label = $VBoxContainer/StatusBar/FilenameLabel
@@ -35,6 +39,7 @@ var audio_manager: Node
 var visual_effects_manager: Node
 var animation_manager: Node
 var theme_manager: Node
+var zoom_controller: Node
 
 # Settings dialog
 var settings_dialog: SettingsDialogScene
@@ -96,6 +101,9 @@ func _ready() -> void:
 	
 	# Setup line numbers component
 	_setup_line_numbers()
+	
+	# Setup zoom controller
+	_setup_zoom_controller()
 	
 	_connect_signals()
 	_setup_menus()
@@ -161,6 +169,30 @@ func _on_racing_light_effect_triggered() -> void:
 	if audio_manager and audio_manager.has_method("play_racing_light_sound"):
 		audio_manager.play_racing_light_sound()
 
+func _setup_zoom_controller() -> void:
+	"""Setup the zoom controller component"""
+	print("DEBUG: Setting up zoom controller...")
+	
+	# Create zoom controller instance
+	var ZoomControllerScript = preload("res://scripts/components/zoom_controller.gd")
+	zoom_controller = ZoomControllerScript.new()
+	zoom_controller.name = "ZoomController"
+	add_child(zoom_controller)
+	
+	# Setup with references to components
+	if text_editor and line_numbers and main_area:
+		zoom_controller.setup(text_editor, line_numbers, main_area)
+		
+		# Connect zoom changed signal to update the 100% button text
+		zoom_controller.zoom_changed.connect(_on_zoom_changed)
+		
+		print("Zoom controller setup complete")
+	else:
+		print("ERROR: Could not setup zoom controller - missing components")
+		print("  text_editor: ", text_editor)
+		print("  line_numbers: ", line_numbers)
+		print("  main_area: ", main_area)
+
 func _clean_up_scene_issues():
 	print("Cleaning up scene issues that could interfere with themes")
 	
@@ -205,6 +237,9 @@ func _connect_signals() -> void:
 	save_button.pressed.connect(_on_save_pressed)
 	undo_button.pressed.connect(_on_undo_pressed)
 	redo_button.pressed.connect(_on_redo_pressed)
+	zoom_out_button.pressed.connect(_on_zoom_out_pressed)
+	zoom_reset_button.pressed.connect(_on_zoom_reset_pressed)
+	zoom_in_button.pressed.connect(_on_zoom_in_pressed)
 	
 	# Connect menu items
 	file_menu.id_pressed.connect(_on_file_menu_pressed)
@@ -402,6 +437,24 @@ func _on_undo_pressed() -> void:
 func _on_redo_pressed() -> void:
 	if text_editor:
 		text_editor.redo()
+
+func _on_zoom_out_pressed() -> void:
+	if zoom_controller:
+		zoom_controller.zoom_out()
+
+func _on_zoom_reset_pressed() -> void:
+	if zoom_controller:
+		zoom_controller.reset_zoom()
+
+func _on_zoom_in_pressed() -> void:
+	if zoom_controller:
+		zoom_controller.zoom_in()
+
+func _on_zoom_changed(zoom_level: float) -> void:
+	"""Update zoom reset button text to show current zoom percentage"""
+	if zoom_reset_button:
+		var zoom_percent = int(zoom_level * 100)
+		zoom_reset_button.text = str(zoom_percent) + "%"
 
 func _on_file_menu_pressed(id: int) -> void:
 	match id:
@@ -754,42 +807,16 @@ func _on_goto_line_requested(line_number: int) -> void:
 
 # Zoom functionality
 func _zoom_in() -> void:
-	if text_editor and theme_manager and theme_manager.current_theme:
-		# Update the theme's font size and reapply
-		var current_theme = theme_manager.current_theme
-		var new_size = min(current_theme.editor_font_size + 2, 72)  # Max size 72
-		current_theme.editor_font_size = new_size
-		
-		# Reapply the theme to maintain all styling
-		theme_manager.apply_theme_to_element(text_editor)
-		
-		if game_controller:
-			game_controller.set_setting("font_size", new_size)
+	if zoom_controller:
+		zoom_controller.zoom_in()
 
 func _zoom_out() -> void:
-	if text_editor and theme_manager and theme_manager.current_theme:
-		# Update the theme's font size and reapply
-		var current_theme = theme_manager.current_theme
-		var new_size = max(current_theme.editor_font_size - 2, 8)  # Min size 8
-		current_theme.editor_font_size = new_size
-		
-		# Reapply the theme to maintain all styling
-		theme_manager.apply_theme_to_element(text_editor)
-		
-		if game_controller:
-			game_controller.set_setting("font_size", new_size)
+	if zoom_controller:
+		zoom_controller.zoom_out()
 
 func _reset_zoom() -> void:
-	if text_editor and theme_manager and theme_manager.current_theme:
-		# Reset the theme's font size and reapply
-		var current_theme = theme_manager.current_theme
-		current_theme.editor_font_size = 16  # Default size
-		
-		# Reapply the theme to maintain all styling
-		theme_manager.apply_theme_to_element(text_editor)
-		
-		if game_controller:
-			game_controller.set_setting("font_size", 16)
+	if zoom_controller:
+		zoom_controller.reset_zoom()
 
 # Text statistics
 func get_text_statistics() -> Dictionary:
