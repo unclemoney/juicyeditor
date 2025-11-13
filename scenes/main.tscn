@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://bt74kgu67tnxg"]
+[gd_scene load_steps=12 format=3 uid="uid://bt74kgu67tnxg"]
 
 [ext_resource type="Script" uid="uid://dhfhsla164f80" path="res://scripts/ui/main_scene.gd" id="1_51l7b"]
 [ext_resource type="Script" uid="uid://cs73sg5vom7ql" path="res://scripts/components/juicy_text_edit.gd" id="2_h3n2m"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://bxg7hdo3st8ji" path="res://scripts/components/visual_effects_manager.gd" id="4_tbgi4"]
 [ext_resource type="Script" uid="uid://bsm3t74ppu58m" path="res://scripts/components/file_tab_container.gd" id="6_tab_container"]
 [ext_resource type="Theme" uid="uid://gwjtp8avnct" path="res://themes/balatro_ui_theme.tres" id="7_balatro_theme"]
+[ext_resource type="PackedScene" uid="uid://bwxstgl5vfieh" path="res://scenes/components/juicy_lucy.tscn" id="8_juicy_lucy"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tbgi4"]
 shader = ExtResource("2_jyhfs")
@@ -233,3 +234,17 @@ access = 2
 
 [node name="VisualEffectsManager" type="Node" parent="."]
 script = ExtResource("4_tbgi4")
+
+[node name="JuicyLucy" parent="." instance=ExtResource("8_juicy_lucy")]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -270.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0

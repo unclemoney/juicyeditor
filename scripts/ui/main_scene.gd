@@ -32,6 +32,7 @@ const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 @onready var filename_label: Label = $VBoxContainer/StatusBar/FilenameLabel
 @onready var file_dialog: FileDialog = $FileDialog
 @onready var save_file_dialog: FileDialog = $SaveFileDialog
+@onready var juicy_lucy: Control = $JuicyLucy
 
 # Game controller instance
 var game_controller: Node
@@ -104,6 +105,9 @@ func _ready() -> void:
 	
 	# Setup zoom controller
 	_setup_zoom_controller()
+	
+	# Setup Juicy Lucy
+	_setup_lucy()
 	
 	_connect_signals()
 	_setup_menus()
@@ -192,6 +196,15 @@ func _setup_zoom_controller() -> void:
 		print("  text_editor: ", text_editor)
 		print("  line_numbers: ", line_numbers)
 		print("  main_area: ", main_area)
+
+func _setup_lucy() -> void:
+	"""Setup Juicy Lucy assistant"""
+	print("DEBUG: Setting up Juicy Lucy...")
+	
+	if juicy_lucy:
+		print("Juicy Lucy initialized!")
+	else:
+		print("ERROR: Could not find JuicyLucy node")
 
 func _clean_up_scene_issues():
 	print("Cleaning up scene issues that could interfere with themes")
@@ -495,6 +508,9 @@ func _on_tab_changed(_tab_index: int) -> void:
 func _on_text_changed() -> void:
 	is_file_modified = true
 	_update_window_title()
+	
+	if juicy_lucy and juicy_lucy.has_method("on_text_changed"):
+		juicy_lucy.on_text_changed(text_editor.text)
 
 func _on_text_typed(character: String) -> void:
 	# This signal comes from JuicyTextEdit when a character is typed
@@ -518,6 +534,9 @@ func _on_file_saved(file_path: String) -> void:
 	current_file_path = file_path
 	is_file_modified = false
 	_update_ui()
+	
+	if juicy_lucy and juicy_lucy.has_method("encourage"):
+		juicy_lucy.encourage()
 	
 	# Update line numbers after save (in case of any formatting changes)
 	if line_numbers and line_numbers.has_method("force_update"):

@@ -1,0 +1,439 @@
+[gd_scene load_steps=18 format=3 uid="uid://bwxstgl5vfieh"]
+
+[ext_resource type="Script" uid="uid://c8rtt5skwmkyy" path="res://scripts/components/juicy_lucy.gd" id="1_juicy_lucy"]
+[ext_resource type="Texture2D" uid="uid://dam5n7p3x2k8w" path="res://assets/ui/icons/juicy_lucy_south.png" id="2_body"]
+[ext_resource type="Texture2D" uid="uid://brlo3cfct8h34" path="res://assets/ui/icons/juicy_lucy_south_eyes.png" id="3_eyes"]
+[ext_resource type="Texture2D" uid="uid://bj4x8p2wak5n3" path="res://assets/ui/panels/panel_background.png" id="4_panel_bg"]
+[ext_resource type="Shader" uid="uid://beloxo3jjtb5" path="res://shaders/lucy_squish.gdshader" id="5_squish_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lucy"]
+shader = ExtResource("5_squish_shader")
+shader_parameter/squish_amount = 0.0
+shader_parameter/bounce_offset = 0.0
+shader_parameter/squish_direction = Vector2(1, 1)
+
+[sub_resource type="Animation" id="Animation_bounce"]
+resource_name = "bounce"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Body:material:shader_parameter/squish_amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, 0.3, 0.0, 0.15, 0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Body:material:shader_parameter/bounce_offset")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.5, 0.0, -0.25, 0.0]
+}
+
+[sub_resource type="Animation" id="Animation_excited"]
+resource_name = "excited"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Eyebrows/LeftEyebrow:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 0.35]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Eyebrows/RightEyebrow:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, -0.35]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Eyebrows/LeftEyebrow:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-13, -20), Vector2(-13, -22)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Eyebrows/RightEyebrow:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(13, -20), Vector2(13, -22)]
+}
+
+[sub_resource type="Animation" id="Animation_furrow"]
+resource_name = "furrow"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Eyebrows/LeftEyebrow:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, -0.3]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Eyebrows/RightEyebrow:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 0.3]
+}
+
+[sub_resource type="Animation" id="Animation_neutral"]
+resource_name = "neutral"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Eyebrows/LeftEyebrow:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Eyebrows/RightEyebrow:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_raise"]
+resource_name = "raise"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Eyebrows/LeftEyebrow:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-15, -20), Vector2(-15, -25)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Eyebrows/RightEyebrow:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(15, -20), Vector2(15, -25)]
+}
+
+[sub_resource type="Animation" id="Animation_raise_high"]
+resource_name = "raise_high"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Eyebrows/LeftEyebrow:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-15, -20), Vector2(-15, -30)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Eyebrows/RightEyebrow:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(15, -20), Vector2(15, -30)]
+}
+
+[sub_resource type="Animation" id="Animation_raise_slight"]
+resource_name = "raise_slight"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Eyebrows/LeftEyebrow:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-15, -20), Vector2(-15, -22)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Eyebrows/RightEyebrow:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(15, -20), Vector2(15, -22)]
+}
+
+[sub_resource type="Animation" id="Animation_skeptical"]
+resource_name = "skeptical"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Eyebrows/LeftEyebrow:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 0.3]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Eyebrows/RightEyebrow:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 0.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Eyebrows/RightEyebrow:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(15, -20), Vector2(15, -23)]
+}
+
+[sub_resource type="Animation" id="Animation_squish"]
+resource_name = "squish"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Body:material:shader_parameter/squish_amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.0, 0.5, 0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Body:material:shader_parameter/squish_direction")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(0.5, 1.5), Vector2(1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_upset"]
+resource_name = "upset"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Eyebrows/LeftEyebrow:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, -0.4]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Eyebrows/RightEyebrow:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 0.4]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Eyebrows/LeftEyebrow:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-13, -20), Vector2(-13, -18)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Eyebrows/RightEyebrow:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(13, -20), Vector2(13, -18)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_lucy"]
+_data = {
+&"bounce": SubResource("Animation_bounce"),
+&"excited": SubResource("Animation_excited"),
+&"furrow": SubResource("Animation_furrow"),
+&"neutral": SubResource("Animation_neutral"),
+&"raise": SubResource("Animation_raise"),
+&"raise_high": SubResource("Animation_raise_high"),
+&"raise_slight": SubResource("Animation_raise_slight"),
+&"skeptical": SubResource("Animation_skeptical"),
+&"squish": SubResource("Animation_squish"),
+&"upset": SubResource("Animation_upset")
+}
+
+[node name="JuicyLucy" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 200.0
+offset_bottom = 250.0
+script = ExtResource("1_juicy_lucy")
+
+[node name="Body" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_lucy")
+position = Vector2(100, 100)
+texture = ExtResource("2_body")
+
+[node name="Eyes" type="Sprite2D" parent="."]
+position = Vector2(100, 100)
+texture = ExtResource("3_eyes")
+
+[node name="LeftPupil" type="ColorRect" parent="Eyes"]
+offset_right = 4.0
+offset_bottom = 4.0
+color = Color(0, 0, 0, 1)
+
+[node name="RightPupil" type="ColorRect" parent="Eyes"]
+offset_right = 4.0
+offset_bottom = 4.0
+color = Color(0, 0, 0, 1)
+
+[node name="Eyebrows" type="Node2D" parent="."]
+position = Vector2(100, 100)
+
+[node name="LeftEyebrow" type="Line2D" parent="Eyebrows"]
+position = Vector2(-11, -20)
+width = 2.0
+default_color = Color(0, 0, 0, 1)
+
+[node name="RightEyebrow" type="Line2D" parent="Eyebrows"]
+position = Vector2(11, -20)
+width = 2.0
+default_color = Color(0, 0, 0, 1)
+
+[node name="DialogPanel" type="NinePatchRect" parent="."]
+visible = false
+layout_mode = 0
+offset_left = -129.0
+offset_top = 27.0
+offset_right = 81.0
+offset_bottom = 77.0
+texture = ExtResource("4_panel_bg")
+patch_margin_left = 10
+patch_margin_top = 10
+patch_margin_right = 10
+patch_margin_bottom = 10
+
+[node name="DialogBox" type="RichTextLabel" parent="."]
+layout_mode = 0
+offset_left = -124.0
+offset_top = 32.0
+offset_right = 76.0
+offset_bottom = 72.0
+bbcode_enabled = true
+text = "[wave][center]Hello! I'm Lucy![/center][/wave]"
+fit_content = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_lucy")
+}
+
+[node name="CommentTimer" type="Timer" parent="."]
+wait_time = 20.0
+autostart = true

@@ -34,6 +34,17 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **Balatro UI Theme**: Cartoonishly large, juicy buttons with poker-game aesthetics featuring Juicy Lucy the hamburger mascot
 - ✅ **Theme Switching**: Live theme switching through Settings menu with preview functionality
 - ✅ **Custom Fonts**: Integration of National2Condensed Regular and Medium fonts for enhanced typography
+- ✅ **Juicy Lucy Assistant**: Animated Clippy-style assistant with eye tracking, expressive eyebrows, and witty commentary to encourage and entertain
+
+### Juicy Lucy Features
+Inspired by Microsoft's Clippy from the 1990s and early 2000s, Juicy Lucy is your friendly text editor companion:
+- **Eye Tracking**: Lucy's pupils procedurally follow your mouse cursor around the screen
+- **Expressive Eyebrows**: Procedurally generated Line2D eyebrows that animate to show different emotions (happy, surprised, concerned, skeptical, curious)
+- **Witty Commentary**: Lucy occasionally comments on your typing with fun phrases like "Did you really mean to type that?" or "Maybe you should save the file, because I'm not going to do it for you."
+- **Encouragement**: Lucy provides positive reinforcement when you save files and complete tasks
+- **BBCode Animations**: Lucy's dialog box uses RichTextLabel with BBCode effects for juicy animated text
+- **Context-Aware**: Lucy detects different situations (typing, idle, deleting, long lines) and responds appropriately
+- **Non-Intrusive**: Lucy appears in the lower right corner and her commentary is timed to be helpful, not annoying
 
 ### Quality of Life
 - ✅ **Settings Persistence**: Comprehensive settings with tabbed interface for all preferences
@@ -118,11 +129,13 @@ juicyeditor/
 │   │   ├── theme_manager.gd  # Theme loading and application system
 │   │   ├── file_tab_container.gd # Multi-file tab management
 │   │   ├── juicy_theme.gd    # Theme resource definition
-│   │   └── juicy_text_edit.gd # Enhanced text editor
+│   │   ├── juicy_text_edit.gd # Enhanced text editor
+│   │   └── juicy_lucy.gd     # Animated assistant with eye tracking
 │   └── ui/                   # UI-specific scripts
 │       └── theme_switcher.gd # Theme selection UI component
 ├── scenes/
 │   ├── components/           # Reusable scene components
+│   │   └── juicy_lucy.tscn   # Juicy Lucy assistant scene
 │   └── ui/                   # UI layouts and screens
 │       ├── effects_settings_panel.tscn # Visual effects configuration
 │       └── theme_switcher.tscn # Theme selection dialog
@@ -185,6 +198,17 @@ Enhanced TextEdit component:
 - Typing sound integration
 - Animation hooks
 - Line number management
+
+#### JuicyLucy
+Animated text editor assistant inspired by Microsoft Clippy:
+- **Eye Tracking**: Procedurally generated pupils that follow the mouse cursor in real-time
+- **Eyebrow Animation**: Procedural Line2D eyebrows that express emotions through 6 different animation states
+- **Context-Aware Commentary**: Witty phrases triggered by user actions (typing, idle, saving, deleting)
+- **Phrase Dictionary**: Categorized phrases for different situations with randomized selection
+- **BBCode Dialog**: RichTextLabel with wave effects for juicy animated text display
+- **Emotion System**: Six emotional states (neutral, happy, surprised, concerned, skeptical, curious) with matching eyebrow animations
+- **Non-Blocking**: All commentary is timed to be helpful without interrupting workflow
+- **Signal-Based**: Emits signals for phrase displays and emotion changes for extensibility
 
 ## 🎨 Syntax Highlighting System
 
