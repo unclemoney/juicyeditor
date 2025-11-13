@@ -57,9 +57,9 @@ signal emotion_changed(emotion: String)
 ## Eyebrow thickness
 @export var eyebrow_thickness: float = 2.0
 
-## How often Lucy might comment (in seconds)
-@export var comment_interval_min: float = 15.0
-@export var comment_interval_max: float = 45.0
+## How often Lucy might comment (in seconds) - increased frequency
+@export var comment_interval_min: float = 8.0
+@export var comment_interval_max: float = 25.0
 
 ## Witty phrases categorized by context
 var phrases: Dictionary = {
@@ -119,12 +119,36 @@ var current_emotion: String = "neutral"
 var recent_text: String = ""
 var chars_since_last_comment: int = 0
 
+## Spell checker reference
+var spell_checker: Node = null
+
+## Spell check timer (2-3 second delay)
+var spell_check_timer: Timer = null
+
+## Last text that was spell checked
+var last_checked_text: String = ""
+
+## Sassy spelling error phrases
+var spelling_error_phrases: Array = [
+	"You didn't spell '%s' correctly, you dumb bitch.",
+	"Really? '%s'? That's not even close to a real word.",
+	"I'm pretty sure '%s' isn't how you spell that, genius.",
+	"'%s'? Did you even try to spell that correctly?",
+	"Oh honey, '%s' is not a word. Not even a little bit.",
+	"'%s'... Are you having a stroke or just can't spell?",
+	"The word is '%s', not whatever the hell you just typed.",
+	"'%s'? Maybe try using a dictionary sometime.",
+	"I've seen toddlers spell better than '%s'. Come on.",
+	"'%s' is giving me a headache. Please fix it.",
+]
+
 func _ready() -> void:
 	_setup_pupils()
 	_setup_eyebrows()
 	_setup_dialog_box()
 	_start_comment_timer()
 	_setup_click_detection()
+	_setup_spell_checker()
 
 func _setup_click_detection() -> void:
 	if body_sprite:
@@ -141,22 +165,19 @@ func _gui_input(event: InputEvent) -> void:
 func _on_lucy_clicked() -> void:
 	var random_action: int = randi() % 3
 	
+	# Always play a body animation when clicked
+	_play_random_body_animation()
+	
 	match random_action:
 		0:
 			_say_phrase(phrases["encouragement"].pick_random())
 			_set_emotion("happy")
-			_perform_body_animation("bounce")
 		1:
 			_say_phrase(phrases["idle"].pick_random())
 			_set_emotion("curious")
-			_perform_body_animation("squish")
 		2:
 			_say_phrase(phrases["typing"].pick_random())
 			_set_emotion("skeptical")
-
-func _perform_body_animation(anim_name: String) -> void:
-	if animation_player and animation_player.has_animation(anim_name):
-		animation_player.play(anim_name)
 
 func _setup_pupils() -> void:
 	if left_pupil:
@@ -198,6 +219,20 @@ func _start_comment_timer() -> void:
 		comment_timer.timeout.connect(_on_comment_timer_timeout)
 		comment_timer.start()
 
+func _setup_spell_checker() -> void:
+	# Create and add spell checker as child
+	var SymSpellChecker: GDScript = load("res://scripts/components/symspell_checker.gd")
+	if SymSpellChecker:
+		spell_checker = SymSpellChecker.new()
+		add_child(spell_checker)
+		print("JuicyLucy: Spell checker initialized")
+	
+	# Create spell check timer (2-3 second delay)
+	spell_check_timer = Timer.new()
+	spell_check_timer.one_shot = true
+	spell_check_timer.timeout.connect(_on_spell_check_timer_timeout)
+	add_child(spell_check_timer)
+
 func _process(_delta: float) -> void:
 	_update_pupil_tracking()
 
@@ -233,29 +268,42 @@ func on_text_changed(new_text: String) -> void:
 	recent_text = new_text
 	chars_since_last_comment += 1
 	
+	# Restart spell check timer (2-3 second delay)
+	if spell_check_timer:
+		spell_check_timer.stop()
+		spell_check_timer.wait_time = randf_range(2.0, 3.0)
+		spell_check_timer.start()
+	
+	# Occasionally do a quick animation while user is typing (5% chance)
+	if randf() < 0.05:
+		_play_random_body_animation()
+	
 	if chars_since_last_comment > 50 and randf() < 0.05:
 		_make_typing_comment()
 		chars_since_last_comment = 0
 
 ## Called when user hasn't typed in a while
 func on_idle() -> void:
-	if randf() < 0.3:
+	if randf() < 0.5:  # Increased from 0.3 to 0.5
 		_say_phrase(phrases["idle"].pick_random())
 
 ## Called when file should be saved
 func on_save_reminder() -> void:
 	_say_phrase(phrases["saving"].pick_random())
 	_set_emotion("concerned")
+	_play_random_body_animation()
 
 ## Called when user deletes a lot of text
 func on_delete_spree() -> void:
 	_say_phrase(phrases["delete"].pick_random())
 	_set_emotion("surprised")
+	_play_random_body_animation()
 
 ## Show encouragement
 func encourage() -> void:
 	_say_phrase(phrases["encouragement"].pick_random())
 	_set_emotion("happy")
+	_play_random_body_animation()
 
 func _make_typing_comment() -> void:
 	if recent_text.length() > 100:
@@ -268,15 +316,61 @@ func _make_typing_comment() -> void:
 func _say_phrase(phrase: String) -> void:
 	if dialog_box and dialog_panel:
 		dialog_box.text = "[wave][center]" + phrase + "[/center][/wave]"
+		
+		# Set a reasonable width for the dialog box (200 pixels)
+		var dialog_width: float = 200.0
+		dialog_box.custom_minimum_size.x = dialog_width
+		
+		# Make visible to calculate size
 		dialog_box.visible = true
+		
+		# Wait a frame for the RichTextLabel to calculate its content height
+		await get_tree().process_frame
+		
+		# Get the content height and add padding
+		var content_height: float = dialog_box.get_content_height()
+		var padding: Vector2 = Vector2(10, 10)  # 5px padding on each side
+		
+		# Calculate final sizes
+		var dialog_box_size: Vector2 = Vector2(dialog_width, content_height)
+		var panel_size: Vector2 = dialog_box_size + padding
+		
+		# Update dialog box position and size
+		dialog_box.size = dialog_box_size
+		dialog_box.position = Vector2(-dialog_box_size.x / 2, 32)
+		
+		# Update dialog panel position and size to match
+		dialog_panel.size = panel_size
+		dialog_panel.position = Vector2(-panel_size.x / 2, 27)
+		
+		# Bouncy tween animation for opening
 		dialog_panel.visible = true
+		dialog_panel.scale = Vector2.ZERO
+		
+		var tween: Tween = create_tween()
+		tween.set_ease(Tween.EASE_OUT)
+		tween.set_trans(Tween.TRANS_BACK)
+		tween.tween_property(dialog_panel, "scale", Vector2.ONE, 0.4)
+		
 		phrase_displayed.emit(phrase)
+		
+		# Play a random body animation
+		_play_random_body_animation()
 		
 		await get_tree().create_timer(5.0).timeout
 		
+		# Bouncy tween animation for closing
 		if dialog_box and dialog_panel:
+			var close_tween: Tween = create_tween()
+			close_tween.set_ease(Tween.EASE_IN)
+			close_tween.set_trans(Tween.TRANS_BACK)
+			close_tween.tween_property(dialog_panel, "scale", Vector2.ZERO, 0.3)
+			
+			await close_tween.finished
+			
 			dialog_box.visible = false
 			dialog_panel.visible = false
+			dialog_panel.scale = Vector2.ONE  # Reset scale for next time
 
 func _set_emotion(emotion: String) -> void:
 	current_emotion = emotion
@@ -307,9 +401,65 @@ func _animate_eyebrows(style: String) -> void:
 	if animation_player.has_animation(style):
 		animation_player.play(style)
 
+## Play a random body animation to make Lucy more lively
+func _play_random_body_animation() -> void:
+	if not animation_player:
+		return
+	
+	var body_animations: Array = ["bounce", "squish"]
+	var random_animation: String = body_animations.pick_random()
+	
+	if animation_player.has_animation(random_animation):
+		animation_player.play(random_animation)
+
 func _on_comment_timer_timeout() -> void:
-	if randf() < 0.4:
+	# Increased frequency - 70% chance of commenting instead of 40%
+	if randf() < 0.7:
 		on_idle()
+		# Also do a random animation when commenting
+		_play_random_body_animation()
 	
 	comment_timer.wait_time = randf_range(comment_interval_min, comment_interval_max)
 	comment_timer.start()
+
+## Called when spell check timer times out (after 2-3 seconds of no typing)
+func _on_spell_check_timer_timeout() -> void:
+	if not spell_checker or recent_text == last_checked_text:
+		return
+	
+	# Only check if spell checker is loaded
+	if not spell_checker.is_loaded:
+		return
+	
+	last_checked_text = recent_text
+	
+	# Check for spelling errors
+	var errors: Array = spell_checker.check_text(recent_text)
+	
+	if errors.size() > 0:
+		# Pick a random error to complain about
+		var error: Dictionary = errors.pick_random()
+		var misspelled_word: String = error.word
+		
+		# Get suggestions (if any)
+		var suggestions: Array = error.suggestions
+		var suggestion_text: String = ""
+		if suggestions.size() > 0:
+			suggestion_text = "Did you mean '%s'?" % suggestions[0].term
+		
+		# Show upset eyebrows and sassy message
+		_set_emotion("upset")
+		var phrase: String = spelling_error_phrases.pick_random() % misspelled_word
+		
+		if suggestion_text:
+			phrase += " " + suggestion_text
+		
+		_say_phrase(phrase)
+		
+		print("JuicyLucy: Found spelling error: %s" % misspelled_word)
+
+## Public method to manually trigger spell check
+func check_spelling_now() -> void:
+	if spell_check_timer:
+		spell_check_timer.stop()
+		_on_spell_check_timer_timeout()

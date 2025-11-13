@@ -39,11 +39,15 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 ### Juicy Lucy Features
 Inspired by Microsoft's Clippy from the 1990s and early 2000s, Juicy Lucy is your friendly text editor companion:
 - **Eye Tracking**: Lucy's pupils procedurally follow your mouse cursor around the screen
-- **Expressive Eyebrows**: Procedurally generated Line2D eyebrows that animate to show different emotions (happy, surprised, concerned, skeptical, curious)
+- **Expressive Eyebrows**: Procedurally generated Line2D eyebrows that animate to show different emotions (happy, surprised, concerned, skeptical, curious, upset)
 - **Witty Commentary**: Lucy occasionally comments on your typing with fun phrases like "Did you really mean to type that?" or "Maybe you should save the file, because I'm not going to do it for you."
+- **Spell Checking**: Lucy watches for spelling mistakes as you type and calls you out after 2-3 seconds of inactivity with delightfully sassy messages like "You didn't spell '%s' correctly, you dumb bitch." She'll also suggest corrections!
+- **Smart Detection**: Lucy uses the SymSpell algorithm with a comprehensive English frequency dictionary to detect misspellings quickly and accurately
+- **Non-Intrusive Checking**: Spell checking only triggers after you stop typing for 2-3 seconds, so Lucy won't interrupt your flow
+- **No Visual Clutter**: Lucy doesn't highlight misspelled words - she just tells you about them with her signature sass
 - **Encouragement**: Lucy provides positive reinforcement when you save files and complete tasks
 - **BBCode Animations**: Lucy's dialog box uses RichTextLabel with BBCode effects for juicy animated text
-- **Context-Aware**: Lucy detects different situations (typing, idle, deleting, long lines) and responds appropriately
+- **Context-Aware**: Lucy detects different situations (typing, idle, deleting, long lines, spelling errors) and responds appropriately
 - **Non-Intrusive**: Lucy appears in the lower right corner and her commentary is timed to be helpful, not annoying
 
 ### Quality of Life
@@ -202,13 +206,38 @@ Enhanced TextEdit component:
 #### JuicyLucy
 Animated text editor assistant inspired by Microsoft Clippy:
 - **Eye Tracking**: Procedurally generated pupils that follow the mouse cursor in real-time
-- **Eyebrow Animation**: Procedural Line2D eyebrows that express emotions through 6 different animation states
-- **Context-Aware Commentary**: Witty phrases triggered by user actions (typing, idle, saving, deleting)
+- **Eyebrow Animation**: Procedural Line2D eyebrows that express emotions through 7 different animation states (including upset for spelling errors)
+- **Context-Aware Commentary**: Witty phrases triggered by user actions (typing, idle, saving, deleting, spelling errors)
 - **Phrase Dictionary**: Categorized phrases for different situations with randomized selection
 - **BBCode Dialog**: RichTextLabel with wave effects for juicy animated text display
-- **Emotion System**: Six emotional states (neutral, happy, surprised, concerned, skeptical, curious) with matching eyebrow animations
+- **Emotion System**: Seven emotional states (neutral, happy, surprised, concerned, skeptical, curious, upset) with matching eyebrow animations
+- **Spell Checking Integration**: Real-time spelling error detection with sassy feedback
 - **Non-Blocking**: All commentary is timed to be helpful without interrupting workflow
 - **Signal-Based**: Emits signals for phrase displays and emotion changes for extensibility
+
+#### SymSpell Spell Checker
+Local spell checking system based on the SymSpell algorithm:
+- **Algorithm**: Symmetric Delete spelling correction (https://github.com/wolfgarbe/SymSpell)
+- **Dictionary**: Uses frequency_bigramdictionary_en_243_342.txt with 240,000+ bigrams
+- **Performance**: 1 million times faster than traditional spell checkers
+- **Edit Distance**: Supports Damerau-Levenshtein distance (insertions, deletions, substitutions, transpositions)
+- **Smart Detection**: Only checks words 2+ characters, ignores numbers and single letters
+- **Frequency-Based Ranking**: Suggestions ranked by edit distance and word frequency
+- **GDScript Implementation**: Pure GDScript implementation optimized for Godot
+- **Automatic Loading**: Dictionary loads on startup with progress tracking
+- **Word Extraction**: Intelligent word boundary detection with apostrophe support for contractions
+- **Max Edit Distance**: Configurable (default: 2) for balance between speed and accuracy
+- **Prefix Optimization**: Uses prefix length of 7 for memory efficiency
+
+#### Spell Checking Features
+How the spell checker integrates with Juicy Lucy:
+- **Delayed Checking**: 2-3 second delay after typing stops to avoid interrupting flow
+- **No Visual Clutter**: Words are NOT highlighted or underlined - Lucy just tells you about errors
+- **Sassy Feedback**: Lucy displays upset eyebrows and phrases like "You didn't spell '%s' correctly, you dumb bitch."
+- **Suggestions Included**: Lucy provides the best spelling suggestion when available
+- **Random Selection**: If multiple errors exist, Lucy randomly picks one to comment on
+- **Context Preservation**: Spell checking respects your typing session without breaking concentration
+- **Performance**: Fast enough to check entire documents without lag
 
 ## 🎨 Syntax Highlighting System
 

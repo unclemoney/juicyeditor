@@ -21,6 +21,7 @@ We are making a simple text editor for Godot called Juicy Editor. It is a simple
 - Godot installation folder: "C:\Users\danie\OneDrive\Documents\GODOT\Godot_v4.4.1-stable_win64.exe".
 - Update the README.md file to reflect any new features or changes made to the project structure.
 - Autoload scripts should not have class_name declarations.
+- When searching the codebase always exclude res://assets/dictionary/frequency_bigramdictionary_en_243_342.txt, and never search within it.
 
 ## Scene & Node Organization
 - Single responsibility: each scene owns exactly one domain (UI, gameplay logic, effects).

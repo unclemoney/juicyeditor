@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://test_spell_checker_scene"]
+
+[ext_resource type="Script" path="res://scripts/test_spell_checker.gd" id="1"]
+
+[node name="TestSpellChecker" type="Node"]
+script = ExtResource("1")
