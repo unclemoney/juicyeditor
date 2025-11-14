@@ -617,6 +617,15 @@ func _input(event: InputEvent) -> void:
 				KEY_0: # Ctrl+0 - Reset Zoom
 					_reset_zoom()
 					get_viewport().set_input_as_handled()
+		
+		if event.ctrl_pressed and event.alt_pressed:
+			match event.keycode:
+				KEY_9: # Ctrl+Alt+9 - Add [ ] to line beginning
+					_add_checkbox_to_line()
+					get_viewport().set_input_as_handled()
+				KEY_0: # Ctrl+Alt+0 - Toggle [ ] to [X]
+					_toggle_checkbox()
+					get_viewport().set_input_as_handled()
 
 func _on_settings_menu_selected(id: int) -> void:
 	match id:
@@ -887,6 +896,52 @@ func _show_text_statistics() -> void:
 	add_child(dialog)
 	dialog.popup_centered()
 	dialog.confirmed.connect(func(): dialog.queue_free())
+
+# Markdown checklist functionality
+func _add_checkbox_to_line() -> void:
+	## Add unchecked checkbox [ ] to the beginning of the current line
+	if not text_editor:
+		return
+	
+	var current_line = text_editor.get_caret_line()
+	var line_text = text_editor.get_line(current_line)
+	
+	# Don't add if checkbox already exists
+	if line_text.strip_edges().begins_with("[ ]") or line_text.strip_edges().begins_with("[X]"):
+		return
+	
+	# Add checkbox at the beginning of the line (preserving indentation)
+	var leading_whitespace = ""
+	for i in range(line_text.length()):
+		if line_text[i] in [" ", "\t"]:
+			leading_whitespace += line_text[i]
+		else:
+			break
+	
+	var new_line = leading_whitespace + "[ ] " + line_text.strip_edges()
+	text_editor.set_line(current_line, new_line)
+	
+	# Move caret to end of line
+	text_editor.set_caret_column(new_line.length())
+
+func _toggle_checkbox() -> void:
+	## Toggle checkbox from [ ] to [X] or [X] to [ ] on the current line
+	if not text_editor:
+		return
+	
+	var current_line = text_editor.get_caret_line()
+	var line_text = text_editor.get_line(current_line)
+	var stripped = line_text.strip_edges()
+	
+	# Check if line has a checkbox
+	if stripped.begins_with("[ ]"):
+		# Convert [ ] to [X]
+		var new_line = line_text.replace("[ ]", "[X]")
+		text_editor.set_line(current_line, new_line)
+	elif stripped.begins_with("[X]"):
+		# Convert [X] to [ ]
+		var new_line = line_text.replace("[X]", "[ ]")
+		text_editor.set_line(current_line, new_line)
 
 # Effects menu methods
 func _open_effects_settings_dialog() -> void:

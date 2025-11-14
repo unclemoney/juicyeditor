@@ -27,15 +27,45 @@ var is_file_modified: bool = false
 var editor_settings: Dictionary = {}
 var recent_files: Array[String] = []
 var max_recent_files: int = 10
+var processed_args: PackedStringArray = []  # Track which args we've processed
+var check_interval: float = 0.5  # Check for new files every half second
+var time_since_last_check: float = 0.0
+var instance_lock_file: String = ""
+var instance_command_file: String = ""
+var is_primary_instance: bool = false
 
 func _ready() -> void:
 	print("Juicy Editor starting up...")
+	
+	# Check if another instance is running BEFORE initializing
+	if not _try_become_primary_instance():
+		# Another instance is running - send files to it and quit
+		print("Another instance detected, sending files and exiting...")
+		_send_files_to_primary_instance()
+		get_tree().quit()
+		return
+	
+	print("This is the primary instance")
 	_initialize_systems()
 	_connect_signals()
 	_load_settings()
 	
 	# Process command line arguments after everything is set up
 	call_deferred("_process_command_line_arguments")
+	
+	# Ensure at least one tab exists after command line processing
+	call_deferred("_ensure_initial_tab")
+
+func _process(delta: float) -> void:
+	"""Check periodically for new files via command file"""
+	if not is_primary_instance:
+		return
+	
+	time_since_last_check += delta
+	
+	if time_since_last_check >= check_interval:
+		time_since_last_check = 0.0
+		_check_command_file()
 
 func initialize_node_references() -> void:
 	# Initialize node references from paths
@@ -445,6 +475,13 @@ func _notification(what: int) -> void:
 			# TODO: Show save dialog before closing
 			pass
 		_save_settings()
+		
+		# Clean up lock file when exiting
+		if is_primary_instance and instance_lock_file != "":
+			if FileAccess.file_exists(instance_lock_file):
+				DirAccess.remove_absolute(instance_lock_file)
+				print("Removed lock file on exit")
+		
 		get_tree().quit()
 
 func _add_to_recent_files(file_path: String) -> void:
@@ -553,6 +590,11 @@ func get_file_info(file_path: String) -> Dictionary:
 func _process_command_line_arguments() -> void:
 	"""Process command line arguments to open files passed to the application"""
 	var args = OS.get_cmdline_args()
+	
+	# Store processed args to detect new ones in single instance mode
+	if processed_args.is_empty():
+		processed_args = args
+	
 	print("DEBUG: Command line arguments: ", args)
 	print("DEBUG: Executable path: ", OS.get_executable_path())
 	print("DEBUG: Working directory: ", OS.get_environment("PWD"))
@@ -580,9 +622,6 @@ func _process_command_line_arguments() -> void:
 	# Open all the files found in command line arguments
 	if files_to_open.size() > 0:
 		print("Opening ", files_to_open.size(), " file(s) from command line...")
-		
-		# Clear the default empty tab if it exists and is empty
-		_clear_default_empty_tab()
 		
 		# Open each file in a new tab
 		for file_path in files_to_open:
@@ -635,3 +674,146 @@ func _clear_default_empty_tab() -> void:
 			var current_tab = file_tab_container.current_tab_index
 			file_tab_container.close_tab(current_tab)
 			print("DEBUG: Cleared default empty tab")
+
+func _ensure_initial_tab() -> void:
+	"""Ensure at least one tab exists after startup - only if no files were opened"""
+	if file_tab_container and file_tab_container.has_method("ensure_tab_exists"):
+		file_tab_container.ensure_tab_exists()
+		print("DEBUG: Ensured initial tab exists")
+
+func _check_for_new_command_line_files() -> void:
+	"""Check if new command line arguments have been added (single instance mode)"""
+	var current_args = OS.get_cmdline_args()
+	
+	# Check if args have changed (new files passed from second instance)
+	if current_args.size() > processed_args.size():
+		print("DEBUG: New command line arguments detected!")
+		
+		# Find the new arguments
+		var new_files: Array[String] = []
+		for arg in current_args:
+			if arg not in processed_args:
+				# Skip Godot engine arguments
+				if arg.begins_with("--") or arg.begins_with("-"):
+					continue
+				
+				# Skip the executable path
+				if arg.ends_with(".exe") or arg.ends_with("juicyeditor"):
+					continue
+				
+				# Check if it's a valid file
+				var absolute_path = _get_absolute_file_path(arg)
+				if absolute_path != "":
+					new_files.append(absolute_path)
+					print("DEBUG: New file to open: ", absolute_path)
+		
+		# Update processed args
+		processed_args = current_args
+		
+		# Open the new files
+		for file_path in new_files:
+			open_file(file_path)
+		
+		# Bring window to front
+		if new_files.size() > 0:
+			get_window().grab_focus()
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+			DisplayServer.window_move_to_foreground()
+
+## IPC Methods for Single Instance Support
+
+func _try_become_primary_instance() -> bool:
+	"""Try to become the primary instance. Returns true if successful, false if another instance exists"""
+	# Use user:// directory for lock files
+	instance_lock_file = "user://juicy_editor.lock"
+	instance_command_file = "user://juicy_editor_commands.txt"
+	
+	# Check if lock file exists
+	if FileAccess.file_exists(instance_lock_file):
+		# Check if the process is still alive by trying to read it
+		var lock_read = FileAccess.open(instance_lock_file, FileAccess.READ)
+		if lock_read:
+			var pid = lock_read.get_as_text().strip_edges()
+			lock_read.close()
+			
+			# If lock file exists, assume another instance is running
+			# (In a production app, you'd verify the PID is still running)
+			print("Lock file exists with PID: ", pid)
+			is_primary_instance = false
+			return false
+	
+	# Create lock file with our PID
+	var lock_write = FileAccess.open(instance_lock_file, FileAccess.WRITE)
+	if lock_write:
+		lock_write.store_string(str(OS.get_process_id()))
+		lock_write.close()
+		is_primary_instance = true
+		print("Created lock file, we are primary instance")
+		
+		# Clear any old command file
+		if FileAccess.file_exists(instance_command_file):
+			DirAccess.remove_absolute(instance_command_file)
+		
+		return true
+	
+	# If we can't create lock file, assume we're primary anyway
+	is_primary_instance = true
+	return true
+	return true
+
+func _send_files_to_primary_instance() -> void:
+	"""Send our command line files to the primary instance via command file"""
+	var args = OS.get_cmdline_args()
+	var files_to_send: Array[String] = []
+	
+	# Extract file arguments
+	for arg in args:
+		if arg.begins_with("--") or arg.begins_with("-"):
+			continue
+		if arg.ends_with(".exe") or arg.ends_with("juicyeditor"):
+			continue
+		
+		var absolute_path = _get_absolute_file_path(arg)
+		if absolute_path != "":
+			files_to_send.append(absolute_path)
+	
+	# Write files to command file
+	if files_to_send.size() > 0:
+		var cmd_file = FileAccess.open(instance_command_file, FileAccess.WRITE)
+		if cmd_file:
+			for file_path in files_to_send:
+				cmd_file.store_line(file_path)
+			cmd_file.close()
+			print("Sent ", files_to_send.size(), " files to primary instance")
+
+func _check_command_file() -> void:
+	"""Check if there are new files to open from command file"""
+	if not FileAccess.file_exists(instance_command_file):
+		return
+	
+	# Read command file
+	var cmd_file = FileAccess.open(instance_command_file, FileAccess.READ)
+	if not cmd_file:
+		return
+	
+	var files_to_open: Array[String] = []
+	while not cmd_file.eof_reached():
+		var line = cmd_file.get_line().strip_edges()
+		if line != "" and FileAccess.file_exists(line):
+			files_to_open.append(line)
+	
+	cmd_file.close()
+	
+	# Delete command file after reading
+	DirAccess.remove_absolute(instance_command_file)
+	
+	# Open the files
+	if files_to_open.size() > 0:
+		print("Received ", files_to_open.size(), " files from secondary instance")
+		for file_path in files_to_open:
+			open_file(file_path)
+		
+		# Bring window to front
+		get_window().grab_focus()
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+		DisplayServer.window_move_to_foreground()

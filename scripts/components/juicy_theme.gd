@@ -53,6 +53,8 @@ class_name JuicyTheme
 @export var markdown_italic_color: Color
 @export var markdown_code_color: Color
 @export var markdown_link_color: Color
+@export var markdown_checkbox_unchecked_color: Color
+@export var markdown_checkbox_checked_color: Color
 
 @export_group("JSON Colors")
 @export var json_key_color: Color
@@ -484,6 +486,10 @@ func _setup_markdown_highlighting_themed(highlighter: CodeHighlighter) -> void:
 	
 	# Code blocks
 	highlighter.add_color_region("```", "```", markdown_code_color)
+	
+	# Checkboxes - unchecked and checked
+	highlighter.add_color_region("[ ]", " ", markdown_checkbox_unchecked_color, false)
+	highlighter.add_color_region("[X]", " ", markdown_checkbox_checked_color, false)
 	
 	# Symbols
 	highlighter.symbol_color = symbol_color

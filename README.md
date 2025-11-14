@@ -16,6 +16,7 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **File Association Support**: Open files directly from Windows file association and command line arguments
 - ✅ **Multiple File Opening**: Support for opening multiple files simultaneously via command line or file association
 - ✅ **Syntax Highlighting**: File type-specific syntax highlighting for GDScript, Python, Markdown, and JSON with theme-aware colors
+- ✅ **Markdown Checklists**: Quick keyboard shortcuts to add `[ ]` or toggle to `[X]` with themed colors
 - ✅ **Theme-Aware Highlighting**: Each theme provides unique color schemes for different programming languages and file types
 - ✅ **Find & Replace**: Comprehensive search and replace with case sensitivity and whole word options
 - ✅ **Go to Line**: Quick navigation to specific line numbers
@@ -261,6 +262,7 @@ Juicy Editor provides specialized syntax highlighting for:
   - Bold (`**text**`) and italic (`*text*`) formatting
   - Inline code (`` `code` ``) and code blocks with distinct highlighting
   - Links (`[text](url)`) with link-specific colors
+  - Checkboxes (`[ ]` unchecked, `[X]` checked) with distinct colors
 
 - **JSON (.json)**: Structured JSON highlighting
   - Keys and values with distinct colors
@@ -386,6 +388,8 @@ Juicy Editor features a powerful zoom system that scales the entire text editing
 | Reset Zoom | Ctrl+0 |
 | Undo | Ctrl+Z |
 | Redo | Ctrl+Y |
+| Add Checkbox (Markdown) | Ctrl+Alt+9 |
+| Toggle Checkbox (Markdown) | Ctrl+Alt+0 |
 
 ### Adding Audio
 Place audio files in `audio/sfx/` and configure them in the AudioManager.

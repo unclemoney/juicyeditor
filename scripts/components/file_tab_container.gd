@@ -48,9 +48,8 @@ func setup_text_editor(editor: TextEdit) -> void:
 	"""Setup reference to the main text editor"""
 	text_editor = editor
 	
-	# Now create initial "Untitled" tab after text editor is set up
-	if tab_files.size() == 0:
-		add_new_tab("", "")
+	# Don't create initial tab automatically - let the game controller decide
+	# based on whether files are being opened from command line
 
 func add_new_tab(file_path: String = "", content: String = "") -> int:
 	"""Add a new tab with the given file"""
@@ -234,3 +233,8 @@ func save_all_tabs() -> bool:
 	# This will need to be implemented in coordination with the game controller
 	# For now, just return true
 	return true
+
+func ensure_tab_exists() -> void:
+	"""Ensure at least one tab exists - creates empty tab if none exist"""
+	if tab_files.size() == 0:
+		add_new_tab("", "")
