@@ -15,13 +15,22 @@ signal audio_settings_changed
 var audio_players: Array[AudioStreamPlayer] = []
 var typing_player: AudioStreamPlayer
 var ui_player: AudioStreamPlayer
+var delete_player: AudioStreamPlayer
 
 var audio_enabled: bool = true
 var typing_sounds_enabled: bool = true
 
+# Delete sound effect system with pitch-down
+var delete_sound: AudioStream
+var delete_pitch_offset: float = 0.0  # Cents offset from original pitch
+var delete_pitch_step: float = 1.0  # Lower by 1 cent each time
+var pitch_reset_timer: Timer
+
 func _ready() -> void:
 	_setup_audio_players()
+	_setup_pitch_reset_timer()
 	_load_default_sounds()
+	_load_delete_sound()
 
 func _setup_audio_players() -> void:
 	# Create audio players for different types of sounds
@@ -32,6 +41,11 @@ func _setup_audio_players() -> void:
 	ui_player = AudioStreamPlayer.new()
 	ui_player.name = "UIPlayer"
 	add_child(ui_player)
+	
+	delete_player = AudioStreamPlayer.new()
+	delete_player.name = "DeletePlayer"
+	delete_player.bus = "Master"
+	add_child(delete_player)
 	
 	# Create a pool of audio players for overlapping sounds
 	for i in range(5):
@@ -44,6 +58,27 @@ func _load_default_sounds() -> void:
 	# Create procedural audio streams as placeholders
 	_create_procedural_typing_sounds()
 	_create_procedural_ui_sounds()
+
+func _setup_pitch_reset_timer() -> void:
+	## Setup timer to reset pitch offset after 0.5 seconds
+	pitch_reset_timer = Timer.new()
+	pitch_reset_timer.name = "PitchResetTimer"
+	pitch_reset_timer.wait_time = 0.5
+	pitch_reset_timer.one_shot = true
+	pitch_reset_timer.timeout.connect(_on_pitch_reset_timeout)
+	add_child(pitch_reset_timer)
+
+func _load_delete_sound() -> void:
+	## Load the delete sound effect from the audio folder
+	var delete_sound_path = "res://audio/sfx/delete.wav"
+	if ResourceLoader.exists(delete_sound_path):
+		delete_sound = load(delete_sound_path) as AudioStream
+		if delete_sound:
+			print("AudioManager: Delete sound loaded successfully")
+		else:
+			print("AudioManager: Failed to load delete sound")
+	else:
+		print("AudioManager: Delete sound file not found at ", delete_sound_path)
 
 func _create_procedural_typing_sounds() -> void:
 	# Create simple procedural typing sounds using AudioStreamGenerator
@@ -117,6 +152,36 @@ func play_typing_sound() -> void:
 		typing_player.stream = sound
 		typing_player.volume_db = linear_to_db(master_volume * typing_volume)
 		typing_player.play()
+
+func play_delete_sound() -> void:
+	## Play delete/backspace/cut sound with pitch-down effect
+	if not audio_enabled or not delete_sound or not delete_player:
+		return
+	
+	# Set up the audio stream
+	delete_player.stream = delete_sound
+	delete_player.volume_db = linear_to_db(master_volume * ui_volume)
+	
+	# Apply pitch shift (convert cents to pitch scale)
+	# 100 cents = 1 semitone, pitch_scale of 2.0 = 1 octave up
+	# Formula: pitch_scale = 2^(cents/1200)
+	var pitch_scale = pow(2.0, delete_pitch_offset / 1200.0)
+	delete_player.pitch_scale = pitch_scale
+	
+	# Play the sound
+	delete_player.play()
+	
+	# Decrease pitch by 1 cent for next time
+	delete_pitch_offset -= delete_pitch_step
+	
+	# Restart the reset timer
+	if pitch_reset_timer:
+		pitch_reset_timer.stop()
+		pitch_reset_timer.start()
+
+func _on_pitch_reset_timeout() -> void:
+	## Reset pitch offset back to 0 after 0.5 seconds of no deletions
+	delete_pitch_offset = 0.0
 
 func play_ui_sound(sound_name: String) -> void:
 	if not audio_enabled:

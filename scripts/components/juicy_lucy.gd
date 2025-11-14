@@ -38,6 +38,24 @@ signal emotion_changed(emotion: String)
 ## Timer for random commentary
 @onready var comment_timer: Timer = $CommentTimer
 
+## Timer for random eye blinking
+var blink_timer: Timer = null
+
+## Blink animation variables
+var blink_frames: Array[Texture2D] = []
+var is_blinking: bool = false
+var current_blink_frame: int = 0
+var blink_frame_duration: float = 0.01  # Will be randomized per frame
+var blink_frame_timer: float = 0.0
+var blinks_remaining: int = 0  # Number of blinks left in current cycle
+var blink_pause_timer: float = 0.0  # Pause between consecutive blinks
+var blink_pause_duration: float = 0.1  # 100ms pause between blinks
+var is_blink_pausing: bool = false
+
+## Blink interval range (in seconds)
+@export var blink_interval_min: float = 3.0
+@export var blink_interval_max: float = 8.0
+
 ## Eye center positions relative to the Eyes node
 @export var left_eye_center: Vector2 = Vector2(-12, -5)
 @export var right_eye_center: Vector2 = Vector2(12, -5)
@@ -149,6 +167,8 @@ func _ready() -> void:
 	_start_comment_timer()
 	_setup_click_detection()
 	_setup_spell_checker()
+	_load_blink_frames()
+	_setup_blink_timer()
 
 func _setup_click_detection() -> void:
 	if body_sprite:
@@ -233,8 +253,130 @@ func _setup_spell_checker() -> void:
 	spell_check_timer.timeout.connect(_on_spell_check_timer_timeout)
 	add_child(spell_check_timer)
 
+func _load_blink_frames() -> void:
+	## Load all 8 blink animation frames
+	for i in range(1, 9):
+		var frame_path = "res://assets/ui/icons/juicy_lucy_south_eyes%d.png" % i
+		if ResourceLoader.exists(frame_path):
+			var texture = load(frame_path) as Texture2D
+			if texture:
+				blink_frames.append(texture)
+			else:
+				print("JuicyLucy: Failed to load blink frame: ", frame_path)
+		else:
+			print("JuicyLucy: Blink frame not found: ", frame_path)
+	
+	if blink_frames.size() == 8:
+		print("JuicyLucy: Successfully loaded all 8 blink frames")
+	else:
+		print("JuicyLucy: Warning - Only loaded ", blink_frames.size(), " blink frames")
+
+func _setup_blink_timer() -> void:
+	## Setup timer for random eye blinking
+	blink_timer = Timer.new()
+	blink_timer.name = "BlinkTimer"
+	blink_timer.one_shot = true
+	blink_timer.timeout.connect(_on_blink_timer_timeout)
+	add_child(blink_timer)
+	
+	# Start the first blink cycle
+	_start_next_blink_cycle()
+
+func _start_next_blink_cycle() -> void:
+	## Schedule the next random blink
+	if blink_timer:
+		var wait_time = randf_range(blink_interval_min, blink_interval_max)
+		blink_timer.wait_time = wait_time
+		blink_timer.start()
+
+func _on_blink_timer_timeout() -> void:
+	## Start a blink animation when timer expires
+	if not is_blinking and blink_frames.size() == 8:
+		# Random number of blinks (1-3)
+		blinks_remaining = randi_range(1, 3)
+		_start_blink_animation()
+	
+	# Schedule next blink
+	_start_next_blink_cycle()
+
+func _start_blink_animation() -> void:
+	## Begin the 8-frame blink animation
+	is_blinking = true
+	current_blink_frame = 0
+	blink_frame_timer = 0.0
+	is_blink_pausing = false
+	
+	# Hide pupils during blink
+	if left_pupil:
+		left_pupil.visible = false
+	if right_pupil:
+		right_pupil.visible = false
+	
+	# Randomize frame duration for this blink (between 10ms and 50ms)
+	blink_frame_duration = randf_range(0.01, 0.05)
+
 func _process(_delta: float) -> void:
 	_update_pupil_tracking()
+	_update_blink_animation(_delta)
+
+func _update_blink_animation(delta: float) -> void:
+	## Update blink animation frame by frame
+	if not is_blinking or blink_frames.is_empty():
+		return
+	
+	# Handle pause between consecutive blinks
+	if is_blink_pausing:
+		blink_pause_timer += delta
+		if blink_pause_timer >= blink_pause_duration:
+			# Pause complete, start next blink
+			is_blink_pausing = false
+			blink_pause_timer = 0.0
+			current_blink_frame = 0
+			blink_frame_timer = 0.0
+			# Randomize frame duration for next blink
+			blink_frame_duration = randf_range(0.01, 0.05)
+		return
+	
+	blink_frame_timer += delta
+	
+	if blink_frame_timer >= blink_frame_duration:
+		blink_frame_timer = 0.0
+		
+		# Apply current frame texture
+		if eyes_sprite and current_blink_frame < blink_frames.size():
+			eyes_sprite.texture = blink_frames[current_blink_frame]
+		
+		current_blink_frame += 1
+		
+		# Check if single blink animation is complete
+		if current_blink_frame >= blink_frames.size():
+			blinks_remaining -= 1
+			
+			if blinks_remaining > 0:
+				# More blinks to do, enter pause state
+				is_blink_pausing = true
+			else:
+				# All blinks complete
+				_end_blink_animation()
+
+func _end_blink_animation() -> void:
+	## End blink and reset to normal eyes
+	is_blinking = false
+	current_blink_frame = 0
+	blinks_remaining = 0
+	is_blink_pausing = false
+	
+	# Show pupils again
+	if left_pupil:
+		left_pupil.visible = true
+	if right_pupil:
+		right_pupil.visible = true
+	
+	# Reset to normal eyes texture
+	if eyes_sprite:
+		var normal_eyes_path = "res://assets/ui/icons/juicy_lucy_south_eyes.png"
+		if ResourceLoader.exists(normal_eyes_path):
+			eyes_sprite.texture = load(normal_eyes_path) as Texture2D
 
 ## Update pupils to look at mouse cursor
 func _update_pupil_tracking() -> void:

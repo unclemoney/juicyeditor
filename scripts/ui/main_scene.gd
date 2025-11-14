@@ -271,6 +271,8 @@ func _connect_signals() -> void:
 	text_editor.caret_changed.connect(_update_status_bar)
 	if text_editor.has_signal("text_typed"):
 		text_editor.text_typed.connect(_on_text_typed)
+	if text_editor.has_signal("text_deleted"):
+		text_editor.text_deleted.connect(_on_text_deleted)
 	
 	# Connect game controller signals
 	game_controller.file_opened.connect(_on_file_opened)
@@ -515,6 +517,12 @@ func _on_text_changed() -> void:
 func _on_text_typed(character: String) -> void:
 	# This signal comes from JuicyTextEdit when a character is typed
 	print("Character typed: ", character)
+
+func _on_text_deleted(_character: String) -> void:
+	## Handle text deletion (backspace, delete, cut)
+	## Play delete sound effect with pitch-down
+	if audio_manager and audio_manager.has_method("play_delete_sound"):
+		audio_manager.play_delete_sound()
 
 func _on_file_opened(file_path: String) -> void:
 	current_file_path = file_path
