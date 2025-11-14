@@ -1,11 +1,10 @@
-[gd_scene load_steps=13 format=3 uid="uid://bt74kgu67tnxg"]
+[gd_scene load_steps=12 format=3 uid="uid://bt74kgu67tnxg"]
 
 [ext_resource type="Script" uid="uid://dhfhsla164f80" path="res://scripts/ui/main_scene.gd" id="1_51l7b"]
 [ext_resource type="Script" uid="uid://cs73sg5vom7ql" path="res://scripts/components/juicy_text_edit.gd" id="2_h3n2m"]
 [ext_resource type="Shader" uid="uid://cvcqfj50imfxw" path="res://shaders/gradient.gdshader" id="2_jyhfs"]
 [ext_resource type="Script" uid="uid://c70qaxxo05ucq" path="res://scripts/components/line_numbers.gd" id="3_line_numbers"]
 [ext_resource type="Script" uid="uid://bxg7hdo3st8ji" path="res://scripts/components/visual_effects_manager.gd" id="4_tbgi4"]
-[ext_resource type="Shader" uid="uid://ceus8uhefd1mx" path="res://shaders/rainbow_shader.gdshader" id="6_85g3d"]
 [ext_resource type="Script" uid="uid://bsm3t74ppu58m" path="res://scripts/components/file_tab_container.gd" id="6_tab_container"]
 [ext_resource type="Theme" uid="uid://gwjtp8avnct" path="res://themes/balatro_ui_theme.tres" id="7_balatro_theme"]
 [ext_resource type="PackedScene" uid="uid://bwxstgl5vfieh" path="res://scenes/components/juicy_lucy.tscn" id="8_juicy_lucy"]
@@ -27,12 +26,6 @@ shader_parameter/is_rotating = false
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_o6xl0"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tefeu"]
-shader = ExtResource("6_85g3d")
-shader_parameter/wave_strength = 0.03
-shader_parameter/wave_speed = 1.2
-shader_parameter/outline_size = 2.5
-shader_parameter/shimmer_width = 0.15
-shader_parameter/glow_base = 0.35
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -172,6 +165,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="LineNumbers" type="Control" parent="VBoxContainer/MainArea/TextEditorContainer/EditorHBox"]
+clip_contents = true
 custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 size_flags_horizontal = 0
