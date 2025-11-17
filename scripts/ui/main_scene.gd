@@ -620,6 +620,9 @@ func _input(event: InputEvent) -> void:
 		
 		if event.ctrl_pressed and event.alt_pressed:
 			match event.keycode:
+				KEY_8: # Ctrl+Alt+8 - Organize selected markdown lines
+					_organize_markdown_selection()
+					get_viewport().set_input_as_handled()
 				KEY_9: # Ctrl+Alt+9 - Add [ ] to line beginning
 					_add_checkbox_to_line()
 					get_viewport().set_input_as_handled()
@@ -942,6 +945,51 @@ func _toggle_checkbox() -> void:
 		# Convert [X] to [ ]
 		var new_line = line_text.replace("[X]", "[ ]")
 		text_editor.set_line(current_line, new_line)
+
+func _organize_markdown_selection() -> void:
+	## Organize selected markdown lines: no checkbox, then [ ], then [X]
+	if not text_editor:
+		return
+	
+	# Check if there's a selection
+	if not text_editor.has_selection():
+		return
+	
+	var selection_from_line = text_editor.get_selection_from_line()
+	var selection_to_line = text_editor.get_selection_to_line()
+	
+	# Collect all lines in the selection
+	var lines = []
+	for line_num in range(selection_from_line, selection_to_line + 1):
+		lines.append(text_editor.get_line(line_num))
+	
+	# Categorize lines into three groups
+	var no_checkbox_lines = []
+	var unchecked_lines = []
+	var checked_lines = []
+	
+	for line in lines:
+		var stripped = line.strip_edges()
+		if stripped.begins_with("[X]"):
+			checked_lines.append(line)
+		elif stripped.begins_with("[ ]"):
+			unchecked_lines.append(line)
+		else:
+			no_checkbox_lines.append(line)
+	
+	# Combine in order: no checkbox, unchecked, checked
+	var organized_lines = []
+	organized_lines.append_array(no_checkbox_lines)
+	organized_lines.append_array(unchecked_lines)
+	organized_lines.append_array(checked_lines)
+	
+	# Replace the selected lines with organized lines
+	for i in range(organized_lines.size()):
+		var line_num = selection_from_line + i
+		text_editor.set_line(line_num, organized_lines[i])
+	
+	# Restore selection
+	text_editor.select(selection_from_line, 0, selection_to_line, text_editor.get_line(selection_to_line).length())
 
 # Effects menu methods
 func _open_effects_settings_dialog() -> void:

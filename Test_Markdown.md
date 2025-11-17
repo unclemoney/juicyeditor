@@ -37,7 +37,18 @@ func example_function():
 ### Instructions
 - Press **Ctrl+Alt+9** to add `[ ]` to the beginning of any line
 - Press **Ctrl+Alt+0** to toggle between `[ ]` and `[X]`
+- Press **Ctrl+Alt+8** to organize selected lines (no checkbox → unchecked → checked)
 - Notice the different colors for unchecked and checked boxes!
+
+### Try Organizing This Mixed List
+Select the lines below and press Ctrl+Alt+8 to see them reorganize:
+[X] This is completed
+Write documentation
+[ ] This is pending
+[X] Another completed item
+Review code
+[ ] Another pending task
+Update tests
 
 ## Conclusion
 

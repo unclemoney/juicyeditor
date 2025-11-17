@@ -16,7 +16,7 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **File Association Support**: Open files directly from Windows file association and command line arguments
 - ✅ **Multiple File Opening**: Support for opening multiple files simultaneously via command line or file association
 - ✅ **Syntax Highlighting**: File type-specific syntax highlighting for GDScript, Python, Markdown, and JSON with theme-aware colors
-- ✅ **Markdown Checklists**: Quick keyboard shortcuts to add `[ ]` or toggle to `[X]` with themed colors
+- ✅ **Markdown Checklists**: Quick keyboard shortcuts to add `[ ]`, toggle to `[X]`, and organize selections by checkbox state with themed colors
 - ✅ **Theme-Aware Highlighting**: Each theme provides unique color schemes for different programming languages and file types
 - ✅ **Find & Replace**: Comprehensive search and replace with case sensitivity and whole word options
 - ✅ **Go to Line**: Quick navigation to specific line numbers
@@ -388,6 +388,7 @@ Juicy Editor features a powerful zoom system that scales the entire text editing
 | Reset Zoom | Ctrl+0 |
 | Undo | Ctrl+Z |
 | Redo | Ctrl+Y |
+| Organize Selection (Markdown) | Ctrl+Alt+8 |
 | Add Checkbox (Markdown) | Ctrl+Alt+9 |
 | Toggle Checkbox (Markdown) | Ctrl+Alt+0 |
 
