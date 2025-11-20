@@ -206,6 +206,18 @@ func _on_reset_button_pressed() -> void:
 	var balatro_theme = preload("res://themes/balatro_ui_theme.tres")
 	confirm_dialog.theme = balatro_theme
 	
+	# Create custom panel StyleBox for the dialog background
+	# This replaces the grey default background with our dark purple
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color("#140d26")
+	#panel_style.border_color = Color("#7851a9")  # Light purple border
+	#panel_style.set_border_width_all(4)
+	#panel_style.set_corner_radius_all(8)
+	#panel_style.set_content_margin_all(20)
+	
+	# Override the AcceptDialog panel style for this specific dialog
+	#confirm_dialog.add_theme_stylebox_override("panel", panel_style)
+	
 	# Add to scene tree
 	add_child(confirm_dialog)
 	
