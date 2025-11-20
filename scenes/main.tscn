@@ -16,7 +16,7 @@ shader = ExtResource("2_jyhfs")
 shader_parameter/spin_rotation_speed = 2.0
 shader_parameter/move_speed = 7.0
 shader_parameter/offset = Vector2(0, 0)
-shader_parameter/colour_1 = Color(0.871, 0.267, 0.231, 1)
+shader_parameter/colour_1 = Color(0.3, 0.2, 0.4, 1)
 shader_parameter/colour_2 = Color(0, 0.42, 0.706, 1)
 shader_parameter/colour_3 = Color(0.086, 0.137, 0.145, 1)
 shader_parameter/contrast = 3.5
@@ -279,15 +279,3 @@ offset_left = 48.0
 offset_top = 72.0
 offset_right = 326.0
 offset_bottom = 370.0
-
-[node name="WindowTest" type="Window" parent="."]
-visible = false
-
-[node name="ColorRect" type="ColorRect" parent="WindowTest"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
