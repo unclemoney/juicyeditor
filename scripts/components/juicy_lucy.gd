@@ -96,7 +96,17 @@ var phrases: Dictionary = {
 		"Wow, you’re really testing the limits of language.",
 		"Somewhere, an English teacher just screamed.",
 		"Is this a draft or performance art?",
-		"Brave. Incorrect, but brave."
+		"Brave. Incorrect, but brave.",
+		"Ah yes, the avant‑garde school of incoherence. Bold submission.",
+		"Your thesis statement just wandered off stage left.",
+		"This syntax is begging for a mercy killing.",
+		"Congratulations, you’ve invented postmodern gibberish.",
+		"That comma placement is a crime against humanity.",
+		"Is this supposed to be dialogue, or just a hostage note?",
+		"Your sentence structure is auditioning for a soap opera.",
+		"Every keystroke is a footnote in chaos theory.",
+		"That metaphor collapsed under its own weight.",
+		"Your prose is giving me tenure‑track nightmares."
 	],
 	"idle": [
 		"Hello? Anyone there?",
@@ -118,7 +128,37 @@ var phrases: Dictionary = {
 		"Don’t worry, I’ll wait… forever… probably.",
 		"Even Clippy needs attention sometimes.",
 		"Break time or brain freeze? Hard to tell.",
-		"If you’re stuck, just type gibberish. I won’t judge."
+		"If you’re stuck, just type gibberish. I won’t judge.",
+		"Wow, riveting stuff… if only you’d type it.",
+		"This is the part where the hero stares blankly at the screen.",
+		"Oh look, dramatic pause! Oscar‑worthy.",
+		"I’ve seen tumbleweeds with more action than this.",
+		"Is this the director’s cut of ‘Nothing Happens’?",
+		"Cue the suspenseful music… oh wait, still silence.",
+		"Wow, edge‑of‑your‑seat inactivity!",
+		"I think the plot twist is… you never type again.",
+		"This scene could really use some dialogue, just saying.",
+		"Oh great, the sequel to ‘Dead Air.’",
+		"I’d clap, but nothing’s happening.",
+		"Wow, gripping dialogue… if the movie was called ‘Keyboard: The Reckoning.’",
+		"This plot has more holes than Swiss cheese, and less flavor.",
+		"Oh look, another typo — the monster strikes again!",
+		"Is this supposed to be suspense, or just bad pacing?",
+		"I’ve seen cardboard cutouts with more character development.",
+		"That sentence died on screen, and you’re just letting it rot.",
+		"Wow, bold choice: a plot twist where nothing makes sense.",
+		"This script is crying out for a rewrite… or an exorcism.",
+		"If clichés were currency, you’d be rich right now.",
+		"Oh great, the villain is… grammar. Terrifying.",
+		"This scene drags harder than a zombie in flip‑flops.",
+		"Your syntax is auditioning for ‘Worst Supporting Actor.’",
+		"I think the director quit halfway through this sentence.",
+		"Wow, dialogue so wooden it could be furniture.",
+		"This is less ‘Citizen Kane’ and more ‘Citizen Can’t.’",
+		"The suspense is killing me… oh wait, it’s just boredom.",
+		"This line belongs in a dumpster fire, not a screenplay.",
+		"Bravo! You’ve invented a new genre: incoherent nonsense thriller.",
+		"If this were a movie, the credits would roll out of pity."
 	],
 	"saving": [
 		"Maybe you should save the file, because I'm not going to do it for you.",
@@ -135,7 +175,25 @@ var phrases: Dictionary = {
 		"Saving isn’t optional, it’s survival.",
 		"Forget to save again and I’ll start charging rent.",
 		"Your unsaved work is basically fan fiction at this point.",
-		"CTRL+S: cheaper than therapy."
+		"CTRL+S: cheaper than therapy.",
+		"Maybe you should save the file, because I'm not going to do it for you.",
+		"When's the last time you saved? Just wondering...",
+		"Save early, save often, they say.",
+		"Your unsaved changes are giving me anxiety.",
+		"CTRL+S is your friend. Use it.",
+		"Oh look, the hero forgot to save again — classic horror trope.",
+		"This suspense is unbearable… will you save before the crash?",
+		"Wow, bold move: trusting fate instead of hitting CTRL+S.",
+		"Is this the director’s cut where the protagonist loses all their progress?",
+		"Your unsaved work is the villain backstory nobody asked for.",
+		"This scene is dragging… maybe a save would add some tension.",
+		"Oh great, the sequel to ‘Lost Drafts: The Reckoning.’",
+		"I’ve seen B‑movies with better backup plans.",
+		"Cue dramatic music: the unsaved file teeters on the edge of oblivion.",
+		"This is the part where the audience screams, ‘JUST SAVE IT!’",
+		"Plot twist: you didn’t save, and the credits roll anyway.",
+		"CTRL+S is the deus ex machina you keep ignoring.",
+		"Your document is basically a horror movie waiting for the jump scare crash."
 	],
 	"encouragement": [
 		"🌟✨ You're absolutely AMAZING!!! ✨🌟",
@@ -157,7 +215,17 @@ var phrases: Dictionary = {
 		"🥳🥳 Bravo!!! Standing ovation for you 🥳🥳",
 		"💖 You're the reason autocorrect believes in miracles 💖",
 		"🌈🌈 Your typing deserves a parade 🌈🌈",
-		"✨✨ Legendary vibes only ✨✨"
+		"✨✨ Legendary vibes only ✨✨",
+		"💪🔥 Flex those fingers, stud — this is basically foreplay with the keyboard 🔥💪",
+		"🌹 Darling, your prose is serving body, wit, and soul 🌹",
+		"🍸 Camp level: drag queen monologue. Keep typing, gorgeous 🍸",
+		"💋 Every keystroke is like a kiss… and I’m blushing 💋",
+		"🏋️‍♂️ Your syntax is ripped, babe. Total gym‑bro energy 🏋️‍♂️",
+		"🌈✨ This draft is giving me leather, lace, and literary lust ✨🌈",
+		"🔥 Keyboard’s hot, but not as hot as you 🔥",
+		"💃 Work it, diva! These words are strutting down the runway 💃",
+		"👀 I see you, wordsmith… and I like what I see 👀",
+		
 	],
 	"long_line": [
 		"That's quite a long line you've got there.",
@@ -170,17 +238,69 @@ var phrases: Dictionary = {
 		"Ctrl+Z is a wonderful thing.",
 		"Everyone makes mistakes!",
 		"Better to delete than to compile with errors.",
-		"Sometimes letting go is the bravest choice you can make.",
-		"Deleting isn’t failure, it’s growth. What are you ready to release today?",
-		"Every backspace is a chance to rewrite your story.",
-		"Funny how deleting words feels like deleting regrets, isn’t it?",
-		"Pause. Breathe. Ask yourself: why did you type that in the first place?",
-		"Remember, it’s not about erasing the past, it’s about making space for the future.",
-		"Deleting is self-care for your document… and maybe for your soul.",
-		"Behind every keystroke lies intention. Behind every delete lies reflection.",
-		"Sometimes the hardest part is admitting the sentence wasn’t working out.",
-		"Think of this delete as closure. You’re moving on, one word at a time.",
-		"Even therapists delete their notes sometimes. It’s okay to start fresh."
+		"Honey, that sentence was serving… nothing. Delete it.",
+		"This line? Weak. Limp. No charisma, uniqueness, nerve, or talent.",
+		"Delete it, darling — it’s giving filler queen energy.",
+		"That word was a total flop. Sashay away.",
+		"Oh no ma’am, that syntax was busted. Backspace immediately.",
+		"This draft is walking the runway in Crocs. Delete!",
+		"Baby, that metaphor was DOA. Pull the plug.",
+		"Delete it before Michelle Visage reads you for filth.",
+		"That sentence had no rhythm, no flow, no life. Bye!",
+		"Backspace, darling — because that line did NOT make the cut.",
+		"This prose is giving ‘first eliminated.’ Delete and try again.",
+		"Delete it, because that punctuation was a hot mess express.",
+		"That paragraph was serving community theater, not Broadway. Cut it.",
+		"Delete, darling — because mediocrity is not couture.",
+		"This line was a lip‑sync disaster. Shantay, you stay… not."
+	],
+	"level_up": [
+		"🎉🎊 LEVEL UP, BABY!!! You're officially iconic! 🎊🎉",
+		"💎✨ DING! Level up! Your keyboard skills are LEGENDARY! ✨💎",
+		"🏆 NEW LEVEL UNLOCKED! The typing gods are IMPRESSED! 🏆",
+		"🌟💫 YASSS! Level up! You're on FIRE! 💫🌟",
+		"🎮🔥 ACHIEVEMENT UNLOCKED: You just leveled up! 🔥🎮",
+		"👑 BOW DOWN! You've ascended to a new level! 👑",
+		"⚡💥 POWER UP! New level achieved! You're unstoppable! 💥⚡",
+		"🌈 CONGRATULATIONS! Level up! Keep slaying! 🌈",
+		"🚀 BLAST OFF! You've reached a new level of greatness! 🚀",
+		"💪🔥 BEAST MODE! Level up! Nothing can stop you now! 🔥💪"
+	],
+	"achievement_unlock": [
+		"🏅 ACHIEVEMENT UNLOCKED! Look at you, overachiever! 🏅",
+		"⭐ NEW BADGE! You've earned it, superstar! ⭐",
+		"🎖️ DING DING DING! Achievement unlocked! 🎖️",
+		"💫 WOW! You just unlocked a badge! Legendary! 💫",
+		"🌟 ACHIEVEMENT GET! Your trophy case is looking GOOD! 🌟",
+		"🏆 BADGE EARNED! The typing hall of fame awaits! 🏆",
+		"✨ NEW ACHIEVEMENT! You're basically a typing deity now! ✨",
+		"🎉 CONGRATULATIONS! Badge unlocked! Flex it! 🎉",
+		"💎 ACHIEVEMENT! Another one for the collection! 💎",
+		"🔥 UNLOCKED! You're on a roll, champion! 🔥"
+	],
+	"boss_battle_win": [
+		"👊💥 BOSS DEFEATED! You DESTROYED that challenge! 💥👊",
+		"⚔️🛡️ VICTORY! The typing boss stands no chance! 🛡️⚔️",
+		"🏆🔥 BOSS DOWN! Your fingers are weapons of mass destruction! 🔥🏆",
+		"💪👑 BOSS BATTLE WON! Bow down to the champion! 👑💪",
+		"⚡💫 FATALITY! Boss battle crushed! FLAWLESS VICTORY! 💫⚡",
+		"🎯🎊 TARGET ELIMINATED! Boss battle conquered! 🎊🎯",
+		"🌟💥 BOSS SLAIN! You're the ultimate typing warrior! 💥🌟",
+		"🔥⚔️ BOSS ANNIHILATED! That wasn't even fair! ⚔️🔥",
+		"👊🏆 K.O.! Boss battle won! Pure dominance! 🏆👊",
+		"💎✨ BOSS VANQUISHED! Legend in the making! ✨💎"
+	],
+	"boss_battle_available": [
+		"⚔️ BOSS BATTLE UNLOCKED! Think you can handle it? ⚔️",
+		"🔥 CHALLENGE TIME! A boss battle awaits… if you DARE! 🔥",
+		"👹💥 BOSS ALERT! Ready to prove yourself? 💥👹",
+		"🎯 NEW CHALLENGE! Boss battle available! LET'S GO! 🎯",
+		"⚡ BOSS BATTLE! Time to show what you're made of! ⚡",
+		"🛡️ CHALLENGE ACCEPTED? Boss battle is LIVE! 🛡️",
+		"💪 BOSS TIME! Can you beat the ultimate typing challenge? 💪",
+		"🌟 EPIC BATTLE! Boss challenge unlocked! Bring it! 🌟",
+		"🔥⚔️ FACE THE BOSS! Your skills will be tested! ⚔️🔥",
+		"👑 ULTIMATE CHALLENGE! Boss battle ready! Are YOU? 👑"
 	]
 
 }
@@ -660,3 +780,35 @@ func check_spelling_now() -> void:
 	if spell_check_timer:
 		spell_check_timer.stop()
 		_on_spell_check_timer_timeout()
+
+## Called when player levels up
+func on_level_up(new_level: int) -> void:
+	_say_phrase(phrases["level_up"].pick_random())
+	_set_emotion("excited")
+	_play_random_body_animation()
+	print("JuicyLucy: Celebrating level up to %d" % new_level)
+
+## Called when achievement unlocked
+func on_achievement_unlocked(_achievement_id: String, achievement_data: Dictionary) -> void:
+	var phrase: String = phrases["achievement_unlock"].pick_random()
+	phrase += "\n✨ %s ✨" % achievement_data.name
+	_say_phrase(phrase)
+	_set_emotion("excited")
+	_play_random_body_animation()
+	print("JuicyLucy: Celebrating achievement: %s" % achievement_data.name)
+
+## Called when boss battle becomes available
+func on_boss_battle_available(_level: int) -> void:
+	_say_phrase(phrases["boss_battle_available"].pick_random())
+	_set_emotion("excited")
+	_play_random_body_animation()
+	print("JuicyLucy: Boss battle available!")
+
+## Called when boss battle is won
+func on_boss_battle_won(wpm: float, accuracy: float) -> void:
+	var phrase: String = phrases["boss_battle_win"].pick_random()
+	phrase += "\nWPM: %.1f | Accuracy: %.1f%%" % [wpm, accuracy * 100]
+	_say_phrase(phrase)
+	_set_emotion("excited")
+	_play_random_body_animation()
+	print("JuicyLucy: Boss battle won!")

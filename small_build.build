@@ -1,0 +1,19 @@
+{
+	"disabled_build_options": {
+		"disable_3d": true,
+		"disable_3d_physics": true,
+		"openxr": false,
+		"vulkan": false
+	},
+	"disabled_classes": [
+		"NavigationMeshSourceGeometryData2D",
+		"NavigationMeshSourceGeometryData3D",
+		"Node3D",
+		"Occluder3D",
+		"OccluderPolygon2D",
+		"Shape3D",
+		"Texture3D",
+		"World3D"
+	],
+	"type": "build_profile"
+}

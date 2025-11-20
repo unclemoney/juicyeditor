@@ -27,12 +27,15 @@ const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 @onready var zoom_out_button: Button = $VBoxContainer/TopBar/Toolbar/ZoomOutButton
 @onready var zoom_reset_button: Button = $VBoxContainer/TopBar/Toolbar/ZoomResetButton
 @onready var zoom_in_button: Button = $VBoxContainer/TopBar/Toolbar/ZoomInButton
+@onready var xp_toggle_button: Button = $VBoxContainer/TopBar/Toolbar/XPToggleButton
+@onready var debug_boss_battle_button: Button = $VBoxContainer/TopBar/Toolbar/DebugBossBattleButton
 @onready var line_label: Label = $VBoxContainer/StatusBar/LineLabel
 @onready var column_label: Label = $VBoxContainer/StatusBar/ColumnLabel
 @onready var filename_label: Label = $VBoxContainer/StatusBar/FilenameLabel
 @onready var file_dialog: FileDialog = $FileDialog
 @onready var save_file_dialog: FileDialog = $SaveFileDialog
 @onready var juicy_lucy: Control = $JuicyLucy
+@onready var xp_display_panel: Control = $XPDisplayPanel
 
 # Game controller instance
 var game_controller: Node
@@ -112,6 +115,8 @@ func _ready() -> void:
 	_connect_signals()
 	_setup_menus()
 	_setup_theme_ui()
+	_setup_xp_toggle()
+	_setup_debug_buttons()
 	_clean_up_scene_issues()
 	_update_ui()
 	_animate_ui_entrance()
@@ -205,6 +210,67 @@ func _setup_lucy() -> void:
 		print("Juicy Lucy initialized!")
 	else:
 		print("ERROR: Could not find JuicyLucy node")
+
+func _setup_xp_toggle() -> void:
+	"""Setup XP panel toggle button"""
+	print("DEBUG: Setting up XP toggle button...")
+	
+	if xp_toggle_button and xp_display_panel:
+		# Connect button to toggle panel visibility
+		xp_toggle_button.pressed.connect(_on_xp_toggle_pressed)
+		
+		# Load saved visibility state from game controller
+		if game_controller and "editor_settings" in game_controller:
+			var saved_visible = game_controller.editor_settings.get("xp_panel_visible", true)
+			xp_display_panel.visible = saved_visible
+			_update_xp_toggle_button_text()
+			print("XP panel visibility loaded: ", saved_visible)
+		
+		print("XP toggle button setup complete")
+	else:
+		print("ERROR: Could not setup XP toggle - missing components")
+		print("  xp_toggle_button: ", xp_toggle_button)
+		print("  xp_display_panel: ", xp_display_panel)
+
+func _on_xp_toggle_pressed() -> void:
+	"""Toggle XP panel visibility"""
+	if xp_display_panel:
+		xp_display_panel.visible = !xp_display_panel.visible
+		_update_xp_toggle_button_text()
+		
+		# Save state to game controller
+		if game_controller and game_controller.has_method("_save_settings"):
+			game_controller.editor_settings["xp_panel_visible"] = xp_display_panel.visible
+			game_controller._save_settings()
+		
+		print("XP panel visibility toggled to: ", xp_display_panel.visible)
+
+func _update_xp_toggle_button_text() -> void:
+	"""Update toggle button text based on panel visibility"""
+	if xp_toggle_button and xp_display_panel:
+		xp_toggle_button.text = "👁 XP" if xp_display_panel.visible else "👁 XP"
+
+func _setup_debug_buttons() -> void:
+	"""Setup debug buttons (temporary for testing)"""
+	print("DEBUG: Setting up debug buttons...")
+	
+	if debug_boss_battle_button:
+		debug_boss_battle_button.pressed.connect(_on_debug_boss_battle_pressed)
+		print("Debug boss battle button connected")
+
+func _on_debug_boss_battle_pressed() -> void:
+	"""[DEBUG] Manually trigger a boss battle"""
+	var xp_system = get_node_or_null("/root/XPSystem")
+	if xp_system:
+		var current_level = xp_system.current_level
+		print("[DEBUG] Manually triggering boss battle at level ", current_level)
+		# Trigger boss battle available signal
+		if game_controller:
+			game_controller._on_boss_battle_available(current_level)
+		else:
+			print("[DEBUG] ERROR: game_controller not found")
+	else:
+		print("[DEBUG] ERROR: XPSystem not found")
 
 func _clean_up_scene_issues():
 	print("Cleaning up scene issues that could interfere with themes")

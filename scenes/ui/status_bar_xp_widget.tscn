@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://dvn1x0s6rn5kl"]
+
+[ext_resource type="Theme" uid="uid://gwjtp8avnct" path="res://themes/balatro_ui_theme.tres" id="1_nxpwk"]
+[ext_resource type="Script" uid="uid://7alb6e8rccdc" path="res://scripts/ui/status_bar_xp_widget.gd" id="1_widget"]
+
+[node name="StatusBarXPWidget" type="HBoxContainer"]
+theme = ExtResource("1_nxpwk")
+script = ExtResource("1_widget")
+
+[node name="LevelLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "Lvl: 1"
+
+[node name="XPMiniBar" type="ProgressBar" parent="."]
+custom_minimum_size = Vector2(100, 16)
+layout_mode = 2
+show_percentage = false

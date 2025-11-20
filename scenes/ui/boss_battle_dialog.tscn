@@ -1,0 +1,103 @@
+[gd_scene load_steps=6 format=3 uid="uid://b5tj5nlubma7y"]
+
+[ext_resource type="Theme" uid="uid://gwjtp8avnct" path="res://themes/balatro_ui_theme.tres" id="1_3w5i0"]
+[ext_resource type="Script" uid="uid://sesjkkeo7qfm" path="res://scripts/ui/boss_battle_dialog.gd" id="1_boss"]
+[ext_resource type="Shader" uid="uid://ceus8uhefd1mx" path="res://shaders/rainbow_shader.gdshader" id="3_4nqor"]
+[ext_resource type="FontFile" uid="uid://dyauv5sly2e4r" path="res://fonts/National2Condensed-Regular.otf" id="3_i354u"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bimur"]
+shader = ExtResource("3_4nqor")
+shader_parameter/wave_strength = 0.03
+shader_parameter/wave_speed = 1.2
+shader_parameter/outline_size = 2.5
+shader_parameter/shimmer_width = 0.15
+shader_parameter/glow_base = 0.35
+
+[node name="BossBattleDialog" type="Window"]
+title = "Boss Battle Challenge!"
+initial_position = 1
+size = Vector2i(600, 400)
+theme = ExtResource("1_3w5i0")
+script = ExtResource("1_boss")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="ColorRect" type="ColorRect" parent="MarginContainer"]
+material = SubResource("ShaderMaterial_bimur")
+layout_mode = 2
+mouse_filter = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_fonts/font = ExtResource("3_i354u")
+theme_override_font_sizes/font_size = 24
+text = "Boss Battle - Level 1"
+horizontal_alignment = 1
+
+[node name="TimerLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "01:00"
+horizontal_alignment = 1
+
+[node name="PromptContainer" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PromptLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/PromptContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][b]Type this text:[/b][/center]
+
+The quick brown fox jumps over the lazy dog."
+fit_content = true
+scroll_active = false
+
+[node name="InputEdit" type="TextEdit" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+placeholder_text = "Start typing here..."
+wrap_mode = 1
+
+[node name="StatsContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="WPMLabel" type="Label" parent="MarginContainer/VBoxContainer/StatsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "WPM: 0.0"
+
+[node name="VSeparator" type="VSeparator" parent="MarginContainer/VBoxContainer/StatsContainer"]
+layout_mode = 2
+
+[node name="AccuracyLabel" type="Label" parent="MarginContainer/VBoxContainer/StatsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Accuracy: 100.0%"
+
+[node name="ResultLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][color=green][b]VICTORY![/b][/color]
+
+WPM: 45.2 | Accuracy: 98.5%[/center]"
+fit_content = true
+scroll_active = false
+
+[connection signal="close_requested" from="." to="." method="_on_close_requested"]

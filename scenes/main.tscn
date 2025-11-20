@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://bt74kgu67tnxg"]
+[gd_scene load_steps=14 format=3 uid="uid://bt74kgu67tnxg"]
 
 [ext_resource type="Script" uid="uid://dhfhsla164f80" path="res://scripts/ui/main_scene.gd" id="1_51l7b"]
 [ext_resource type="Script" uid="uid://cs73sg5vom7ql" path="res://scripts/components/juicy_text_edit.gd" id="2_h3n2m"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://bsm3t74ppu58m" path="res://scripts/components/file_tab_container.gd" id="6_tab_container"]
 [ext_resource type="Theme" uid="uid://gwjtp8avnct" path="res://themes/balatro_ui_theme.tres" id="7_balatro_theme"]
 [ext_resource type="PackedScene" uid="uid://bwxstgl5vfieh" path="res://scenes/components/juicy_lucy.tscn" id="8_juicy_lucy"]
+[ext_resource type="PackedScene" uid="uid://c4mbubxlv8m3p" path="res://scenes/ui/xp_display_panel.tscn" id="9_85g3d"]
+[ext_resource type="PackedScene" uid="uid://dvn1x0s6rn5kl" path="res://scenes/ui/status_bar_xp_widget.tscn" id="10_xp_widget"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tbgi4"]
 shader = ExtResource("2_jyhfs")
@@ -141,6 +143,19 @@ text = "100%"
 layout_mode = 2
 text = "Zoom In"
 
+[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/TopBar/Toolbar"]
+layout_mode = 2
+
+[node name="XPToggleButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
+layout_mode = 2
+tooltip_text = "Toggle XP Panel Visibility"
+text = "👁 XP"
+
+[node name="DebugBossBattleButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
+layout_mode = 2
+tooltip_text = "[DEBUG] Trigger Boss Battle"
+text = "⚔️"
+
 [node name="FileTabContainer" type="VBoxContainer" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 35)
 layout_mode = 2
@@ -204,6 +219,7 @@ script = ExtResource("2_h3n2m")
 
 [node name="StatusBar" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
+theme = ExtResource("7_balatro_theme")
 
 [node name="LineLabel" type="Label" parent="VBoxContainer/StatusBar"]
 layout_mode = 2
@@ -212,6 +228,12 @@ text = "Line: 1"
 [node name="ColumnLabel" type="Label" parent="VBoxContainer/StatusBar"]
 layout_mode = 2
 text = "Column: 1"
+
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/StatusBar"]
+layout_mode = 2
+
+[node name="StatusBarXPWidget" parent="VBoxContainer/StatusBar" instance=ExtResource("10_xp_widget")]
+layout_mode = 2
 
 [node name="FilenameLabel" type="Label" parent="VBoxContainer/StatusBar"]
 layout_mode = 2
@@ -249,3 +271,11 @@ offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 0
 grow_vertical = 0
+
+[node name="XPDisplayPanel" parent="." instance=ExtResource("9_85g3d")]
+visible = false
+layout_mode = 0
+offset_left = 48.0
+offset_top = 72.0
+offset_right = 346.0
+offset_bottom = 516.0

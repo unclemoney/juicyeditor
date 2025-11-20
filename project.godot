@@ -24,6 +24,7 @@ AudioManager="*res://scripts/components/audio_manager.gd"
 VisualEffectsManager="*res://scripts/components/visual_effects_manager.gd"
 AnimationManager="*res://scripts/components/animation_manager.gd"
 TypingEffectsManager="*res://scripts/components/typing_effects_manager.gd"
+XPSystem="*res://scripts/components/xp_system.gd"
 
 [display]
 

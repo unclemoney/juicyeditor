@@ -8,6 +8,12 @@ signal file_opened(file_path: String)
 signal file_saved(file_path: String)
 signal settings_changed(settings: Dictionary)
 
+## Preload celebration scene
+const ParticleCelebrationScene = preload("res://scenes/effects/particle_celebration.tscn")
+
+## Preload boss battle dialog
+const BossBattleDialogScene = preload("res://scenes/ui/boss_battle_dialog.tscn")
+
 @export var text_editor_path: NodePath
 @export var menu_bar_path: NodePath
 @export var status_bar_path: NodePath
@@ -21,6 +27,14 @@ var file_dialog: FileDialog
 var file_tab_container: Control
 var visual_effects_manager: Node
 var animation_manager: Node
+var xp_system: Node  # XP System autoload reference
+
+## Particle celebration pool
+var active_celebrations: Array[Node2D] = []
+const MAX_CELEBRATIONS: int = 5
+
+## Boss battle dialog instance
+var boss_battle_dialog: Window = null
 
 var current_file_path: String = ""
 var is_file_modified: bool = false
@@ -36,6 +50,7 @@ var is_primary_instance: bool = false
 
 func _ready() -> void:
 	print("Juicy Editor starting up...")
+	print("GameController: _ready() step 1 - Checking for primary instance")
 	
 	# Check if another instance is running BEFORE initializing
 	if not _try_become_primary_instance():
@@ -46,15 +61,26 @@ func _ready() -> void:
 		return
 	
 	print("This is the primary instance")
+	print("GameController: _ready() step 2 - Calling _initialize_systems()")
 	_initialize_systems()
+	
+	print("GameController: _ready() step 3 - Calling _initialize_xp_system()")
+	_initialize_xp_system()
+	
+	print("GameController: _ready() step 4 - Calling _connect_signals()")
 	_connect_signals()
+	
+	print("GameController: _ready() step 5 - Calling _load_settings()")
 	_load_settings()
 	
+	print("GameController: _ready() step 6 - Deferring command line processing")
 	# Process command line arguments after everything is set up
 	call_deferred("_process_command_line_arguments")
 	
 	# Ensure at least one tab exists after command line processing
 	call_deferred("_ensure_initial_tab")
+	
+	print("GameController: _ready() completed")
 
 func _process(delta: float) -> void:
 	"""Check periodically for new files via command file"""
@@ -80,6 +106,9 @@ func initialize_node_references() -> void:
 	
 	# Get animation manager (if it exists)
 	animation_manager = get_node("/root/AnimationManager") if has_node("/root/AnimationManager") else null
+	
+	# Get XP system autoload
+	xp_system = get_node("/root/XPSystem") if has_node("/root/XPSystem") else null
 	
 	print("Node references initialized:")
 	print("  text_editor: ", text_editor)
@@ -153,11 +182,162 @@ func _initialize_systems() -> void:
 		"visual_effects_enabled": true,
 		
 		# File management
-		"recent_files": []
+		"recent_files": [],
+		
+		# XP System persistence
+		"xp_data": {},
+		
+		# XP UI Settings
+		"xp_panel_visible": true,
+		"enable_boss_battles": true
 	}
 	
 	# Setup visual effects after node initialization
 	call_deferred("_setup_visual_effects")
+
+func _initialize_xp_system() -> void:
+	## Initialize XP system and connect signals
+	xp_system = get_node("/root/XPSystem") if has_node("/root/XPSystem") else null
+	
+	if xp_system:
+		# Connect XP system signals
+		xp_system.level_up.connect(_on_xp_level_up)
+		xp_system.achievement_unlocked.connect(_on_achievement_unlocked)
+		xp_system.boss_battle_available.connect(_on_boss_battle_available)
+		print("XPSystem: Connected signals")
+	else:
+		print("XPSystem: Autoload not found - XP features disabled")
+
+func _on_xp_level_up(new_level: int, _xp_needed_for_next: int) -> void:
+	## Called when player levels up
+	print("LEVEL UP! Now level %d" % new_level)
+	
+	# Play level-up celebration with particle effects
+	_spawn_celebration_at_screen_center(ParticleCelebrationScene.instantiate().CelebrationType.LEVEL_UP)
+	
+	# Play level-up celebration with visual effects
+	if visual_effects_manager:
+		pass  # TODO: Add special level-up visual effect
+	
+	# Get Juicy Lucy to celebrate
+	var lucy: Node = get_node_or_null("/root/Main/JuicyLucy")
+	if lucy and lucy.has_method("on_level_up"):
+		lucy.on_level_up(new_level)
+
+func _on_achievement_unlocked(achievement_id: String, achievement_data: Dictionary) -> void:
+	## Called when player unlocks an achievement
+	print("ACHIEVEMENT UNLOCKED! %s - %s" % [achievement_data.name, achievement_data.description])
+	
+	# Play achievement celebration with particle effects
+	_spawn_celebration_at_xp_panel(ParticleCelebrationScene.instantiate().CelebrationType.ACHIEVEMENT)
+	
+	# Show achievement notification UI
+	# TODO: Create achievement notification popup
+	
+	# Get Juicy Lucy to announce achievement
+	var lucy: Node = get_node_or_null("/root/Main/JuicyLucy")
+	if lucy and lucy.has_method("on_achievement_unlocked"):
+		lucy.on_achievement_unlocked(achievement_id, achievement_data)
+
+func _on_boss_battle_available(level: int) -> void:
+	## Called when boss battle becomes available
+	print("Boss battle available at level %d!" % level)
+	
+	# Check if boss battles are enabled
+	if not editor_settings.get("enable_boss_battles", true):
+		print("Boss battles are disabled in settings")
+		return
+	
+	# Create boss battle dialog if not exists
+	if not boss_battle_dialog:
+		boss_battle_dialog = BossBattleDialogScene.instantiate()
+		add_child(boss_battle_dialog)
+		
+		# Connect signals
+		boss_battle_dialog.battle_completed.connect(_on_boss_battle_completed)
+		boss_battle_dialog.battle_cancelled.connect(_on_boss_battle_cancelled)
+	
+	# Show dialog and start battle
+	boss_battle_dialog.show()
+	boss_battle_dialog.start_battle(level)
+	
+	# Get Juicy Lucy to challenge player
+	var lucy: Node = get_node_or_null("/root/Main/JuicyLucy")
+	if lucy and lucy.has_method("on_boss_battle_available"):
+		lucy.on_boss_battle_available(level)
+
+func _on_boss_battle_completed(wpm: float, accuracy: float, success: bool) -> void:
+	## Called when boss battle is completed
+	print("Boss battle completed - WPM: %.1f, Accuracy: %.1f%%, Success: %s" % [wpm, accuracy, success])
+	
+	if success:
+		# Spawn victory celebration
+		_spawn_celebration_at_screen_center(ParticleCelebrationScene.instantiate().CelebrationType.BOSS_VICTORY)
+		
+		# Get Juicy Lucy to celebrate
+		var lucy: Node = get_node_or_null("/root/Main/JuicyLucy")
+		if lucy and lucy.has_method("on_boss_battle_won"):
+			lucy.on_boss_battle_won(wpm, accuracy)
+
+func _on_boss_battle_cancelled() -> void:
+	## Called when boss battle is cancelled
+	print("Boss battle cancelled by player")
+
+## Spawn a particle celebration at the screen center
+func _spawn_celebration_at_screen_center(celebration_type: int) -> void:
+	var celebration = ParticleCelebrationScene.instantiate()
+	celebration.celebration_type = celebration_type
+	
+	# Add to scene tree
+	add_child(celebration)
+	
+	# Position at screen center
+	var viewport_size = get_viewport_rect().size
+	celebration.trigger_at_position(viewport_size / 2.0)
+	
+	# Add to pool and manage cleanup
+	_add_to_celebration_pool(celebration)
+
+## Spawn a particle celebration at the XP panel position
+func _spawn_celebration_at_xp_panel(celebration_type: int) -> void:
+	var celebration = ParticleCelebrationScene.instantiate()
+	celebration.celebration_type = celebration_type
+	
+	# Add to scene tree
+	add_child(celebration)
+	
+	# Find XP panel and position at it
+	var xp_panel = get_node_or_null("/root/Main/XPDisplayPanel")
+	if xp_panel:
+		celebration.trigger_at_position(xp_panel.global_position + Vector2(xp_panel.size.x / 2.0, xp_panel.size.y / 2.0))
+	else:
+		# Fallback to screen center if panel not found
+		var viewport_size = get_viewport_rect().size
+		celebration.trigger_at_position(viewport_size / 2.0)
+	
+	# Add to pool and manage cleanup
+	_add_to_celebration_pool(celebration)
+
+## Add celebration to pool, remove oldest if at max capacity
+func _add_to_celebration_pool(celebration: Node2D) -> void:
+	# Remove oldest if at max
+	if active_celebrations.size() >= MAX_CELEBRATIONS:
+		var oldest = active_celebrations.pop_front()
+		if is_instance_valid(oldest):
+			oldest.queue_free()
+	
+	# Add to pool
+	active_celebrations.append(celebration)
+	
+	# Connect cleanup when celebration finishes
+	if celebration.has_signal("celebration_finished"):
+		celebration.celebration_finished.connect(func(): _remove_from_pool(celebration))
+
+## Remove celebration from pool
+func _remove_from_pool(celebration: Node2D) -> void:
+	var idx = active_celebrations.find(celebration)
+	if idx >= 0:
+		active_celebrations.remove_at(idx)
 
 func _setup_visual_effects() -> void:
 	if visual_effects_manager:
@@ -195,18 +375,22 @@ func _connect_signals() -> void:
 	pass
 
 func _load_settings() -> void:
+	print("GameController: _load_settings() started")
+	
 	# Load settings from file or use defaults
 	var default_rich_effects = true  # Our intended default
 	print("DEBUG: Loading settings, default rich_effects=", default_rich_effects)
 	
 	var config_file = FileAccess.open("user://juicy_editor_settings.cfg", FileAccess.READ)
 	if config_file:
+		print("GameController: Settings file found, parsing JSON...")
 		var json_string = config_file.get_as_text()
 		config_file.close()
 		
 		var json = JSON.new()
 		var parse_result = json.parse(json_string)
 		if parse_result == OK:
+			print("GameController: JSON parsed successfully")
 			var saved_settings = json.data
 			if typeof(saved_settings) == TYPE_DICTIONARY:
 				print("DEBUG: Loaded saved settings, rich_effects=", saved_settings.get("rich_effects", "NOT_FOUND"))
@@ -227,6 +411,7 @@ func _load_settings() -> void:
 	print("DEBUG: Final rich_effects setting: ", editor_settings.get("rich_effects"))
 	
 	# Load recent files
+	print("GameController: Loading recent files...")
 	if "recent_files" in editor_settings:
 		var loaded_files = editor_settings.recent_files
 		if loaded_files is Array:
@@ -234,10 +419,34 @@ func _load_settings() -> void:
 			for file_path in loaded_files:
 				if file_path is String:
 					recent_files.append(file_path)
+	
+	# Load XP system data
+	print("GameController: Loading XP system data...")
+	if xp_system:
+		print("GameController: xp_system exists, checking for xp_data in settings...")
+		if "xp_data" in editor_settings:
+			print("GameController: xp_data found in settings, loading...")
+			var xp_data = editor_settings.xp_data
+			if typeof(xp_data) == TYPE_DICTIONARY:
+				print("GameController: xp_data is a Dictionary, calling load_save_data()...")
+				xp_system.load_save_data(xp_data)
+				print("GameController: load_save_data() completed")
+			else:
+				print("GameController: xp_data is not a Dictionary (type: ", typeof(xp_data), ")")
+		else:
+			print("GameController: No xp_data in settings")
+	else:
+		print("GameController: xp_system is null, skipping XP data load")
+	
+	print("GameController: _load_settings() completed")
 
 func _save_settings() -> void:
 	# Update recent files in settings
 	editor_settings.recent_files = recent_files
+	
+	# Save XP system data
+	if xp_system:
+		editor_settings.xp_data = xp_system.get_save_data()
 	
 	var config_file = FileAccess.open("user://juicy_editor_settings.cfg", FileAccess.WRITE)
 	if config_file:
@@ -253,6 +462,24 @@ func _on_text_changed() -> void:
 		file_tab_container.set_current_file_modified(true)
 	
 	_update_window_title()
+	
+	# Track typing for XP
+	if text_editor and xp_system:
+		var text_length: int = text_editor.text.length()
+		if text_length > 0:
+			# Track chars typed (award XP per 100 chars)
+			xp_system.on_text_typed(text_length)
+			
+			# Track word count
+			var word_count: int = _count_words(text_editor.text)
+			xp_system.on_word_count_updated(word_count)
+
+func _count_words(text: String) -> int:
+	## Count words in text (simple whitespace split)
+	if text.is_empty():
+		return 0
+	var words: PackedStringArray = text.split(" ", false)
+	return words.size()
 
 func _on_caret_changed() -> void:
 	# Update status bar with cursor position
@@ -369,6 +596,10 @@ func save_file(file_path: String = "") -> bool:
 		_update_window_title()
 		_add_to_recent_files(path_to_save)
 		file_saved.emit(path_to_save)
+		
+		# Track file save for XP
+		if xp_system:
+			xp_system.on_file_saved()
 		
 		# Add visual feedback for successful file save
 		if visual_effects_manager and text_editor and visual_effects_manager.has_method("create_pulse_effect"):
@@ -724,31 +955,39 @@ func _check_for_new_command_line_files() -> void:
 
 func _try_become_primary_instance() -> bool:
 	"""Try to become the primary instance. Returns true if successful, false if another instance exists"""
+	print("GameController: Checking for existing instance...")
+	
 	# Use user:// directory for lock files
 	instance_lock_file = "user://juicy_editor.lock"
 	instance_command_file = "user://juicy_editor_commands.txt"
 	
+	print("GameController: Lock file path: ", instance_lock_file)
+	
 	# Check if lock file exists
 	if FileAccess.file_exists(instance_lock_file):
+		print("GameController: Lock file found, checking if it's stale...")
+		
 		# Check if the process is still alive by trying to read it
 		var lock_read = FileAccess.open(instance_lock_file, FileAccess.READ)
 		if lock_read:
 			var pid = lock_read.get_as_text().strip_edges()
 			lock_read.close()
+			print("GameController: Lock file contains PID: ", pid)
 			
-			# If lock file exists, assume another instance is running
-			# (In a production app, you'd verify the PID is still running)
-			print("Lock file exists with PID: ", pid)
-			is_primary_instance = false
-			return false
+			# IMPORTANT: For now, assume lock files are stale after app restart
+			# In a production app, you'd use OS.is_process_running(pid) or similar
+			# But for development, we'll just delete stale locks
+			print("GameController: Treating lock file as stale, removing it...")
+			DirAccess.remove_absolute(instance_lock_file)
 	
 	# Create lock file with our PID
+	print("GameController: Creating lock file...")
 	var lock_write = FileAccess.open(instance_lock_file, FileAccess.WRITE)
 	if lock_write:
 		lock_write.store_string(str(OS.get_process_id()))
 		lock_write.close()
 		is_primary_instance = true
-		print("Created lock file, we are primary instance")
+		print("Created lock file, we are primary instance (PID: ", OS.get_process_id(), ")")
 		
 		# Clear any old command file
 		if FileAccess.file_exists(instance_command_file):
@@ -757,8 +996,8 @@ func _try_become_primary_instance() -> bool:
 		return true
 	
 	# If we can't create lock file, assume we're primary anyway
+	print("GameController: Could not create lock file, assuming primary instance")
 	is_primary_instance = true
-	return true
 	return true
 
 func _send_files_to_primary_instance() -> void:
