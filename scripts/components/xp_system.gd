@@ -104,6 +104,66 @@ var ACHIEVEMENTS: Dictionary = {
 		"description": "Complete 5 boss battles",
 		"badge_file": "boss_slayer.png",
 		"check": func(xp_sys): return xp_sys.completed_boss_battles.size() >= 5
+	},
+	"champion": {
+		"name": "Champion",
+		"description": "Reach level 100",
+		"badge_file": "champion.png",
+		"check": func(xp_sys): return xp_sys.current_level >= 100
+	},
+	"perfectionist": {
+		"name": "Perfectionist",
+		"description": "Maintain 95%+ accuracy in 10 boss battles",
+		"badge_file": "perfectionist.png",
+		"check": func(xp_sys): return xp_sys.achievement_data.get("high_accuracy_battles", 0) >= 10
+	},
+	"power_user": {
+		"name": "Power User",
+		"description": "Type 100,000 characters",
+		"badge_file": "power_user.png",
+		"check": func(xp_sys): return xp_sys.lifetime_chars_typed >= 100000
+	},
+	"momentum": {
+		"name": "Momentum",
+		"description": "Gain 1000 XP in a single session",
+		"badge_file": "momentum.png",
+		"check": func(xp_sys): return xp_sys.achievement_data.get("max_session_xp", 0) >= 1000
+	},
+	"wizard": {
+		"name": "Code Wizard",
+		"description": "Save 200 files",
+		"badge_file": "wizard.png",
+		"check": func(xp_sys): return xp_sys.lifetime_files_saved >= 200
+	},
+	"speedster": {
+		"name": "Speedster",
+		"description": "Win 3 boss battles with 80+ WPM",
+		"badge_file": "speedster.png",
+		"check": func(xp_sys): return xp_sys.achievement_data.get("ultra_fast_battles", 0) >= 3
+	},
+	"flawless": {
+		"name": "Flawless Victory",
+		"description": "Win a boss battle with 100% accuracy",
+		"badge_file": "flawless.png",
+		"check": func(xp_sys): return xp_sys.achievement_data.get("perfect_accuracy_battle", false)
+	},
+	"time_master": {
+		"name": "Time Master",
+		"description": "Complete 10 boss battles",
+		"badge_file": "time_master.png",
+		"check": func(xp_sys): return xp_sys.completed_boss_battles.size() >= 10
+	},
+	"dedicated": {
+		"name": "Dedicated Writer",
+		"description": "Type 50,000 words",
+		"badge_file": "dedicated.png",
+		"check": func(xp_sys): return xp_sys.lifetime_words_typed >= 50000
+	},
+	"superstar": {
+		"name": "Superstar",
+		"description": "Unlock all other achievements",
+		"badge_file": "superstar.png",
+		"check": func(xp_sys): return xp_sys.unlocked_achievements.size() >= 19
 	}
 }
 
@@ -143,6 +203,16 @@ func add_xp(amount: int, reason: String = "") -> void:
 	
 	current_xp += amount
 	total_xp += amount
+	
+	# Track session XP for Momentum achievement
+	session_chars_typed += 0  # Just to reference it exists
+	var current_session_xp = achievement_data.get("current_session_xp", 0) + amount
+	achievement_data["current_session_xp"] = current_session_xp
+	
+	# Track max session XP
+	var max_session_xp = achievement_data.get("max_session_xp", 0)
+	if current_session_xp > max_session_xp:
+		achievement_data["max_session_xp"] = current_session_xp
 	
 	xp_gained.emit(amount, reason)
 	
@@ -201,9 +271,20 @@ func complete_boss_battle(level: int, wpm: float, accuracy: float) -> int:
 	
 	print("XPSystem: Boss battle completed! WPM: %.1f, Accuracy: %.1f%%, XP: %d" % [wpm, accuracy * 100, total_bonus])
 	
+	# Track achievement progress
 	if wpm >= 60:
 		achievement_data["speed_demon_unlocked"] = true
-		_check_achievements()
+	
+	if wpm >= 80:
+		achievement_data["ultra_fast_battles"] = achievement_data.get("ultra_fast_battles", 0) + 1
+	
+	if accuracy >= 0.95:
+		achievement_data["high_accuracy_battles"] = achievement_data.get("high_accuracy_battles", 0) + 1
+	
+	if accuracy >= 1.0:
+		achievement_data["perfect_accuracy_battle"] = true
+	
+	_check_achievements()
 	
 	add_xp(total_bonus, "Boss Battle Victory")
 	
