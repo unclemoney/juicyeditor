@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=27 format=3 uid="uid://gwjtp8avnct"]
+[gd_resource type="Theme" load_steps=32 format=3 uid="uid://gwjtp8avnct"]
 
 [ext_resource type="Texture2D" uid="uid://bqw8x7fy4nj3v" path="res://assets/ui/buttons/button_normal.png" id="1_button_normal"]
 [ext_resource type="Texture2D" uid="uid://cn5qak2xm8w4r" path="res://assets/ui/buttons/button_hover.png" id="2_button_hover"]
@@ -39,20 +39,61 @@ texture_margin_right = 6.0
 texture_margin_bottom = 10.0
 region_rect = Rect2(44, 11, 40, 44)
 
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_frna2"]
+texture = ExtResource("1_button_normal")
+texture_margin_left = 6.0
+texture_margin_top = 7.0
+texture_margin_right = 5.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(44, 11, 40, 44)
+
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_i813d"]
 texture = ExtResource("1_button_normal")
-texture_margin_left = 18.0
-texture_margin_top = 15.0
-texture_margin_right = 18.0
-texture_margin_bottom = 28.0
+texture_margin_left = 7.0
+texture_margin_top = 6.0
+texture_margin_right = 5.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(44, 11, 40, 45)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_v76iw"]
+texture = ExtResource("1_button_normal")
+texture_margin_left = 6.0
+texture_margin_top = 7.0
+texture_margin_right = 5.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(44, 11, 40, 44)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8ftu0"]
+texture = ExtResource("1_button_normal")
+texture_margin_left = 6.0
+texture_margin_top = 7.0
+texture_margin_right = 5.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(44, 11, 40, 44)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_3q13g"]
+texture = ExtResource("1_button_normal")
+texture_margin_left = 6.0
+texture_margin_top = 7.0
+texture_margin_right = 5.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(44, 11, 40, 44)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_kbqem"]
 texture = ExtResource("1_button_normal")
-texture_margin_left = 18.0
-texture_margin_top = 15.0
-texture_margin_right = 18.0
-texture_margin_bottom = 27.0
-region_rect = Rect2(0, 0, 128, 64)
+texture_margin_left = 6.0
+texture_margin_top = 7.0
+texture_margin_right = 5.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(44, 11, 40, 44)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_85y6q"]
+texture = ExtResource("1_button_normal")
+texture_margin_left = 6.0
+texture_margin_top = 7.0
+texture_margin_right = 5.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(44, 11, 40, 44)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kbqem"]
 content_margin_left = 10.0
@@ -283,14 +324,19 @@ Button/styles/focus = null
 Button/styles/hover = SubResource("StyleBoxTexture_dbmuc")
 Button/styles/normal = SubResource("StyleBoxTexture_mkfmu")
 Button/styles/pressed = SubResource("StyleBoxTexture_exfcn")
-CheckBox/constants/check_v_offset = -5
+CheckBox/constants/check_v_offset = -2
 CheckBox/fonts/font = ExtResource("5_font_medium")
+CheckBox/styles/focus = SubResource("StyleBoxTexture_frna2")
 CheckBox/styles/normal = SubResource("StyleBoxTexture_i813d")
-CheckButton/constants/check_v_offset = -6
+CheckBox/styles/pressed = SubResource("StyleBoxTexture_v76iw")
+CheckButton/constants/check_v_offset = 0
 CheckButton/constants/icon_max_width = 32
 CheckButton/constants/outline_size = 2
 CheckButton/fonts/font = ExtResource("5_font_medium")
+CheckButton/styles/focus = SubResource("StyleBoxTexture_8ftu0")
+CheckButton/styles/hover_pressed = SubResource("StyleBoxTexture_3q13g")
 CheckButton/styles/normal = SubResource("StyleBoxTexture_kbqem")
+CheckButton/styles/pressed = SubResource("StyleBoxTexture_85y6q")
 FileDialog/styles/embedded_border = SubResource("StyleBoxFlat_kbqem")
 FileDialog/styles/embedded_unfocused_border = SubResource("StyleBoxFlat_frna2")
 FileDialog/styles/panel = SubResource("StyleBoxFlat_i813d")

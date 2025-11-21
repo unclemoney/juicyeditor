@@ -251,26 +251,71 @@ func _update_xp_toggle_button_text() -> void:
 		xp_toggle_button.text = "👁 XP" if xp_display_panel.visible else "👁 XP"
 
 func _setup_debug_buttons() -> void:
-	"""Setup debug buttons (temporary for testing)"""
-	print("DEBUG: Setting up debug buttons...")
+	"""Setup boss battle button"""
+	print("Setting up boss battle button...")
 	
 	if debug_boss_battle_button:
-		debug_boss_battle_button.pressed.connect(_on_debug_boss_battle_pressed)
-		print("Debug boss battle button connected")
+		# Start disabled - will be enabled when boss battle is available
+		debug_boss_battle_button.disabled = true
+		debug_boss_battle_button.text = "⚔️"
+		debug_boss_battle_button.tooltip_text = "Boss Battle (Unlocks at levels 10, 20, 30...)"
+		debug_boss_battle_button.pressed.connect(_on_boss_battle_button_pressed)
+		print("Boss battle button connected")
 
-func _on_debug_boss_battle_pressed() -> void:
-	"""[DEBUG] Manually trigger a boss battle"""
+func _on_boss_battle_button_pressed() -> void:
+	"""Start a boss battle when button is pressed"""
 	var xp_system = get_node_or_null("/root/XPSystem")
-	if xp_system:
+	if xp_system and game_controller:
 		var current_level = xp_system.current_level
-		print("[DEBUG] Manually triggering boss battle at level ", current_level)
-		# Trigger boss battle available signal
-		if game_controller:
-			game_controller._on_boss_battle_available(current_level)
-		else:
-			print("[DEBUG] ERROR: game_controller not found")
+		print("Starting boss battle at level ", current_level)
+		
+		# Disable button until next milestone
+		debug_boss_battle_button.disabled = true
+		
+		# Create boss battle dialog if not exists
+		if not game_controller.boss_battle_dialog:
+			game_controller.boss_battle_dialog = game_controller.BossBattleDialogScene.instantiate()
+			game_controller.add_child(game_controller.boss_battle_dialog)
+			
+			# Connect signals
+			game_controller.boss_battle_dialog.battle_completed.connect(game_controller._on_boss_battle_completed)
+			game_controller.boss_battle_dialog.battle_cancelled.connect(game_controller._on_boss_battle_cancelled)
+		
+		# Show dialog and start battle
+		game_controller.boss_battle_dialog.show()
+		game_controller.boss_battle_dialog.start_battle(current_level)
 	else:
-		print("[DEBUG] ERROR: XPSystem not found")
+		print("ERROR: XPSystem or game_controller not found")
+
+func enable_boss_battle_button(level: int) -> void:
+	"""Enable boss battle button with celebratory effects"""
+	if not debug_boss_battle_button:
+		return
+	
+	print("Enabling boss battle button for level ", level)
+	
+	# Enable the button
+	debug_boss_battle_button.disabled = false
+	
+	# Play notification sound
+	if audio_manager and audio_manager.has_method("play_sfx"):
+		audio_manager.play_sfx("button_click", 1.2)  # Higher pitch for excitement
+	
+	# Spawn particle explosion at button position
+	if game_controller and game_controller.has_method("_spawn_celebration_particles"):
+		var button_global_pos = debug_boss_battle_button.global_position
+		var button_center = button_global_pos + debug_boss_battle_button.size / 2
+		game_controller._spawn_celebration_particles(button_center, game_controller.ParticleCelebrationScene.instantiate().CelebrationType.LEVEL_UP)
+	
+	# Create bouncy animation
+	var tween = create_tween()
+	tween.set_loops(3)  # Bounce 3 times
+	tween.set_trans(Tween.TRANS_ELASTIC)
+	tween.set_ease(Tween.EASE_OUT)
+	
+	# Scale animation: grow then shrink
+	tween.tween_property(debug_boss_battle_button, "scale", Vector2(1.3, 1.3), 0.3)
+	tween.tween_property(debug_boss_battle_button, "scale", Vector2(1.0, 1.0), 0.3)
 
 func _clean_up_scene_issues():
 	print("Cleaning up scene issues that could interfere with themes")

@@ -153,7 +153,8 @@ text = "👁 XP"
 
 [node name="DebugBossBattleButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
 layout_mode = 2
-tooltip_text = "[DEBUG] Trigger Boss Battle"
+tooltip_text = "Boss Battle (Unlocks at levels 10, 20, 30...)"
+disabled = true
 text = "⚔️"
 
 [node name="FileTabContainer" type="VBoxContainer" parent="VBoxContainer"]

@@ -240,7 +240,7 @@ func _on_achievement_unlocked(achievement_id: String, achievement_data: Dictiona
 		lucy.on_achievement_unlocked(achievement_id, achievement_data)
 
 func _on_boss_battle_available(level: int) -> void:
-	## Called when boss battle becomes available
+	## Called when boss battle becomes available - enables button with effects
 	print("Boss battle available at level %d!" % level)
 	
 	# Check if boss battles are enabled
@@ -248,18 +248,10 @@ func _on_boss_battle_available(level: int) -> void:
 		print("Boss battles are disabled in settings")
 		return
 	
-	# Create boss battle dialog if not exists
-	if not boss_battle_dialog:
-		boss_battle_dialog = BossBattleDialogScene.instantiate()
-		add_child(boss_battle_dialog)
-		
-		# Connect signals
-		boss_battle_dialog.battle_completed.connect(_on_boss_battle_completed)
-		boss_battle_dialog.battle_cancelled.connect(_on_boss_battle_cancelled)
-	
-	# Show dialog and start battle
-	boss_battle_dialog.show()
-	boss_battle_dialog.start_battle(level)
+	# Enable boss battle button in main scene
+	var main_scene = get_node_or_null("/root/Main")
+	if main_scene and main_scene.has_method("enable_boss_battle_button"):
+		main_scene.enable_boss_battle_button(level)
 	
 	# Get Juicy Lucy to challenge player
 	var lucy: Node = get_node_or_null("/root/Main/JuicyLucy")
@@ -285,15 +277,19 @@ func _on_boss_battle_cancelled() -> void:
 
 ## Spawn a particle celebration at the screen center
 func _spawn_celebration_at_screen_center(celebration_type: int) -> void:
+	var viewport_size = get_viewport_rect().size
+	_spawn_celebration_particles(viewport_size / 2.0, celebration_type)
+
+## Spawn a particle celebration at a specific position
+func _spawn_celebration_particles(spawn_position: Vector2, celebration_type: int) -> void:
 	var celebration = ParticleCelebrationScene.instantiate()
 	celebration.celebration_type = celebration_type
 	
 	# Add to scene tree
 	add_child(celebration)
 	
-	# Position at screen center
-	var viewport_size = get_viewport_rect().size
-	celebration.trigger_at_position(viewport_size / 2.0)
+	# Position at specified location
+	celebration.trigger_at_position(spawn_position)
 	
 	# Add to pool and manage cleanup
 	_add_to_celebration_pool(celebration)
@@ -974,11 +970,21 @@ func _try_become_primary_instance() -> bool:
 			lock_read.close()
 			print("GameController: Lock file contains PID: ", pid)
 			
-			# IMPORTANT: For now, assume lock files are stale after app restart
-			# In a production app, you'd use OS.is_process_running(pid) or similar
-			# But for development, we'll just delete stale locks
-			print("GameController: Treating lock file as stale, removing it...")
-			DirAccess.remove_absolute(instance_lock_file)
+			# IMPORTANT: This controls the staleness check behavior, leave this on false during testing
+			var check_stale = true
+			if check_stale:
+				# Check if process with this PID is running
+				var pid_int = int(pid)
+				if OS.is_process_running(pid_int):
+					print("GameController: Another instance is running with PID: ", pid)
+					is_primary_instance = true
+					return true
+				else:
+					# Stale lock file, remove it
+					print("GameController: No process with PID ", pid, " found, treating lock file as stale.")
+					DirAccess.remove_absolute(instance_lock_file)
+			else:
+				pass
 	
 	# Create lock file with our PID
 	print("GameController: Creating lock file...")

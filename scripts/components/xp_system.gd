@@ -170,20 +170,20 @@ func _check_level_up() -> void:
 		
 		xp_needed = get_xp_for_next_level()
 
-## Check if boss battle should be unlocked (every 5 levels)
+## Check if boss battle should be unlocked (every 10 levels)
 func _check_boss_battle_unlock() -> void:
-	if current_level % 5 == 0 and not completed_boss_battles.has(current_level):
+	if current_level % 10 == 0 and not completed_boss_battles.has(current_level):
 		print("XPSystem: Boss battle available at level %d!" % current_level)
 		boss_battle_available.emit(current_level)
 
 ## Check if boss battle is available for current level
 func is_boss_battle_available() -> bool:
-	return current_level % 5 == 0 and not completed_boss_battles.has(current_level)
+	return current_level % 10 == 0 and not completed_boss_battles.has(current_level)
 
 ## Get the next boss battle level
 func get_next_boss_battle_level() -> int:
-	var milestones_passed: int = int(float(current_level) / 5.0)
-	var next_milestone: int = (milestones_passed + 1) * 5
+	var milestones_passed: int = int(float(current_level) / 10.0)
+	var next_milestone: int = (milestones_passed + 1) * 10
 	return next_milestone
 
 ## Complete a boss battle
@@ -194,7 +194,7 @@ func complete_boss_battle(level: int, wpm: float, accuracy: float) -> int:
 	
 	completed_boss_battles.append(level)
 	
-	var base_xp: int = 100
+	var base_xp: int = 50
 	var speed_bonus: int = int(max(0, (wpm - 40) * 2))
 	var accuracy_bonus: int = int(accuracy * 100)
 	var total_bonus: int = base_xp + speed_bonus + accuracy_bonus

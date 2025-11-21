@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bq7m3k8n5x2wp"]
 
-[ext_resource type="Script" path="res://scripts/components/particle_celebration.gd" id="1_celebration"]
+[ext_resource type="Script" uid="uid://c4oor35jfd1jh" path="res://scripts/components/particle_celebration.gd" id="1_celebration"]
 
 [node name="ParticleCelebration" type="Node2D"]
 script = ExtResource("1_celebration")
