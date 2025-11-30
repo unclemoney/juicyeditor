@@ -49,8 +49,9 @@ func _ready() -> void:
 	print("  Typing effects: ", typing_effects_manager != null)
 
 func _gui_input(event: InputEvent) -> void:
-	## Handle custom input for tab indentation
+	## Handle custom input for tab indentation and heading hotkeys
 	if event is InputEventKey and event.pressed and not event.echo:
+		# Tab indentation handling
 		if event.keycode == KEY_TAB:
 			if has_selection():
 				if event.shift_pressed:
@@ -59,6 +60,25 @@ func _gui_input(event: InputEvent) -> void:
 					_indent_selection()
 				accept_event()
 				return
+		
+		# Heading hotkeys (Shift + key combinations)
+		if event.shift_pressed and not event.ctrl_pressed and not event.alt_pressed:
+			match event.keycode:
+				KEY_ENTER, KEY_KP_ENTER:
+					# SHIFT+ENTER: Create new heading with same level as last heading
+					_insert_new_heading()
+					accept_event()
+					return
+				KEY_UP:
+					# SHIFT+UP: Increase heading level (fewer #)
+					_change_heading_level(-1)
+					accept_event()
+					return
+				KEY_DOWN:
+					# SHIFT+DOWN: Decrease heading level (more #)
+					_change_heading_level(1)
+					accept_event()
+					return
 
 func _indent_selection() -> void:
 	## Indent all lines in the current selection
@@ -92,6 +112,119 @@ func _unindent_selection() -> void:
 	end_complex_operation()
 	
 	select(from_line, 0, to_line + 1, 0)
+
+# ============================================================================
+# Markdown Heading Hotkey Functions
+# ============================================================================
+
+func _insert_new_heading() -> void:
+	## Insert a new heading with the same level as the last heading found
+	## SHIFT+ENTER hotkey
+	var current_line = get_caret_line()
+	var last_heading_level = _find_last_heading_level(current_line)
+	
+	# Default to H1 if no heading found (start fresh documents with H1)
+	if last_heading_level == 0:
+		last_heading_level = 1
+	
+	# Create the heading prefix
+	var heading_prefix = "#".repeat(last_heading_level) + " "
+	
+	# Insert a new line after current line with the heading
+	begin_complex_operation()
+	
+	# Move to end of current line
+	set_caret_column(get_line(current_line).length())
+	
+	# Insert newline and heading
+	insert_text_at_caret("\n" + heading_prefix)
+	
+	end_complex_operation()
+
+func _find_last_heading_level(from_line: int) -> int:
+	## Search backwards from the given line to find the last heading level
+	## Returns 0 if no heading found
+	for line_num in range(from_line, -1, -1):
+		var line_text = get_line(line_num).strip_edges()
+		
+		if line_text.begins_with("#"):
+			# Count the # characters
+			var level = 0
+			for c in line_text:
+				if c == "#":
+					level += 1
+				else:
+					break
+			
+			# Valid heading levels are 1-6, and must have space after #'s
+			if level >= 1 and level <= 6:
+				if line_text.length() > level and line_text[level] == " ":
+					return level
+	
+	return 0
+
+func _change_heading_level(delta: int) -> void:
+	## Change the heading level of the current line
+	## delta: -1 to decrease # count (higher importance), +1 to increase # count (lower importance)
+	## SHIFT+UP decreases level (H2 -> H1), SHIFT+DOWN increases level (H1 -> H2)
+	var current_line = get_caret_line()
+	var line_text = get_line(current_line)
+	var stripped = line_text.strip_edges()
+	
+	# Check if current line is a heading
+	if stripped.begins_with("#"):
+		# Count existing # characters
+		var current_level = 0
+		for c in stripped:
+			if c == "#":
+				current_level += 1
+			else:
+				break
+		
+		# Calculate new level (clamped between 1-6)
+		var new_level = clampi(current_level + delta, 1, 6)
+		
+		if new_level != current_level:
+			# Get the heading text (everything after the #'s and space)
+			var heading_text = ""
+			if stripped.length() > current_level:
+				if stripped[current_level] == " ":
+					heading_text = stripped.substr(current_level + 1)
+				else:
+					heading_text = stripped.substr(current_level)
+			
+			# Preserve leading whitespace
+			var leading_ws = ""
+			for c in line_text:
+				if c in [" ", "\t"]:
+					leading_ws += c
+				else:
+					break
+			
+			# Build new line
+			var new_line = leading_ws + "#".repeat(new_level) + " " + heading_text
+			
+			begin_complex_operation()
+			set_line(current_line, new_line)
+			
+			# Position caret at end of new line
+			set_caret_column(new_line.length())
+			end_complex_operation()
+	else:
+		# Not a heading - convert to heading with default level 2
+		var leading_ws = ""
+		for c in line_text:
+			if c in [" ", "\t"]:
+				leading_ws += c
+			else:
+				break
+		
+		var new_line = leading_ws + "## " + stripped
+		
+		begin_complex_operation()
+		set_line(current_line, new_line)
+		set_caret_column(new_line.length())
+		end_complex_operation()
 
 func _setup_typing_effects() -> void:
 	"""Create and setup the new node-based typing effects manager"""

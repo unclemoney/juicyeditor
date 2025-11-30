@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://bt74kgu67tnxg"]
+[gd_scene load_steps=15 format=3 uid="uid://bt74kgu67tnxg"]
 
 [ext_resource type="Script" uid="uid://dhfhsla164f80" path="res://scripts/ui/main_scene.gd" id="1_51l7b"]
 [ext_resource type="Script" uid="uid://cs73sg5vom7ql" path="res://scripts/components/juicy_text_edit.gd" id="2_h3n2m"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://bwxstgl5vfieh" path="res://scenes/components/juicy_lucy.tscn" id="8_juicy_lucy"]
 [ext_resource type="PackedScene" uid="uid://c4mbubxlv8m3p" path="res://scenes/ui/xp_display_panel.tscn" id="9_85g3d"]
 [ext_resource type="PackedScene" uid="uid://dvn1x0s6rn5kl" path="res://scenes/ui/status_bar_xp_widget.tscn" id="10_xp_widget"]
+[ext_resource type="PackedScene" uid="uid://c3a7ac3j0fycv" path="res://scenes/components/outline_panel.tscn" id="11_outline_panel"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tbgi4"]
 shader = ExtResource("2_jyhfs")
@@ -157,6 +158,14 @@ tooltip_text = "Boss Battle (Unlocks at levels 10, 20, 30...)"
 disabled = true
 text = "⚔️"
 
+[node name="VSeparator4" type="VSeparator" parent="VBoxContainer/TopBar/Toolbar"]
+layout_mode = 2
+
+[node name="OutlineToggleButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
+layout_mode = 2
+tooltip_text = "Toggle Document Outline Panel"
+text = "📑"
+
 [node name="FileTabContainer" type="VBoxContainer" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 35)
 layout_mode = 2
@@ -217,6 +226,10 @@ grow_vertical = 2
 placeholder_text = "Start typing to create your document..."
 scroll_smooth = true
 script = ExtResource("2_h3n2m")
+
+[node name="OutlinePanel" parent="VBoxContainer/MainArea" instance=ExtResource("11_outline_panel")]
+layout_mode = 2
+size_flags_horizontal = 0
 
 [node name="StatusBar" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2

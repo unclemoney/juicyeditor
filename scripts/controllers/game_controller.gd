@@ -55,8 +55,11 @@ func _ready() -> void:
 	# Check if another instance is running BEFORE initializing
 	if not _try_become_primary_instance():
 		# Another instance is running - send files to it and quit
-		print("Another instance detected, sending files and exiting...")
+		print("GameController: Another instance detected, sending files and exiting...")
 		_send_files_to_primary_instance()
+		print("GameController: Calling quit...")
+		# Hide the window immediately while quitting
+		get_window().visible = false
 		get_tree().quit()
 		return
 	
@@ -953,15 +956,16 @@ func _try_become_primary_instance() -> bool:
 	"""Try to become the primary instance. Returns true if successful, false if another instance exists"""
 	print("GameController: Checking for existing instance...")
 	
-	# Use user:// directory for lock files
+	# Use user:// directory for lock files - set these early so they're available for _send_files_to_primary_instance
 	instance_lock_file = "user://juicy_editor.lock"
 	instance_command_file = "user://juicy_editor_commands.txt"
 	
 	print("GameController: Lock file path: ", instance_lock_file)
+	print("GameController: Command file path: ", instance_command_file)
 	
 	# Check if lock file exists
 	if FileAccess.file_exists(instance_lock_file):
-		print("GameController: Lock file found, checking if it's stale...")
+		print("GameController: Lock file found, checking contents...")
 		
 		# Check if the process is still alive by trying to read it
 		var lock_read = FileAccess.open(instance_lock_file, FileAccess.READ)
@@ -970,21 +974,21 @@ func _try_become_primary_instance() -> bool:
 			lock_read.close()
 			print("GameController: Lock file contains PID: ", pid)
 			
-			# IMPORTANT: This controls the staleness check behavior, leave this on false during testing
-			var check_stale = true
-			if check_stale:
-				# Check if process with this PID is running
-				var pid_int = int(pid)
-				if OS.is_process_running(pid_int):
-					print("GameController: Another instance is running with PID: ", pid)
-					is_primary_instance = true
-					return true
-				else:
-					# Stale lock file, remove it
-					print("GameController: No process with PID ", pid, " found, treating lock file as stale.")
-					DirAccess.remove_absolute(instance_lock_file)
+			# If lock file exists with a valid PID, assume another instance is running
+			# The old working version did NOT verify if the PID is still running
+			# because OS.is_process_running() can be unreliable on Windows
+			if pid != "" and pid.is_valid_int():
+				print("GameController: Lock file exists with valid PID, another instance is running")
+				is_primary_instance = false
+				return false
 			else:
-				pass
+				# Invalid or empty PID - stale lock file
+				print("GameController: Lock file has invalid PID, treating as stale")
+				DirAccess.remove_absolute(instance_lock_file)
+		else:
+			# Can't read lock file - try to remove it
+			print("GameController: Cannot read lock file, removing it")
+			DirAccess.remove_absolute(instance_lock_file)
 	
 	# Create lock file with our PID
 	print("GameController: Creating lock file...")
@@ -1008,7 +1012,11 @@ func _try_become_primary_instance() -> bool:
 
 func _send_files_to_primary_instance() -> void:
 	"""Send our command line files to the primary instance via command file"""
+	print("GameController: _send_files_to_primary_instance() called")
+	print("GameController: Command file path: ", instance_command_file)
+	
 	var args = OS.get_cmdline_args()
+	print("GameController: Command line args: ", args)
 	var files_to_send: Array[String] = []
 	
 	# Extract file arguments
@@ -1021,15 +1029,21 @@ func _send_files_to_primary_instance() -> void:
 		var absolute_path = _get_absolute_file_path(arg)
 		if absolute_path != "":
 			files_to_send.append(absolute_path)
+			print("GameController: File to send: ", absolute_path)
 	
 	# Write files to command file
 	if files_to_send.size() > 0:
+		print("GameController: Writing ", files_to_send.size(), " files to command file...")
 		var cmd_file = FileAccess.open(instance_command_file, FileAccess.WRITE)
 		if cmd_file:
 			for file_path in files_to_send:
 				cmd_file.store_line(file_path)
 			cmd_file.close()
-			print("Sent ", files_to_send.size(), " files to primary instance")
+			print("GameController: Successfully sent ", files_to_send.size(), " files to primary instance")
+		else:
+			print("GameController: ERROR - Could not open command file for writing!")
+	else:
+		print("GameController: No files to send to primary instance")
 
 func _check_command_file() -> void:
 	"""Check if there are new files to open from command file"""

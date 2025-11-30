@@ -29,6 +29,7 @@ const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 @onready var zoom_in_button: Button = $VBoxContainer/TopBar/Toolbar/ZoomInButton
 @onready var xp_toggle_button: Button = $VBoxContainer/TopBar/Toolbar/XPToggleButton
 @onready var debug_boss_battle_button: Button = $VBoxContainer/TopBar/Toolbar/DebugBossBattleButton
+@onready var outline_toggle_button: Button = $VBoxContainer/TopBar/Toolbar/OutlineToggleButton
 @onready var line_label: Label = $VBoxContainer/StatusBar/LineLabel
 @onready var column_label: Label = $VBoxContainer/StatusBar/ColumnLabel
 @onready var filename_label: Label = $VBoxContainer/StatusBar/FilenameLabel
@@ -36,6 +37,7 @@ const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 @onready var save_file_dialog: FileDialog = $SaveFileDialog
 @onready var juicy_lucy: Control = $JuicyLucy
 @onready var xp_display_panel: Control = $XPDisplayPanel
+@onready var outline_panel: Control = $VBoxContainer/MainArea/OutlinePanel
 
 # Game controller instance
 var game_controller: Node
@@ -117,6 +119,8 @@ func _ready() -> void:
 	_setup_theme_ui()
 	_setup_xp_toggle()
 	_setup_debug_buttons()
+	_setup_outline_panel()
+	_setup_file_drop_support()
 	_clean_up_scene_issues()
 	_update_ui()
 	_animate_ui_entrance()
@@ -316,6 +320,87 @@ func enable_boss_battle_button(level: int) -> void:
 	# Scale animation: grow then shrink
 	tween.tween_property(debug_boss_battle_button, "scale", Vector2(1.3, 1.3), 0.3)
 	tween.tween_property(debug_boss_battle_button, "scale", Vector2(1.0, 1.0), 0.3)
+
+func _setup_outline_panel() -> void:
+	"""Setup the document outline panel"""
+	print("DEBUG: Setting up outline panel...")
+	
+	if outline_panel and text_editor:
+		# Connect outline panel to text editor
+		outline_panel.setup_text_editor(text_editor)
+		
+		# Connect heading click signal
+		if outline_panel.has_signal("heading_clicked"):
+			outline_panel.heading_clicked.connect(_on_outline_heading_clicked)
+		
+		# Connect panel toggle signal
+		if outline_panel.has_signal("panel_toggled"):
+			outline_panel.panel_toggled.connect(_on_outline_panel_toggled)
+		
+		print("Outline panel setup complete")
+	else:
+		print("ERROR: Could not setup outline panel - missing components")
+		print("  outline_panel: ", outline_panel)
+		print("  text_editor: ", text_editor)
+	
+	# Connect toggle button
+	if outline_toggle_button:
+		outline_toggle_button.pressed.connect(_on_outline_toggle_pressed)
+		print("Outline toggle button connected")
+
+func _on_outline_toggle_pressed() -> void:
+	"""Toggle the outline panel visibility"""
+	if outline_panel:
+		if outline_panel.is_collapsed:
+			outline_panel.expand_panel()
+		else:
+			outline_panel.collapse_panel()
+
+func _on_outline_heading_clicked(line_number: int) -> void:
+	"""Handle outline heading click - optional additional effects"""
+	print("Navigated to heading at line ", line_number + 1)
+	
+	# Optional: highlight effect on the line
+	if animation_manager and animation_manager.has_method("animate_flash"):
+		# Could add a flash effect here
+		pass
+
+func _on_outline_panel_toggled(panel_visible: bool) -> void:
+	"""Handle outline panel visibility change"""
+	print("Outline panel visible: ", panel_visible)
+	
+	# Update toggle button appearance
+	if outline_toggle_button:
+		outline_toggle_button.button_pressed = panel_visible
+
+func _setup_file_drop_support() -> void:
+	"""Setup drag and drop file support"""
+	print("DEBUG: Setting up file drop support...")
+	
+	# Connect to the window's files_dropped signal
+	var window = get_window()
+	if window:
+		window.files_dropped.connect(_on_files_dropped)
+		print("File drop support enabled")
+	else:
+		print("ERROR: Could not get window for file drop support")
+
+func _on_files_dropped(files: PackedStringArray) -> void:
+	"""Handle files dropped onto the window"""
+	print("Files dropped: ", files)
+	
+	for file_path in files:
+		# Check if it's a file we can open (not a directory)
+		if FileAccess.file_exists(file_path):
+			print("Opening dropped file: ", file_path)
+			
+			# Use game controller to open the file (creates new tab)
+			if game_controller and game_controller.has_method("open_file"):
+				game_controller.open_file(file_path)
+			else:
+				print("ERROR: Game controller not available to open file")
+		else:
+			print("Skipping non-file: ", file_path)
 
 func _clean_up_scene_issues():
 	print("Cleaning up scene issues that could interfere with themes")
@@ -617,6 +702,10 @@ func _on_tab_changed(_tab_index: int) -> void:
 			# Force update line numbers for the new content
 			if line_numbers and line_numbers.has_method("force_update"):
 				line_numbers.force_update()
+			
+			# Refresh outline panel for the new file content
+			if outline_panel and outline_panel.has_method("refresh_outline"):
+				outline_panel.refresh_outline()
 
 func _on_text_changed() -> void:
 	is_file_modified = true
@@ -648,6 +737,11 @@ func _on_file_opened(file_path: String) -> void:
 	if line_numbers and line_numbers.has_method("force_update"):
 		print("🔄 Forcing line numbers update after file load")
 		line_numbers.force_update()
+	
+	# Refresh outline panel for the new file content
+	if outline_panel and outline_panel.has_method("refresh_outline"):
+		print("📑 Refreshing outline panel after file load")
+		outline_panel.refresh_outline()
 
 func _on_file_saved(file_path: String) -> void:
 	current_file_path = file_path
@@ -725,9 +819,10 @@ func _input(event: InputEvent) -> void:
 				KEY_MINUS: # Ctrl+- - Zoom Out
 					_zoom_out()
 					get_viewport().set_input_as_handled()
-				KEY_0: # Ctrl+0 - Reset Zoom
-					_reset_zoom()
-					get_viewport().set_input_as_handled()
+				KEY_0: # Ctrl+0 - Reset Zoom (only if Alt NOT pressed)
+					if not event.alt_pressed:
+						_reset_zoom()
+						get_viewport().set_input_as_handled()
 		
 		if event.ctrl_pressed and event.alt_pressed:
 			match event.keycode:
