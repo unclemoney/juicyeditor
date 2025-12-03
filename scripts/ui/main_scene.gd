@@ -1174,12 +1174,20 @@ func _organize_markdown_selection() -> void:
 	var unchecked_lines = []
 	var checked_lines = []
 	
+	# Regex patterns to match checkboxes with or without list markers
+	var regex_checked = RegEx.new()
+	regex_checked.compile("^\\s*[-*+]?\\s*\\[X\\]")
+	var regex_unchecked = RegEx.new()
+	regex_unchecked.compile("^\\s*[-*+]?\\s*\\[ \\]")
+	
 	for line in lines:
-		var stripped = line.strip_edges()
-		if stripped.begins_with("[X]"):
+		# Check if line has a checked checkbox (with or without list marker)
+		if regex_checked.search(line):
 			checked_lines.append(line)
-		elif stripped.begins_with("[ ]"):
+		# Check if line has an unchecked checkbox (with or without list marker)
+		elif regex_unchecked.search(line):
 			unchecked_lines.append(line)
+		# No checkbox found
 		else:
 			no_checkbox_lines.append(line)
 	

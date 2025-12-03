@@ -21,6 +21,9 @@ signal achievement_clicked(achievement_id: String)
 ## Reset button
 @onready var reset_button: Button = $MarginContainer/VBoxContainer/ResetButton
 
+## Close/hide button
+@onready var close_button: Button = $MarginContainer/VBoxContainer/HeaderContainer/CloseButton
+
 ## Reference to XP System
 var xp_system: Node = null
 
@@ -30,6 +33,10 @@ var badge_scene: PackedScene = null
 
 func _ready() -> void:
 	print("XPDisplayPanel: _ready() started")
+	
+	# Connect close button
+	if close_button:
+		close_button.pressed.connect(_on_close_button_pressed)
 	
 	# Connect reset button
 	if reset_button:
@@ -235,3 +242,9 @@ func _on_reset_button_pressed() -> void:
 	
 	# Show dialog
 	confirm_dialog.popup_centered()
+
+
+## _on_close_button_pressed
+## Hides the XP panel when close button is clicked
+func _on_close_button_pressed() -> void:
+	hide()

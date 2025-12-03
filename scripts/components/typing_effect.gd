@@ -469,9 +469,12 @@ func _create_special_burst_animation() -> void:
 	var animation = Animation.new()
 	animation.length = effect_duration * 1.5
 	
+	# Get label path relative to animation player root
+	var label_path = _get_label_path()
+	
 	# Enhanced scale track for burst effect
 	var scale_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(scale_track, NodePath("Label:scale"))
+	animation.track_set_path(scale_track, NodePath(label_path + ":scale"))
 	
 	animation.track_insert_key(scale_track, 0.0, Vector2(0.1, 0.1))
 	animation.track_insert_key(scale_track, 0.15, Vector2(scale_bounce * 2.0, scale_bounce * 2.0))
@@ -480,14 +483,14 @@ func _create_special_burst_animation() -> void:
 	
 	# Enhanced rotation
 	var rotation_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(rotation_track, NodePath("Label:rotation"))
+	animation.track_set_path(rotation_track, NodePath(label_path + ":rotation"))
 	animation.track_insert_key(rotation_track, 0.0, 0.0)
 	animation.track_insert_key(rotation_track, 0.3, PI * 0.25)
 	animation.track_insert_key(rotation_track, animation.length, 0.0)
 	
 	# Modulate track
 	var modulate_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(modulate_track, NodePath("Label:modulate"))
+	animation.track_set_path(modulate_track, NodePath(label_path + ":modulate"))
 	
 	var start_color = label.modulate
 	var end_color = Color(start_color.r, start_color.g, start_color.b, 0.0)
@@ -506,9 +509,12 @@ func _create_combo_bounce_animation() -> void:
 	var animation = Animation.new()
 	animation.length = effect_duration * 1.2
 	
+	# Get label path relative to animation player root
+	var label_path = _get_label_path()
+	
 	# Multi-bounce scale track
 	var scale_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(scale_track, NodePath("Label:scale"))
+	animation.track_set_path(scale_track, NodePath(label_path + ":scale"))
 	
 	animation.track_insert_key(scale_track, 0.0, Vector2(0.1, 0.1))
 	animation.track_insert_key(scale_track, 0.1, Vector2(scale_bounce * 1.5, scale_bounce * 1.5))
@@ -518,7 +524,7 @@ func _create_combo_bounce_animation() -> void:
 	
 	# Modulate track
 	var modulate_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(modulate_track, NodePath("Label:modulate"))
+	animation.track_set_path(modulate_track, NodePath(label_path + ":modulate"))
 	
 	var start_color = label.modulate
 	var end_color = Color(start_color.r, start_color.g, start_color.b, 0.0)
@@ -537,9 +543,12 @@ func _create_rhythm_pulse_animation() -> void:
 	var animation = Animation.new()
 	animation.length = effect_duration
 	
+	# Get label path relative to animation player root
+	var label_path = _get_label_path()
+	
 	# Pulsing scale track
 	var scale_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(scale_track, NodePath("Label:scale"))
+	animation.track_set_path(scale_track, NodePath(label_path + ":scale"))
 	
 	animation.track_insert_key(scale_track, 0.0, Vector2(0.8, 0.8))
 	animation.track_insert_key(scale_track, 0.2, Vector2(1.3, 1.3))
@@ -549,7 +558,7 @@ func _create_rhythm_pulse_animation() -> void:
 	
 	# Modulate track
 	var modulate_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(modulate_track, NodePath("Label:modulate"))
+	animation.track_set_path(modulate_track, NodePath(label_path + ":modulate"))
 	
 	var start_color = label.modulate
 	var end_color = Color(start_color.r, start_color.g, start_color.b, 0.0)
@@ -567,9 +576,12 @@ func _create_bounce_animation() -> void:
 	var animation = Animation.new()
 	animation.length = effect_duration
 	
+	# Get label path relative to animation player root
+	var label_path = _get_label_path()
+	
 	# Scale track for bounce effect
 	var scale_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(scale_track, NodePath("Label:scale"))
+	animation.track_set_path(scale_track, NodePath(label_path + ":scale"))
 	
 	# Bounce animation: start small, scale up, then scale down
 	animation.track_insert_key(scale_track, 0.0, Vector2(0.1, 0.1))
@@ -578,7 +590,7 @@ func _create_bounce_animation() -> void:
 	
 	# Modulate track for fade effect
 	var modulate_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(modulate_track, NodePath("Label:modulate"))
+	animation.track_set_path(modulate_track, NodePath(label_path + ":modulate"))
 	
 	# Fade animation: visible, then fade out
 	var start_color = label.modulate
@@ -603,6 +615,17 @@ func _create_bounce_animation() -> void:
 func _on_cleanup_timer_timeout() -> void:
 	if destroy_on_complete:
 		queue_free()
+
+
+## _get_label_path
+## Returns the path to the label node relative to animation player root
+func _get_label_path() -> String:
+	if label and animation_player:
+		var root = animation_player.get_node(animation_player.root_node) if animation_player.root_node else animation_player.get_parent()
+		if root and label.is_inside_tree():
+			return str(root.get_path_to(label))
+	return "Label"
+
 
 # Static method to reset typing combo state (can be called from TypingEffectsManager)
 static func reset_typing_combo() -> void:

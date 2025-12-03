@@ -379,9 +379,13 @@ func force_update() -> void:
 	"""Force a complete update of line numbers"""
 	print("🔄 Force updating line numbers...")
 	if text_editor:
+		# First sync line height with editor to ensure proper alignment
+		_sync_line_height_with_editor()
 		current_line_count = 0  # Force refresh
 		_update_line_numbers()
 		_update_active_line()
+		# Force position refresh after a frame to ensure everything is aligned
+		call_deferred("_force_refresh_all_positions")
 		print("✅ Force update complete")
 
 func set_font_size(new_font_size: int) -> void:

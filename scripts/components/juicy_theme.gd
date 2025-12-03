@@ -487,9 +487,9 @@ func _setup_markdown_highlighting_themed(highlighter: CodeHighlighter) -> void:
 	# Code blocks
 	highlighter.add_color_region("```", "```", markdown_code_color)
 	
-	# Checkboxes - unchecked and checked
-	highlighter.add_color_region("[ ]", " ", markdown_checkbox_unchecked_color, false)
-	highlighter.add_color_region("[X]", " ", markdown_checkbox_checked_color, false)
+	# Note: Checkbox highlighting [ ] and [X] cannot be done with color_region
+	# as brackets are not valid start symbols for CodeHighlighter regions.
+	# These are handled separately via syntax highlighting keywords if needed.
 	
 	# Symbols
 	highlighter.symbol_color = symbol_color

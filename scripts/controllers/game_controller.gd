@@ -53,7 +53,7 @@ func _ready() -> void:
 	print("GameController: _ready() step 1 - Checking for primary instance")
 	
 	# Check if another instance is running BEFORE initializing
-	if not _try_become_primary_instance():
+	"""if not _try_become_primary_instance():
 		# Another instance is running - send files to it and quit
 		print("GameController: Another instance detected, sending files and exiting...")
 		_send_files_to_primary_instance()
@@ -61,7 +61,7 @@ func _ready() -> void:
 		# Hide the window immediately while quitting
 		get_window().visible = false
 		get_tree().quit()
-		return
+		return"""
 	
 	print("This is the primary instance")
 	print("GameController: _ready() step 2 - Calling _initialize_systems()")
@@ -191,7 +191,7 @@ func _initialize_systems() -> void:
 		"xp_data": {},
 		
 		# XP UI Settings
-		"xp_panel_visible": true,
+		"xp_panel_visible": false,
 		"enable_boss_battles": true
 	}
 	

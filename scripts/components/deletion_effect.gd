@@ -243,9 +243,10 @@ func _create_explosion_scale_animation() -> void:
 	var animation = Animation.new()
 	animation.length = effect_duration
 	
-	# Scale track for explosion growth
+	# Scale track for explosion growth - use actual node name
 	var scale_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(scale_track, NodePath("AnimatedSprite2D:scale"))
+	var sprite_path = explosion_sprite.name if explosion_sprite else "AnimatedSprite2D"
+	animation.track_set_path(scale_track, NodePath(sprite_path + ":scale"))
 	
 	# Explosion animation: start tiny, grow quickly, then shrink
 	animation.track_insert_key(scale_track, 0.0, Vector2(0.1, 0.1))
@@ -253,9 +254,10 @@ func _create_explosion_scale_animation() -> void:
 	animation.track_insert_key(scale_track, 0.6, Vector2(1.0, 1.0))
 	animation.track_insert_key(scale_track, effect_duration, Vector2(0.1, 0.1))
 	
-	# Alpha track for fade out
+	# Alpha track for fade out - use actual node name
 	var alpha_track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(alpha_track, NodePath("AnimatedSprite2D:modulate"))
+	var sprite_path_mod = explosion_sprite.name if explosion_sprite else "AnimatedSprite2D"
+	animation.track_set_path(alpha_track, NodePath(sprite_path_mod + ":modulate"))
 	
 	animation.track_insert_key(alpha_track, 0.0, Color.WHITE)
 	animation.track_insert_key(alpha_track, 0.7, Color.WHITE)

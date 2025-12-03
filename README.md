@@ -26,6 +26,19 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **Dynamic Zoom Buttons**: Toolbar buttons for Zoom In, Zoom Out, and percentage reset (100%) with live percentage display
 - ✅ **Synchronized Scaling**: Line numbers automatically scale with text editor zoom for perfect alignment
 - ✅ **Text Statistics**: Character, word, line, and paragraph counting
+- ✅ **Outline Panel**: Collapsible side panel with markdown heading navigation, smooth animations, and heading highlighting
+
+### Outline Panel Features
+- ✅ **Heading Navigation**: Click any heading in the outline to jump to that section in the document
+- ✅ **Collapsible Panel**: Smooth tween animations for expanding/collapsing the side panel
+- ✅ **Auto-Detection**: Automatically parses markdown headings (H1-H6) from the document
+- ✅ **Current Section Highlighting**: Highlights the heading closest to your cursor position
+- ✅ **Task List Support**: Displays markdown task lists (`- [ ]` and `- [x]`) under their parent headings
+- ✅ **Expandable Tasks**: Click headings with tasks (marked with ★) to expand/collapse the task list with smooth animation
+- ✅ **Task Status Display**: Completed tasks (`[x]`) show with strikethrough styling and dimmed colors
+- ✅ **Star Indicator**: Headings containing task lists are marked with a ★ star at the end
+- ✅ **Pink Gradient Colors**: Heading levels use a pink-to-rose color gradient for visual hierarchy
+- ✅ **Keyboard Shortcuts**: Ctrl+Alt+O to toggle outline panel, Ctrl+Alt+1-6 for heading navigation
 
 ### Juicy Elements
 - ✅ **Audio Feedback**: Typing sounds, button clicks, hover sounds with volume controls
