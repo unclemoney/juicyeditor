@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/markdown_view_window.gd" id="1_script"]
+
+[node name="MarkdownViewWindow" type="Window"]
+title = "Markdown Preview"
+initial_position = 2
+size = Vector2i(700, 600)
+min_size = Vector2i(400, 300)
+script = ExtResource("1_script")

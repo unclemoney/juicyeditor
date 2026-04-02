@@ -144,10 +144,19 @@ func set_current_file_modified(is_modified: bool) -> void:
 
 func get_tab_by_file_path(file_path: String) -> int:
 	"""Find a tab with the given file path. Returns -1 if not found"""
+	var normalized: String = _normalize_path(file_path)
 	for i in range(tab_files.size()):
-		if tab_files[i].file_path == file_path:
+		if _normalize_path(tab_files[i].file_path) == normalized:
 			return i
 	return -1
+
+
+func _normalize_path(path: String) -> String:
+	"""Normalize a file path for consistent comparison."""
+	var result: String = path.replace("\\", "/")
+	if result.length() >= 2 and result[1] == ":":
+		result = result[0].to_lower() + result.substr(1)
+	return result
 
 func switch_to_file(file_path: String) -> bool:
 	"""Switch to a tab with the given file path. Returns true if found"""

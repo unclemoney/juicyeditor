@@ -30,6 +30,7 @@ const GotoLineDialogScene = preload("res://scripts/ui/goto_line_dialog.gd")
 @onready var xp_toggle_button: Button = $VBoxContainer/TopBar/Toolbar/XPToggleButton
 @onready var debug_boss_battle_button: Button = $VBoxContainer/TopBar/Toolbar/DebugBossBattleButton
 @onready var outline_toggle_button: Button = $VBoxContainer/TopBar/Toolbar/OutlineToggleButton
+@onready var preview_button: Button = $VBoxContainer/TopBar/Toolbar/PreviewButton
 @onready var line_label: Label = $VBoxContainer/StatusBar/LineLabel
 @onready var column_label: Label = $VBoxContainer/StatusBar/ColumnLabel
 @onready var filename_label: Label = $VBoxContainer/StatusBar/FilenameLabel
@@ -51,6 +52,10 @@ var zoom_controller: Node
 var settings_dialog: SettingsDialogScene
 var find_replace_dialog: FindReplaceDialogScene
 var goto_line_dialog: GotoLineDialogScene
+
+# Markdown preview
+const MarkdownViewWindowScene = preload("res://scenes/ui/markdown_view_window.tscn")
+var _markdown_preview_window: Window = null
 
 # File state
 var current_file_path: String = ""
@@ -120,6 +125,7 @@ func _ready() -> void:
 	_setup_xp_toggle()
 	_setup_debug_buttons()
 	_setup_outline_panel()
+	_setup_preview_button()
 	_setup_file_drop_support()
 	_clean_up_scene_issues()
 	_update_ui()
@@ -372,6 +378,214 @@ func _on_outline_panel_toggled(panel_visible: bool) -> void:
 	# Update toggle button appearance
 	if outline_toggle_button:
 		outline_toggle_button.button_pressed = panel_visible
+
+func _setup_preview_button() -> void:
+	"""Setup the markdown preview button"""
+	print("DEBUG: Setting up preview button...")
+	if preview_button:
+		preview_button.pressed.connect(_on_preview_button_pressed)
+		# Start disabled until a .md file is opened
+		preview_button.disabled = true
+		print("Preview button setup complete")
+
+func _on_preview_button_pressed() -> void:
+	"""Toggle markdown preview window"""
+	if not text_editor:
+		return
+
+	# Lazy-instantiate the preview window
+	if not _markdown_preview_window:
+		_markdown_preview_window = MarkdownViewWindowScene.instantiate()
+		add_child(_markdown_preview_window)
+		_markdown_preview_window.visibility_changed.connect(_on_preview_visibility_changed)
+		_markdown_preview_window.live_update_toggled.connect(_on_preview_live_toggled)
+		_markdown_preview_window.link_clicked.connect(_on_preview_link_clicked)
+		_markdown_preview_window.navigate_to.connect(_on_preview_navigate_to)
+		_markdown_preview_window.morph_requested.connect(_on_preview_morph_requested)
+
+		# Restore saved position/size
+		if game_controller:
+			var px: int = game_controller.editor_settings.get("markdown_preview_x", -1)
+			var py: int = game_controller.editor_settings.get("markdown_preview_y", -1)
+			var pw: int = game_controller.editor_settings.get("markdown_preview_w", 700)
+			var ph: int = game_controller.editor_settings.get("markdown_preview_h", 600)
+			if pw > 0 and ph > 0:
+				_markdown_preview_window.size = Vector2i(pw, ph)
+			# Restore position with basic sanity check
+			if px >= 0 and py >= 0:
+				var usable: Rect2i = DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen())
+				var safe_x: int = clampi(px, 0, maxi(usable.size.x - 100, 0))
+				var safe_y: int = clampi(py, 0, maxi(usable.size.y - 100, 0))
+				_markdown_preview_window.position = Vector2i(safe_x, safe_y)
+
+	# Get current theme
+	var active_theme: JuicyTheme = null
+	if theme_manager and "current_theme" in theme_manager:
+		active_theme = theme_manager.current_theme
+
+	# Open or refresh
+	var filename: String = current_file_path.get_file() if current_file_path != "" else "Untitled.md"
+	_markdown_preview_window.open_with(text_editor.text, filename, active_theme, current_file_path)
+
+	# Connect live update if enabled
+	_update_preview_live_connection()
+
+func _on_preview_visibility_changed() -> void:
+	## Save preview window position when hidden, reconnect live update when shown.
+	if not _markdown_preview_window:
+		return
+	if _markdown_preview_window.visible:
+		_update_preview_live_connection()
+	else:
+		# Window was hidden — save position and disconnect live update
+		if game_controller:
+			game_controller.editor_settings["markdown_preview_x"] = _markdown_preview_window.position.x
+			game_controller.editor_settings["markdown_preview_y"] = _markdown_preview_window.position.y
+			game_controller.editor_settings["markdown_preview_w"] = _markdown_preview_window.size.x
+			game_controller.editor_settings["markdown_preview_h"] = _markdown_preview_window.size.y
+			game_controller._save_settings()
+		_disconnect_preview_live_update()
+
+
+func _on_preview_link_clicked(url: String) -> void:
+	## Handle a local link clicked in the preview window.
+	if url.begins_with("#"):
+		return
+	if not game_controller:
+		return
+	var resolved_path: String = url
+	if not url.is_absolute_path():
+		var base_dir: String = current_file_path.get_base_dir()
+		resolved_path = base_dir.path_join(url)
+	if FileAccess.file_exists(resolved_path):
+		# Open in editor
+		game_controller.open_file(resolved_path)
+		# Also navigate inside the preview window
+		_open_file_in_preview(resolved_path)
+	else:
+		push_warning("Preview link target not found: " + resolved_path)
+
+
+func _on_preview_navigate_to(file_path: String) -> void:
+	## Handle back/forward navigation from the preview window.
+	if not game_controller:
+		return
+	if FileAccess.file_exists(file_path):
+		game_controller.open_file(file_path)
+		_open_file_in_preview_no_history(file_path)
+
+
+func _on_preview_morph_requested() -> void:
+	## Resize and center the preview window to fit slightly inside the main editor window.
+	if not _markdown_preview_window:
+		return
+	var main_win: Window = get_window()
+	if not main_win:
+		return
+
+	# Get usable screen area (excludes taskbar) for hard clamping
+	var screen_idx: int = DisplayServer.window_get_current_screen()
+	var usable: Rect2i = DisplayServer.screen_get_usable_rect(screen_idx)
+
+	# Target size: smaller than the main window AND the screen, whichever is less
+	var margin_px: int = 60
+	var target_w: int = mini(main_win.size.x, usable.size.x) - margin_px * 2
+	var target_h: int = mini(main_win.size.y, usable.size.y) - margin_px * 2
+	target_w = clampi(target_w, 400, usable.size.x - 40)
+	target_h = clampi(target_h, 300, usable.size.y - 40)
+
+	_markdown_preview_window.size = Vector2i(target_w, target_h)
+
+	# Center on the main window, accounting for embedded vs native coordinate systems
+	if _markdown_preview_window.is_embedded():
+		# Embedded windows: position is relative to parent content area (0,0 = parent top-left)
+		@warning_ignore("integer_division")
+		var offset_x: int = (main_win.size.x - target_w) / 2
+		@warning_ignore("integer_division")
+		var offset_y: int = (main_win.size.y - target_h) / 2
+		_markdown_preview_window.position = Vector2i(maxi(offset_x, 0), maxi(offset_y, 0))
+	else:
+		# Native OS windows: position is in absolute screen coordinates
+		@warning_ignore("integer_division")
+		var center_x: int = main_win.position.x + (main_win.size.x - target_w) / 2
+		@warning_ignore("integer_division")
+		var center_y: int = main_win.position.y + (main_win.size.y - target_h) / 2
+		center_x = clampi(center_x, usable.position.x, usable.end.x - target_w)
+		center_y = clampi(center_y, usable.position.y, usable.end.y - target_h)
+		_markdown_preview_window.position = Vector2i(center_x, center_y)
+
+
+func _open_file_in_preview(file_path: String) -> void:
+	## Load a file and show it in the preview window (pushes history).
+	if not _markdown_preview_window:
+		return
+	var file = FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		return
+	var content: String = file.get_as_text()
+	file.close()
+	var active_theme: JuicyTheme = null
+	if theme_manager and "current_theme" in theme_manager:
+		active_theme = theme_manager.current_theme
+	_markdown_preview_window.open_with(content, file_path.get_file(), active_theme, file_path)
+
+
+func _open_file_in_preview_no_history(file_path: String) -> void:
+	## Load a file and show it in the preview window without pushing history.
+	## Used for back/forward navigation (history is already managed).
+	if not _markdown_preview_window:
+		return
+	var file = FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		return
+	var content: String = file.get_as_text()
+	file.close()
+	var active_theme: JuicyTheme = null
+	if theme_manager and "current_theme" in theme_manager:
+		active_theme = theme_manager.current_theme
+	_markdown_preview_window._current_file_path = file_path
+	_markdown_preview_window._current_filename = file_path.get_file()
+	_markdown_preview_window._current_text = content
+	_markdown_preview_window.current_theme = active_theme
+	_markdown_preview_window._apply_theme_to_ui()
+	_markdown_preview_window._filename_label.text = "📖 " + file_path.get_file()
+	_markdown_preview_window._update_nav_buttons()
+	_markdown_preview_window.call_deferred("_deferred_render")
+
+func _on_preview_live_toggled(enabled: bool) -> void:
+	"""Handle live update toggle from preview window"""
+	if enabled:
+		_update_preview_live_connection()
+	else:
+		_disconnect_preview_live_update()
+
+func _update_preview_live_connection() -> void:
+	"""Connect text_changed to preview debounce if live update is on"""
+	if not _markdown_preview_window:
+		return
+	if not _markdown_preview_window.visible:
+		return
+	if not _markdown_preview_window.is_live_update_enabled():
+		return
+	if not text_editor.text_changed.is_connected(_on_text_changed_for_preview):
+		text_editor.text_changed.connect(_on_text_changed_for_preview)
+
+func _disconnect_preview_live_update() -> void:
+	"""Disconnect live update signal"""
+	if text_editor and text_editor.text_changed.is_connected(_on_text_changed_for_preview):
+		text_editor.text_changed.disconnect(_on_text_changed_for_preview)
+
+func _on_text_changed_for_preview() -> void:
+	"""Forward text changes to preview window debounce"""
+	if _markdown_preview_window and _markdown_preview_window.visible:
+		_markdown_preview_window.queue_live_refresh(text_editor.text)
+
+func _update_preview_button_state() -> void:
+	"""Enable/disable preview button based on current file extension"""
+	if not preview_button:
+		return
+	var is_markdown: bool = current_file_path.get_extension().to_lower() == "md"
+	preview_button.disabled = not is_markdown
 
 func _setup_file_drop_support() -> void:
 	"""Setup drag and drop file support"""
@@ -699,6 +913,8 @@ func _on_tab_changed(_tab_index: int) -> void:
 			if text_editor and file_data.file_path != "":
 				text_editor.set_syntax_highlighting_for_file(file_data.file_path)
 			
+			_update_preview_button_state()
+			
 			# Force update line numbers for the new content
 			if line_numbers and line_numbers.has_method("force_update"):
 				line_numbers.force_update()
@@ -728,6 +944,7 @@ func _on_file_opened(file_path: String) -> void:
 	current_file_path = file_path
 	is_file_modified = false
 	_update_ui()
+	_update_preview_button_state()
 	
 	# Set syntax highlighting based on file extension
 	if text_editor:
@@ -822,6 +1039,11 @@ func _input(event: InputEvent) -> void:
 				KEY_0: # Ctrl+0 - Reset Zoom (only if Alt NOT pressed)
 					if not event.alt_pressed:
 						_reset_zoom()
+						get_viewport().set_input_as_handled()
+				KEY_P: # Ctrl+Shift+P - Markdown Preview
+					if event.shift_pressed:
+						if not preview_button.disabled:
+							_on_preview_button_pressed()
 						get_viewport().set_input_as_handled()
 		
 		if event.ctrl_pressed and event.alt_pressed:
@@ -941,6 +1163,10 @@ func _on_theme_changed(new_theme: JuicyTheme) -> void:
 	if line_numbers and line_numbers.has_method("refresh_for_theme_change"):
 		print("🎨 Refreshing line numbers for theme change")
 		line_numbers.refresh_for_theme_change()
+	
+	# Update markdown preview with new theme
+	if _markdown_preview_window and _markdown_preview_window.visible:
+		_markdown_preview_window.set_juicy_theme(new_theme)
 	
 	# Note: Theme manager will automatically apply theme to all registered UI elements
 

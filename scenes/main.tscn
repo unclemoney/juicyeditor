@@ -166,6 +166,15 @@ layout_mode = 2
 tooltip_text = "Toggle Document Outline Panel"
 text = "📑"
 
+[node name="VSeparator5" type="VSeparator" parent="VBoxContainer/TopBar/Toolbar"]
+layout_mode = 2
+
+[node name="PreviewButton" type="Button" parent="VBoxContainer/TopBar/Toolbar"]
+layout_mode = 2
+tooltip_text = "Markdown Preview (Ctrl+Shift+P)"
+disabled = true
+text = "📖 Preview"
+
 [node name="FileTabContainer" type="VBoxContainer" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 35)
 layout_mode = 2

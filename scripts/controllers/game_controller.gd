@@ -192,7 +192,13 @@ func _initialize_systems() -> void:
 		
 		# XP UI Settings
 		"xp_panel_visible": false,
-		"enable_boss_battles": true
+		"enable_boss_battles": true,
+		
+		# Markdown Preview Window
+		"markdown_preview_x": -1,
+		"markdown_preview_y": -1,
+		"markdown_preview_w": 700,
+		"markdown_preview_h": 600
 	}
 	
 	# Setup visual effects after node initialization
@@ -513,26 +519,31 @@ func _update_window_title() -> void:
 	get_window().title = title
 
 func open_file(file_path: String) -> void:
+	# Resolve Windows shortcuts (.lnk) to their target path
+	var resolved_path: String = _resolve_shortcut(file_path)
+	# Normalize the path for consistent deduplication
+	resolved_path = _normalize_path(resolved_path)
+
 	# Check if file is already open in a tab
 	if file_tab_container and file_tab_container.has_method("switch_to_file"):
-		if file_tab_container.switch_to_file(file_path):
-			print("File already open, switched to tab: ", file_path)
+		if file_tab_container.switch_to_file(resolved_path):
+			print("File already open, switched to tab: ", resolved_path)
 			return
-	
-	var file = FileAccess.open(file_path, FileAccess.READ)
+
+	var file = FileAccess.open(resolved_path, FileAccess.READ)
 	if file:
 		var content = file.get_as_text()
 		var error = file.get_error()
 		file.close()
 		
 		if error != OK:
-			print("Error reading file: ", file_path, " Error code: ", error)
+			print("Error reading file: ", resolved_path, " Error code: ", error)
 			return
 		
 		# Add new tab for this file
 		if file_tab_container and file_tab_container.has_method("add_new_tab"):
-			var tab_index = file_tab_container.add_new_tab(file_path, content)
-			print("Added new tab for file: ", file_path, " at index: ", tab_index)
+			var tab_index = file_tab_container.add_new_tab(resolved_path, content)
+			print("Added new tab for file: ", resolved_path, " at index: ", tab_index)
 		elif text_editor:
 			# Fallback if no tab container
 			text_editor.text = content
@@ -541,20 +552,20 @@ func open_file(file_path: String) -> void:
 		if animation_manager and animation_manager.has_method("reset_control_scale"):
 			animation_manager.reset_control_scale(text_editor)
 		
-		current_file_path = file_path
+		current_file_path = resolved_path
 		is_file_modified = false
 		_update_window_title()
-		_add_to_recent_files(file_path)
-		file_opened.emit(file_path)
+		_add_to_recent_files(resolved_path)
+		file_opened.emit(resolved_path)
 		
 		# Add visual feedback for successful file open
 		if visual_effects_manager and text_editor and visual_effects_manager.has_method("create_glow_effect"):
 			visual_effects_manager.create_glow_effect(text_editor, Color.GREEN, 1.0)
 		
-		print("File opened: ", file_path)
+		print("File opened: ", resolved_path)
 	else:
 		var error = FileAccess.get_open_error()
-		print("Error: Could not open file: ", file_path, " Error code: ", error)
+		print("Error: Could not open file: ", resolved_path, " Error code: ", error)
 
 func save_file(file_path: String = "") -> bool:
 	var path_to_save = file_path
@@ -715,12 +726,13 @@ func _notification(what: int) -> void:
 		get_tree().quit()
 
 func _add_to_recent_files(file_path: String) -> void:
+	var normalized: String = _normalize_path(file_path)
 	# Remove if already exists
-	if file_path in recent_files:
-		recent_files.erase(file_path)
+	if normalized in recent_files:
+		recent_files.erase(normalized)
 	
 	# Add to front
-	recent_files.push_front(file_path)
+	recent_files.push_front(normalized)
 	
 	# Limit to max recent files
 	if recent_files.size() > max_recent_files:
@@ -732,6 +744,82 @@ func get_recent_files() -> Array[String]:
 func clear_recent_files() -> void:
 	recent_files.clear()
 	_save_settings()
+
+
+## _normalize_path
+## Normalizes a file path for consistent comparison on Windows.
+## Replaces backslashes with forward slashes and lowercases the drive letter.
+func _normalize_path(path: String) -> String:
+	var result: String = path.replace("\\", "/")
+	# Lowercase the drive letter for Windows paths (e.g. C:/ -> c:/)
+	if result.length() >= 2 and result[1] == ":":
+		result = result[0].to_lower() + result.substr(1)
+	return result
+
+
+## _resolve_shortcut
+## Resolves a Windows .lnk shortcut to its target path.
+## Returns the original path if it is not a .lnk file or resolution fails.
+func _resolve_shortcut(path: String) -> String:
+	if not path.get_extension().to_lower() == "lnk":
+		return path
+	# Read the .lnk binary and extract the target path
+	var file = FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return path
+	var file_size: int = file.get_length()
+	if file_size < 76:
+		file.close()
+		return path
+	# Read the full header (76 bytes)
+	var header: PackedByteArray = file.get_buffer(76)
+	# Bytes 0-3: magic "L\0\0\0" = 0x4C
+	if header[0] != 0x4C:
+		file.close()
+		return path
+	# LinkFlags at offset 20 (4 bytes, little-endian)
+	var link_flags: int = header[20] | (header[21] << 8) | (header[22] << 16) | (header[23] << 24)
+	var has_link_target_id_list: bool = (link_flags & 0x01) != 0
+	var has_link_info: bool = (link_flags & 0x02) != 0
+	var offset: int = 76
+	# Skip LinkTargetIDList if present
+	if has_link_target_id_list:
+		if offset + 2 > file_size:
+			file.close()
+			return path
+		file.seek(offset)
+		var id_list_size_buf: PackedByteArray = file.get_buffer(2)
+		var id_list_size: int = id_list_size_buf[0] | (id_list_size_buf[1] << 8)
+		offset += 2 + id_list_size
+	# Read LinkInfo if present
+	if has_link_info:
+		if offset + 4 > file_size:
+			file.close()
+			return path
+		file.seek(offset)
+		var link_info_size_buf: PackedByteArray = file.get_buffer(4)
+		var link_info_size: int = link_info_size_buf[0] | (link_info_size_buf[1] << 8) | (link_info_size_buf[2] << 16) | (link_info_size_buf[3] << 24)
+		if link_info_size < 28:
+			file.close()
+			return path
+		# Read the full LinkInfo structure
+		file.seek(offset)
+		var link_info: PackedByteArray = file.get_buffer(mini(link_info_size, file_size - offset))
+		# LocalBasePathOffset is at byte 16 within LinkInfo (4 bytes LE)
+		var local_base_path_offset: int = link_info[16] | (link_info[17] << 8) | (link_info[18] << 16) | (link_info[19] << 24)
+		if local_base_path_offset > 0 and local_base_path_offset < link_info.size():
+			# Read null-terminated ASCII string starting at local_base_path_offset
+			var target_path: String = ""
+			var idx: int = local_base_path_offset
+			while idx < link_info.size() and link_info[idx] != 0:
+				target_path += char(link_info[idx])
+				idx += 1
+			file.close()
+			if target_path != "" and FileAccess.file_exists(target_path):
+				print("Resolved .lnk shortcut: ", path, " -> ", target_path)
+				return target_path
+	file.close()
+	return path
 
 func _on_settings_applied(new_settings: Dictionary) -> void:
 	"""Handle settings being applied from the settings dialog"""

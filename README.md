@@ -27,6 +27,7 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **Synchronized Scaling**: Line numbers automatically scale with text editor zoom for perfect alignment
 - ✅ **Text Statistics**: Character, word, line, and paragraph counting
 - ✅ **Outline Panel**: Collapsible side panel with markdown heading navigation, smooth animations, and heading highlighting
+- ✅ **Markdown View Mode**: Separate preview window that renders markdown as styled, animated blocks with live update support
 
 ### Outline Panel Features
 - ✅ **Heading Navigation**: Click any heading in the outline to jump to that section in the document
@@ -39,6 +40,17 @@ Juicy Editor combines the functionality of a basic text editor with satisfying v
 - ✅ **Star Indicator**: Headings containing task lists are marked with a ★ star at the end
 - ✅ **Pink Gradient Colors**: Heading levels use a pink-to-rose color gradient for visual hierarchy
 - ✅ **Keyboard Shortcuts**: Ctrl+Alt+O to toggle outline panel, Ctrl+Alt+1-6 for heading navigation
+
+### Markdown View Mode
+- ✅ **Preview Window**: Opens a separate OS-level window to render markdown as beautifully styled blocks
+- ✅ **Toolbar Button**: 📖 Preview button in the toolbar (enabled only for `.md` files)
+- ✅ **Keyboard Shortcut**: `Ctrl+Shift+P` to toggle the preview window
+- ✅ **Live Update**: Automatically re-renders the preview as you type (300ms debounce), toggleable via 🔄 Live button
+- ✅ **Full Block Support**: Renders headings (H1–H6), paragraphs, bold/italic/code inline, links, lists, task lists, code blocks with language badges, blockquotes, tables, horizontal rules, and image placeholders
+- ✅ **Theme Integration**: Preview colors and fonts match the active editor theme; updates live when switching themes
+- ✅ **Juicy Animations**: Staggered block entrance animations, heading hover scale effects, code block hover glow, link hover highlights, and H1 pulse effects
+- ✅ **Scroll Memory**: Preserves scroll position across live updates and manual refreshes
+- ✅ **Window Position Memory**: Remembers preview window position and size between sessions
 
 ### Juicy Elements
 - ✅ **Audio Feedback**: Typing sounds, button clicks, hover sounds with volume controls
