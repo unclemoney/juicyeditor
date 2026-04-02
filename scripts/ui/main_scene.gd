@@ -483,29 +483,31 @@ func _on_preview_morph_requested() -> void:
 	if not main_win:
 		return
 
-	# Get usable screen area (excludes taskbar) for hard clamping
-	var screen_idx: int = DisplayServer.window_get_current_screen()
-	var usable: Rect2i = DisplayServer.screen_get_usable_rect(screen_idx)
-
-	# Target size: smaller than the main window AND the screen, whichever is less
 	var margin_px: int = 60
-	var target_w: int = mini(main_win.size.x, usable.size.x) - margin_px * 2
-	var target_h: int = mini(main_win.size.y, usable.size.y) - margin_px * 2
-	target_w = clampi(target_w, 400, usable.size.x - 40)
-	target_h = clampi(target_h, 300, usable.size.y - 40)
 
-	_markdown_preview_window.size = Vector2i(target_w, target_h)
-
-	# Center on the main window, accounting for embedded vs native coordinate systems
 	if _markdown_preview_window.is_embedded():
-		# Embedded windows: position is relative to parent content area (0,0 = parent top-left)
+		# Embedded windows use viewport logical coordinates (affected by content scaling).
+		# Using OS pixel sizes here would inflate the window beyond the visible area.
+		var vp_size: Vector2 = get_viewport().get_visible_rect().size
+		var target_w: int = int(vp_size.x) - margin_px * 2
+		var target_h: int = int(vp_size.y) - margin_px * 2
+		target_w = clampi(target_w, 400, int(vp_size.x) - 40)
+		target_h = clampi(target_h, 300, int(vp_size.y) - 40)
+		_markdown_preview_window.size = Vector2i(target_w, target_h)
 		@warning_ignore("integer_division")
-		var offset_x: int = (main_win.size.x - target_w) / 2
+		var offset_x: int = (int(vp_size.x) - target_w) / 2
 		@warning_ignore("integer_division")
-		var offset_y: int = (main_win.size.y - target_h) / 2
+		var offset_y: int = (int(vp_size.y) - target_h) / 2
 		_markdown_preview_window.position = Vector2i(maxi(offset_x, 0), maxi(offset_y, 0))
 	else:
-		# Native OS windows: position is in absolute screen coordinates
+		# Native OS windows use absolute screen pixel coordinates
+		var screen_idx: int = DisplayServer.window_get_current_screen()
+		var usable: Rect2i = DisplayServer.screen_get_usable_rect(screen_idx)
+		var target_w: int = mini(main_win.size.x, usable.size.x) - margin_px * 2
+		var target_h: int = mini(main_win.size.y, usable.size.y) - margin_px * 2
+		target_w = clampi(target_w, 400, usable.size.x - 40)
+		target_h = clampi(target_h, 300, usable.size.y - 40)
+		_markdown_preview_window.size = Vector2i(target_w, target_h)
 		@warning_ignore("integer_division")
 		var center_x: int = main_win.position.x + (main_win.size.x - target_w) / 2
 		@warning_ignore("integer_division")
