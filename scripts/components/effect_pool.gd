@@ -86,13 +86,13 @@ func _create_deletion_effect() -> Node:
 
 func _deactivate_effect(effect: Node) -> void:
 	"""Deactivate an effect and prepare it for pooling"""
+	# Stop all TweenFX animations first to avoid stale tweens on reuse
+	if effect.has_method("reset_for_pool"):
+		effect.reset_for_pool()
+	
 	effect.visible = false
 	effect.process_mode = Node.PROCESS_MODE_DISABLED
 	effect.position = Vector2.ZERO
-	
-	# Reset any effect-specific properties
-	if effect.has_method("reset_for_pool"):
-		effect.reset_for_pool()
 
 func _activate_effect(effect: Node, target_parent: Node, pos: Vector2) -> void:
 	"""Activate an effect from the pool"""
@@ -127,10 +127,8 @@ func get_typing_effect(parent: Node, pos: Vector2, character: String) -> Node:
 	# Track as active
 	active_typing_effects.append(effect)
 	
-	# Connect cleanup signal
-	if not effect.is_connected("finished", _on_typing_effect_finished):
-		# If the effect doesn't have a finished signal, create a timer
-		_setup_effect_cleanup_timer(effect, 1.5, _on_typing_effect_finished)
+	# Setup cleanup timer (duration matches typing effect lifetime)
+	_setup_effect_cleanup_timer(effect, 2.0, _on_typing_effect_finished)
 	
 	_update_pool_stats()
 	return effect
@@ -157,7 +155,7 @@ func get_flying_letter(parent: Node, pos: Vector2, character: String) -> Node:
 	active_flying_letters.append(letter)
 	
 	# Setup cleanup timer
-	_setup_effect_cleanup_timer(letter, 3.0, _on_flying_letter_finished)
+	_setup_effect_cleanup_timer(letter, 3.5, _on_flying_letter_finished)
 	
 	_update_pool_stats()
 	return letter
@@ -183,7 +181,7 @@ func get_deletion_effect(parent: Node, pos: Vector2) -> Node:
 	active_deletion_effects.append(effect)
 	
 	# Setup cleanup timer
-	_setup_effect_cleanup_timer(effect, 1.0, _on_deletion_effect_finished)
+	_setup_effect_cleanup_timer(effect, 1.5, _on_deletion_effect_finished)
 	
 	_update_pool_stats()
 	return effect

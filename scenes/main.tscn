@@ -235,6 +235,10 @@ grow_vertical = 2
 placeholder_text = "Start typing to create your document..."
 scroll_smooth = true
 script = ExtResource("2_h3n2m")
+enable_typing_sounds = null
+enable_typing_animations = null
+enable_line_numbers = null
+enable_deletion_explosions = null
 
 [node name="OutlinePanel" parent="VBoxContainer/MainArea" instance=ExtResource("11_outline_panel")]
 layout_mode = 2

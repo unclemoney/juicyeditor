@@ -5,13 +5,15 @@ extends Node
 # Manages fun typing animations and effects spawned during text editing
 # Uses node-based approach inspired by ridiculous_coding plugin
 
-signal effect_spawned(character: String, position: Vector2)
+signal effect_spawned(character: String, position: Vector2, tier: String)
 
 @export var enable_typing_effects: bool = true
 @export var enable_deletion_effects: bool = true
 @export var enable_newline_effects: bool = true
 @export var enable_flying_letters: bool = true  # New: Enable flying letter deletion effects
 @export var max_active_effects: int = 50  # Prevent memory issues
+@export var effect_intensity: float = 1.0  # 0.0 - 2.0 multiplier for all effect parameters
+@export var enable_screen_shake: bool = true
 
 # Effect configuration
 @export var typing_effect_scene: PackedScene
@@ -30,6 +32,9 @@ var deletion_reset_timer: Timer
 
 # Object pooling for performance
 var effect_pool: Node
+
+# Screen shake state
+var _shake_tween: Tween = null
 
 func _ready() -> void:
 	# Setup object pool for performance optimization
@@ -160,7 +165,7 @@ func _get_deleted_character() -> String:
 
 func _spawn_typing_effect(pos: Vector2, character: String) -> void:
 	"""Create a typing effect at the specified position"""
-	if not text_editor or character.is_empty():
+	if not text_editor or character.is_empty() or effect_intensity <= 0.0:
 		return
 	
 	# Clean up old effects if we have too many
@@ -174,19 +179,34 @@ func _spawn_typing_effect(pos: Vector2, character: String) -> void:
 	effect.character_typed = character
 	effect.position = pos + typing_effect_offset
 	effect.destroy_on_complete = true
+	effect.effect_intensity = effect_intensity
 	
 	# Add to text editor as overlay
 	text_editor.add_child(effect)
 	active_effects.append(effect)
 	
-	# Emit signal for audio/other systems
-	effect_spawned.emit(character, pos)
+	# Connect to tier detection for audio
+	if effect.has_signal("tier_detected"):
+		effect.tier_detected.connect(_on_typing_tier_detected.bind(character, pos))
 	
 	print("Spawned typing effect for '", character, "' at ", pos)
 
+func _on_typing_tier_detected(tier: String, character: String, pos: Vector2) -> void:
+	effect_spawned.emit(character, pos, tier)
+	
+	# Screen shake for high-tier typing
+	if enable_screen_shake and tier != "normal":
+		match tier:
+			"combo":
+				_shake_screen(3.0 * effect_intensity, 0.15)
+			"special":
+				_shake_screen(6.0 * effect_intensity, 0.25)
+			"rhythm":
+				_shake_screen(2.0 * effect_intensity, 0.1)
+
 func _spawn_deletion_effect(pos: Vector2, deleted_char: String = "") -> void:
 	"""Create a deletion effect (explosion + flying letters) at the specified position"""
-	if not text_editor:
+	if not text_editor or effect_intensity <= 0.0:
 		return
 	
 	_cleanup_excess_effects()
@@ -202,6 +222,7 @@ func _spawn_deletion_effect(pos: Vector2, deleted_char: String = "") -> void:
 	explosion.set_script(deletion_script)
 	explosion.position = pos + typing_effect_offset
 	explosion.destroy_on_complete = true
+	explosion.effect_intensity = effect_intensity
 	
 	text_editor.add_child(explosion)
 	active_effects.append(explosion)
@@ -213,17 +234,24 @@ func _spawn_deletion_effect(pos: Vector2, deleted_char: String = "") -> void:
 		flying_letter.set_script(flying_letter_script)
 		flying_letter.character_text = deleted_char
 		flying_letter.position = pos
+		flying_letter.effect_intensity = effect_intensity
 		
 		text_editor.add_child(flying_letter)
 		active_effects.append(flying_letter)
 		
 		print("Spawned flying letter '", deleted_char, "' at ", pos)
 	
+	# Screen shake scaled by deletion intensity
+	if enable_screen_shake:
+		var shake_scale = DeletionEffect.current_deletion_scale
+		if shake_scale > 1.5:
+			_shake_screen(clampf(4.0 * shake_scale * effect_intensity, 0.0, 20.0), clampf(0.1 * shake_scale * effect_intensity, 0.0, 0.4))
+	
 	print("Spawned enhanced deletion effect at ", pos)
 
 func _spawn_newline_effect(pos: Vector2) -> void:
 	"""Create a newline effect at the specified position"""
-	if not text_editor:
+	if not text_editor or effect_intensity <= 0.0:
 		return
 	
 	_cleanup_excess_effects()
@@ -237,6 +265,7 @@ func _spawn_newline_effect(pos: Vector2) -> void:
 	effect.destroy_on_complete = true
 	effect.effect_duration = 1.0  # Shorter duration for newlines
 	effect.particle_effects = false  # No particles for newlines
+	effect.effect_intensity = effect_intensity
 	
 	text_editor.add_child(effect)
 	active_effects.append(effect)
@@ -290,11 +319,9 @@ func set_sparkle_effects_enabled(enabled: bool) -> void:
 	enable_typing_effects = enabled
 
 func set_effect_intensity(intensity: float) -> void:
-	"""Set the intensity/scale of all effects"""
-	# We'll store intensity and apply it to newly created effects
-	# For now, just implement the method signature for settings integration
-	print("Effect intensity set to: ", intensity)
-	# TODO: Apply intensity to effect scaling in spawn methods
+	"""Set the intensity/scale of all effects (0.0 - 2.0)"""
+	effect_intensity = clampf(intensity, 0.0, 2.0)
+	print("Effect intensity set to: ", effect_intensity)
 
 # Settings integration
 func apply_settings(settings: Dictionary) -> void:
@@ -307,5 +334,36 @@ func apply_settings(settings: Dictionary) -> void:
 		enable_newline_effects = settings.get("enable_newline_effects", true)
 	if settings.has("enable_flying_letters"):
 		enable_flying_letters = settings.get("enable_flying_letters", true)
+	if settings.has("effect_intensity"):
+		set_effect_intensity(settings.get("effect_intensity", 1.0))
+	if settings.has("enable_screen_shake"):
+		enable_screen_shake = settings.get("enable_screen_shake", true)
 	
 	print("TypingEffectsManager settings applied:", settings)
+
+func _shake_screen(intensity: float, duration: float) -> void:
+	"""Shake the viewport canvas transform so the TextEditor stays in place"""
+	var viewport = get_viewport()
+	if not viewport:
+		return
+	
+	var base_transform = viewport.canvas_transform
+	var noise = FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	
+	# Kill previous shake to avoid drift from overlapping tweens
+	if _shake_tween and _shake_tween.is_valid():
+		_shake_tween.kill()
+		viewport.canvas_transform = base_transform
+	
+	_shake_tween = create_tween()
+	_shake_tween.tween_method(func(v: float):
+		var current_intensity := intensity * (1.0 - v)
+		var offset_x := noise.get_noise_2d(v * 1000.0, 0.0) * current_intensity * 2.0
+		var offset_y := noise.get_noise_2d(0.0, v * 1000.0) * current_intensity * 2.0
+		viewport.canvas_transform = base_transform.translated(Vector2(offset_x, offset_y))
+	, 0.0, 1.0, duration)
+	_shake_tween.tween_callback(func():
+		viewport.canvas_transform = base_transform
+		_shake_tween = null
+	)

@@ -167,6 +167,7 @@ func _initialize_systems() -> void:
 		"enable_deletion_effects": true,
 		"enable_newline_effects": true,
 		"enable_flying_letters": true,
+		"enable_screen_shake": true,
 		"typing_effects_max_count": 50,
 		
 		# Animation Settings
@@ -875,6 +876,8 @@ func _apply_settings_to_components(settings: Dictionary) -> void:
 			typing_effects_mgr.set_deletion_explosions_enabled(settings.deletion_explosions)
 		if "sparkle_effects" in settings:
 			typing_effects_mgr.set_sparkle_effects_enabled(settings.sparkle_effects)
+		if "enable_screen_shake" in settings:
+			typing_effects_mgr.enable_screen_shake = settings.enable_screen_shake
 		if "effect_intensity" in settings:
 			typing_effects_mgr.set_effect_intensity(settings.effect_intensity)
 

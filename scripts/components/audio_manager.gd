@@ -7,6 +7,9 @@ extends Node
 signal audio_settings_changed
 
 @export var typing_sounds: Array[AudioStream] = []
+@export var typing_combo_sounds: Array[AudioStream] = []
+@export var typing_special_sounds: Array[AudioStream] = []
+@export var typing_rhythm_sounds: Array[AudioStream] = []
 @export var ui_sounds: Dictionary = {}
 @export var master_volume: float = 0.7
 @export var typing_volume: float = 0.5
@@ -16,12 +19,14 @@ var audio_players: Array[AudioStreamPlayer] = []
 var typing_player: AudioStreamPlayer
 var ui_player: AudioStreamPlayer
 var delete_player: AudioStreamPlayer
+var delete_heavy_player: AudioStreamPlayer
 
 var audio_enabled: bool = true
 var typing_sounds_enabled: bool = true
 
 # Delete sound effect system with pitch-down
 var delete_sound: AudioStream
+var delete_heavy_sound: AudioStream
 var delete_pitch_offset: float = 0.0  # Cents offset from original pitch
 var delete_pitch_step: float = 1.0  # Lower by 1 cent each time
 var pitch_reset_timer: Timer
@@ -46,6 +51,11 @@ func _setup_audio_players() -> void:
 	delete_player.name = "DeletePlayer"
 	delete_player.bus = "Master"
 	add_child(delete_player)
+	
+	delete_heavy_player = AudioStreamPlayer.new()
+	delete_heavy_player.name = "DeleteHeavyPlayer"
+	delete_heavy_player.bus = "Master"
+	add_child(delete_heavy_player)
 	
 	# Create a pool of audio players for overlapping sounds
 	for i in range(5):
@@ -79,6 +89,17 @@ func _load_delete_sound() -> void:
 			print("AudioManager: Failed to load delete sound")
 	else:
 		print("AudioManager: Delete sound file not found at ", delete_sound_path)
+	
+	## Load heavy delete sound
+	var delete_heavy_path = "res://audio/sfx/delete_heavy_01.wav"
+	if ResourceLoader.exists(delete_heavy_path):
+		delete_heavy_sound = load(delete_heavy_path) as AudioStream
+		if delete_heavy_sound:
+			print("AudioManager: Heavy delete sound loaded successfully")
+		else:
+			print("AudioManager: Failed to load heavy delete sound")
+	else:
+		print("AudioManager: Heavy delete sound file not found at ", delete_heavy_path)
 
 func _create_procedural_typing_sounds() -> void:
 	# Create simple procedural typing sounds using AudioStreamGenerator
@@ -151,6 +172,36 @@ func play_typing_sound() -> void:
 	if sound and typing_player:
 		typing_player.stream = sound
 		typing_player.volume_db = linear_to_db(master_volume * typing_volume)
+		typing_player.pitch_scale = randf_range(0.95, 1.05)
+		typing_player.play()
+
+func play_typing_sound_tier(tier: String) -> void:
+	if not audio_enabled or not typing_sounds_enabled:
+		return
+	
+	var sound_array: Array[AudioStream] = []
+	match tier:
+		"combo":
+			sound_array = typing_combo_sounds
+		"special":
+			sound_array = typing_special_sounds
+		"rhythm":
+			sound_array = typing_rhythm_sounds
+		_:
+			sound_array = typing_sounds
+	
+	if sound_array.is_empty():
+		# Fallback to normal typing sounds
+		sound_array = typing_sounds
+	
+	if sound_array.is_empty():
+		return
+	
+	var sound = sound_array[randi() % sound_array.size()]
+	if sound and typing_player:
+		typing_player.stream = sound
+		typing_player.volume_db = linear_to_db(master_volume * typing_volume)
+		typing_player.pitch_scale = randf_range(0.95, 1.05)
 		typing_player.play()
 
 func play_delete_sound() -> void:
@@ -178,6 +229,23 @@ func play_delete_sound() -> void:
 	if pitch_reset_timer:
 		pitch_reset_timer.stop()
 		pitch_reset_timer.start()
+
+func play_delete_sound_heavy() -> void:
+	## Play heavy delete sound for big consecutive deletions
+	if not audio_enabled:
+		return
+	
+	if delete_heavy_sound and delete_heavy_player:
+		delete_heavy_player.stream = delete_heavy_sound
+		delete_heavy_player.volume_db = linear_to_db(master_volume * ui_volume)
+		delete_heavy_player.pitch_scale = randf_range(0.9, 1.1)
+		delete_heavy_player.play()
+	elif delete_sound and delete_player:
+		# Fallback to normal delete sound with lower pitch
+		delete_player.stream = delete_sound
+		delete_player.volume_db = linear_to_db(master_volume * ui_volume)
+		delete_player.pitch_scale = 0.7
+		delete_player.play()
 
 func _on_pitch_reset_timeout() -> void:
 	## Reset pitch offset back to 0 after 0.5 seconds of no deletions
@@ -269,6 +337,24 @@ func _try_load_typing_sounds() -> void:
 		"res://audio/sfx/typing_02.mp3",
 		"res://audio/sfx/typing_03.mp3"
 	]
+	var typing_normal_wav = [
+		"res://audio/sfx/typing_normal_01.wav",
+		"res://audio/sfx/typing_normal_02.wav",
+		"res://audio/sfx/typing_normal_03.wav",
+		"res://audio/sfx/typing_normal_04.wav"
+	]
+	var typing_combo_wav = [
+		"res://audio/sfx/typing_combo_01.wav",
+		"res://audio/sfx/typing_combo_02.wav",
+		"res://audio/sfx/typing_combo_03.wav"
+	]
+	var typing_special_wav = [
+		"res://audio/sfx/typing_special_01.wav"
+	]
+	var typing_rhythm_wav = [
+		"res://audio/sfx/typing_rhythm_01.wav",
+		"res://audio/sfx/typing_rhythm_02.wav"
+	]
 	
 	typing_sounds.clear()
 	for file_path in typing_files:
@@ -276,6 +362,32 @@ func _try_load_typing_sounds() -> void:
 			var sound = load(file_path) as AudioStream
 			if sound:
 				typing_sounds.append(sound)
+	for file_path in typing_normal_wav:
+		if ResourceLoader.exists(file_path):
+			var sound = load(file_path) as AudioStream
+			if sound:
+				typing_sounds.append(sound)
+	
+	typing_combo_sounds.clear()
+	for file_path in typing_combo_wav:
+		if ResourceLoader.exists(file_path):
+			var sound = load(file_path) as AudioStream
+			if sound:
+				typing_combo_sounds.append(sound)
+	
+	typing_special_sounds.clear()
+	for file_path in typing_special_wav:
+		if ResourceLoader.exists(file_path):
+			var sound = load(file_path) as AudioStream
+			if sound:
+				typing_special_sounds.append(sound)
+	
+	typing_rhythm_sounds.clear()
+	for file_path in typing_rhythm_wav:
+		if ResourceLoader.exists(file_path):
+			var sound = load(file_path) as AudioStream
+			if sound:
+				typing_rhythm_sounds.append(sound)
 	
 	# If no audio files found, keep procedural sounds
 	if typing_sounds.is_empty():

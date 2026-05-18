@@ -243,11 +243,11 @@ func _setup_typing_effects() -> void:
 	
 	print("TypingEffectsManager setup complete")
 
-func _on_typing_effect_spawned(character: String, _pos: Vector2) -> void:
+func _on_typing_effect_spawned(character: String, _pos: Vector2, tier: String = "normal") -> void:
 	"""Handle typing effect spawning for coordinated audio feedback"""
 	if audio_manager and enable_typing_sounds:
-		# Let the audio manager handle typing sound with character info
-		audio_manager.play_typing_sound()
+		# Let the audio manager handle typing sound with tier info
+		audio_manager.play_typing_sound_tier(tier)
 	
 	# Emit our own signal for other systems
 	text_typed.emit(character)

@@ -1,9 +1,8 @@
 extends Node2D
 class_name FlyingLetter
 
-# Juicy Editor - Flying Letter Deletion Effect
-# Inspired by TEXTREME's flying letter effect for text deletion
-# Creates physics-based letter animations that fly off when text is deleted
+# Juicy Editor - Flying Letter Deletion Effect (Juiced Up)
+# Uses TweenFX for stylized trajectories instead of manual physics
 
 @export var rotations_per_s_min: float = 7.0
 @export var rotations_per_s_max: float = 13.0
@@ -19,16 +18,16 @@ class_name FlyingLetter
 
 @export var effect_duration: float = 3.0
 @export var fade_start_time: float = 2.0
-@export var use_debris_sprites: bool = true  # Use debris sprites for enhanced effects
+@export var use_debris_sprites: bool = true
 
-var linear_velocity: Vector2
-var angular_velocity: float = 0.0
-var gravity: float = 0.0
+# Juice controls
+@export var effect_intensity: float = 1.0
+
 var character_text: String = ""
-var start_time: float = 0.0
+var start_pos: Vector2
 
 @onready var label: Label
-@onready var debris_sprite: AnimatedSprite2D  # New debris sprite component
+@onready var debris_sprite: AnimatedSprite2D
 @onready var cleanup_timer: Timer
 @onready var visibility_notifier: VisibleOnScreenNotifier2D
 
@@ -38,19 +37,30 @@ var debris_textures: Array[Texture2D] = []
 func _ready() -> void:
 	_load_debris_sprites()
 	_setup_components()
-	_setup_physics()
-	start_time = Time.get_unix_time_from_system()
+	_start_flight()
+
+func reset_for_pool() -> void:
+	"""Reset all state for object pool reuse"""
+	TweenFX.stop_all(self)
+	if label:
+		label.scale = Vector2.ONE
+		label.modulate = Color.WHITE
+		label.rotation = 0.0
+		label.visible = true
+	if debris_sprite:
+		debris_sprite.visible = false
+		debris_sprite.scale = Vector2.ONE
+		debris_sprite.modulate = Color.WHITE
+		debris_sprite.rotation = 0.0
+	character_text = ""
 
 func _load_debris_sprites() -> void:
-	"""Load debris textures for enhanced deletion effects"""
-	for i in range(1, 9):  # Assuming debris_01.png to debris_08.png
+	for i in range(1, 9):
 		var texture_path = "res://effects/sprites/deletion/debris_%02d.png" % i
 		if ResourceLoader.exists(texture_path):
 			var texture = load(texture_path) as Texture2D
 			if texture:
 				debris_textures.append(texture)
-	
-	print("Loaded ", debris_textures.size(), " debris textures")
 
 func _setup_components() -> void:
 	# Create Label for character display
@@ -63,6 +73,7 @@ func _setup_components() -> void:
 	# Create debris sprite for enhanced visual effects
 	if use_debris_sprites and debris_textures.size() > 0:
 		debris_sprite = AnimatedSprite2D.new()
+		debris_sprite.visible = false
 		add_child(debris_sprite)
 		_setup_debris_sprite()
 	
@@ -77,49 +88,30 @@ func _setup_components() -> void:
 	cleanup_timer.one_shot = true
 	cleanup_timer.timeout.connect(_on_cleanup_timeout)
 	add_child(cleanup_timer)
-	cleanup_timer.start()
 	
-	# Set up visibility notifier rect based on label
 	if label:
-		# Use a reasonable default rect size for the notifier
 		visibility_notifier.rect = Rect2(-10, -10, 20, 20)
 
 func _setup_debris_sprite() -> void:
-	"""Setup debris sprite for enhanced deletion effects"""
 	if not debris_sprite or debris_textures.size() == 0:
 		return
 	
-	# Create SpriteFrames with a random debris texture
 	var sprite_frames = SpriteFrames.new()
 	sprite_frames.add_animation("debris")
-	sprite_frames.set_animation_speed("debris", 1.0)  # Static sprite
+	sprite_frames.set_animation_speed("debris", 1.0)
 	sprite_frames.set_animation_loop("debris", false)
 	
-	# Use a random debris texture
 	var random_texture = debris_textures[randi() % debris_textures.size()]
 	sprite_frames.add_frame("debris", random_texture)
 	
 	debris_sprite.sprite_frames = sprite_frames
 	debris_sprite.play("debris")
-	
-	# Make debris sprite slightly smaller than the character
 	debris_sprite.scale = Vector2(0.8, 0.8)
 
-func _setup_physics() -> void:
-	# Calculate effect scale based on font size (default to reasonable values)
-	var effect_scale = 1.0
-	# Note: Using default font size since we don't have a specific font theme name
-	# Could be enhanced later to use actual font metrics
+func _start_flight() -> void:
+	start_pos = position
 	
-	# Randomize horizontal speed
-	var temp_x = randf_range(x_speed_min / effect_scale, x_speed_max / effect_scale)
-	var temp_y = randf_range(y_speed_min, y_speed_max)
-	
-	linear_velocity = Vector2(temp_x, temp_y)
-	gravity = randf_range(gravity_min * effect_scale, gravity_max * effect_scale)
-	angular_velocity = randf_range(rotations_per_s_min / effect_scale, rotations_per_s_max / effect_scale)
-	
-	# Randomize initial color for variety
+	# Randomize initial color
 	if label:
 		label.modulate = Color(
 			randf_range(0.7, 1.0),
@@ -127,32 +119,57 @@ func _setup_physics() -> void:
 			randf_range(0.7, 1.0),
 			1.0
 		)
-
-func _process(delta: float) -> void:
-	# Apply physics
-	position += linear_velocity * delta
-	rotation += angular_velocity * delta
-	linear_velocity += Vector2(0, gravity * delta)
 	
-	# Apply fade effect near end of life
-	var current_time = Time.get_unix_time_from_system()
-	var elapsed = current_time - start_time
+	# Calculate flight parameters scaled by intensity
+	var launch_x = randf_range(x_speed_min, x_speed_max) * effect_intensity
+	var launch_y = randf_range(y_speed_min, y_speed_max) * effect_intensity
+	var rot_speed = randf_range(rotations_per_s_min, rotations_per_s_max) * effect_intensity
 	
-	if elapsed > fade_start_time:
-		var fade_progress = (elapsed - fade_start_time) / (effect_duration - fade_start_time)
-		var alpha = 1.0 - fade_progress
-		if label:
-			label.modulate.a = max(0.0, alpha)
+	# End position (fallen down and drifted horizontally)
+	var end_x = start_pos.x + launch_x * effect_duration * 0.001
+	var end_y = start_pos.y + 200.0 * effect_intensity
+	var arc_height = abs(launch_y) * effect_intensity
+	
+	# Parabolic arc trajectory via tween_method (tracked by TweenFX)
+	var pos_tween = TweenFX.tween_method(self, func(t: float):
+		var x = lerpf(start_pos.x, end_x, t)
+		# Parabola peak: 4 * h * t * (1 - t) gives peak at t = 0.5
+		var y = lerpf(start_pos.y, end_y, t) - 4.0 * arc_height * t * (1.0 - t)
+		position = Vector2(x, y)
+	, 0.0, 1.0, effect_duration)
+	if pos_tween:
+		pos_tween.set_trans(Tween.TRANS_LINEAR)
+	
+	# Spin
+	TweenFX.spin(self, effect_duration, rot_speed * effect_duration / 360.0)
+	
+	# Fade out near end of life
+	var fade_delay = max(0.0, fade_start_time)
+	var fade_dur = effect_duration - fade_delay
+	if fade_dur > 0:
+		TweenFX.delayed_callback(self, fade_delay, func():
+			TweenFX.fade_out(label, fade_dur)
+			if debris_sprite:
+				TweenFX.fade_out(debris_sprite, fade_dur)
+		)
+	
+	# Debris sprite tumbling chaos
+	if debris_sprite and debris_sprite.visible:
+		if randf() < 0.1:
+			# 10% chance of glitch corruption
+			TweenFX.glitch(debris_sprite, 0.5, 8.0)
+		else:
+			TweenFX.fidget(debris_sprite, 0.8, 6)
+	
+	# Start cleanup timer
+	cleanup_timer.start()
 
 func _on_screen_exited() -> void:
-	"""Clean up when letter flies off screen"""
 	queue_free()
 
 func _on_cleanup_timeout() -> void:
-	"""Clean up after maximum duration"""
 	queue_free()
 
-# Static factory method to create flying letters
 static func create_flying_letter(parent: Node, pos: Vector2, character: String) -> FlyingLetter:
 	var letter = FlyingLetter.new()
 	letter.character_text = character
@@ -160,17 +177,15 @@ static func create_flying_letter(parent: Node, pos: Vector2, character: String) 
 	parent.add_child(letter)
 	return letter
 
-# Enhanced factory method with customizable physics
 static func create_flying_letter_custom(parent: Node, pos: Vector2, character: String, direction: Vector2 = Vector2.LEFT) -> FlyingLetter:
 	var letter = FlyingLetter.new()
 	letter.character_text = character
 	letter.position = pos
 	
-	# Customize physics based on direction
-	if direction.x > 0:  # Flying right
+	if direction.x > 0:
 		letter.x_speed_min = 100.0
 		letter.x_speed_max = 300.0
-	else:  # Flying left (default)
+	else:
 		letter.x_speed_min = -300.0
 		letter.x_speed_max = -100.0
 	

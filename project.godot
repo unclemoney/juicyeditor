@@ -25,6 +25,7 @@ VisualEffectsManager="*res://scripts/components/visual_effects_manager.gd"
 AnimationManager="*res://scripts/components/animation_manager.gd"
 TypingEffectsManager="*res://scripts/components/typing_effects_manager.gd"
 XPSystem="*res://scripts/components/xp_system.gd"
+TweenFX="*res://addons/TweenFX/TweenFX.gd"
 
 [display]
 
@@ -37,7 +38,7 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdai-mcp-plugin-godot/plugin.cfg")
+enabled=PackedStringArray("res://addons/TweenFX/plugin.cfg", "res://addons/gdai-mcp-plugin-godot/plugin.cfg")
 
 [file_customization]
 

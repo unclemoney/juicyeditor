@@ -319,6 +319,13 @@ func _create_animation_settings_tab() -> void:
 	animation_tab.add_child(sparkle_effects_check)
 	animation_settings["sparkle_effects"] = sparkle_effects_check
 	
+	# Screen Shake
+	var screen_shake_check = CheckBox.new()
+	screen_shake_check.text = "Enable Screen Shake"
+	screen_shake_check.name = "enable_screen_shake"
+	animation_tab.add_child(screen_shake_check)
+	animation_settings["enable_screen_shake"] = screen_shake_check
+	
 	# Effect Intensity
 	var intensity_group = HBoxContainer.new()
 	animation_tab.add_child(intensity_group)
@@ -494,6 +501,9 @@ func _load_current_settings() -> void:
 	if "sparkle_effects" in game_controller.editor_settings and animation_settings.has("sparkle_effects"):
 		animation_settings["sparkle_effects"].button_pressed = game_controller.editor_settings.sparkle_effects
 	
+	if "enable_screen_shake" in game_controller.editor_settings and animation_settings.has("enable_screen_shake"):
+		animation_settings["enable_screen_shake"].button_pressed = game_controller.editor_settings.enable_screen_shake
+	
 	if "effect_intensity" in game_controller.editor_settings and animation_settings.has("effect_intensity"):
 		animation_settings["effect_intensity"].value = game_controller.editor_settings.effect_intensity
 	
@@ -580,6 +590,9 @@ func _collect_settings() -> Dictionary:
 	if animation_settings.has("sparkle_effects"):
 		settings.sparkle_effects = animation_settings["sparkle_effects"].button_pressed
 	
+	if animation_settings.has("enable_screen_shake"):
+		settings.enable_screen_shake = animation_settings["enable_screen_shake"].button_pressed
+	
 	if animation_settings.has("effect_intensity"):
 		settings.effect_intensity = animation_settings["effect_intensity"].value
 	
@@ -640,6 +653,8 @@ func _apply_settings_to_managers(settings: Dictionary) -> void:
 			typing_effects_manager.set_deletion_explosions_enabled(settings.deletion_explosions)
 		if "sparkle_effects" in settings:
 			typing_effects_manager.set_sparkle_effects_enabled(settings.sparkle_effects)
+		if "enable_screen_shake" in settings:
+			typing_effects_manager.enable_screen_shake = settings.enable_screen_shake
 		if "effect_intensity" in settings:
 			typing_effects_manager.set_effect_intensity(settings.effect_intensity)
 
@@ -687,6 +702,8 @@ func _reset_to_defaults() -> void:
 		animation_settings["deletion_explosions"].button_pressed = true
 	if animation_settings.has("sparkle_effects"):
 		animation_settings["sparkle_effects"].button_pressed = true
+	if animation_settings.has("enable_screen_shake"):
+		animation_settings["enable_screen_shake"].button_pressed = true
 	if animation_settings.has("effect_intensity"):
 		animation_settings["effect_intensity"].value = 1.0
 	if animation_settings.has("cursor_animations"):
