@@ -21,6 +21,7 @@ var _current_text: String = ""
 var _current_filename: String = ""
 var _current_file_path: String = ""
 var _saved_scroll: int = 0
+var _skip_entrance_animation: bool = false
 var _block_nodes: Array[Control] = []
 var _h1_pulse_nodes: Array[RichTextLabel] = []
 var _active_tweens: Array[Tween] = []
@@ -280,8 +281,12 @@ func _render(text: String) -> void:
 			_content_container.add_child(node)
 			_block_nodes.append(node)
 
-	# Entrance animation (deferred so layout is computed)
-	call_deferred("_animate_entrance")
+	# Entrance animation (deferred so layout is computed); skipped for live
+	# refreshes to avoid constant flicker while typing
+	if _skip_entrance_animation:
+		_skip_entrance_animation = false
+	else:
+		call_deferred("_animate_entrance")
 
 
 func _build_block_node(block: Dictionary) -> Control:
@@ -941,9 +946,15 @@ func _on_live_toggled(enabled: bool) -> void:
 
 func _on_debounce_timeout() -> void:
 	_saved_scroll = _scroll_container.scroll_vertical
+	_skip_entrance_animation = true
 	_render(_current_text)
 	call_deferred("_restore_scroll")
 
 
 func _restore_scroll() -> void:
-	_scroll_container.scroll_vertical = _saved_scroll
+	# fit_content RichTextLabels can need more than one frame to reach their
+	# final height; restoring earlier gets clamped by the stale max scroll.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if is_instance_valid(_scroll_container):
+		_scroll_container.scroll_vertical = _saved_scroll

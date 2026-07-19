@@ -9,12 +9,14 @@ void fragment() {
 	vec4 color = texture(TEXTURE, UV);
 
 	if (color.a == 0.0) {
+		// Fixed 8-tap ring kernel: constant cost regardless of outline_width.
+		// The old nested loop sampled (2*w+1)^2 texels per pixel (121 at
+		// width 5), which could stall the GPU/driver on large controls.
 		float alpha = 0.0;
-		for (float x = -outline_width; x <= outline_width; x += 1.0) {
-			for (float y = -outline_width; y <= outline_width; y += 1.0) {
-				vec2 offset = vec2(x, y) / size;
-				alpha = max(alpha, texture(TEXTURE, UV + offset).a);
-			}
+		for (int i = 0; i < 8; i++) {
+			float angle = float(i) * 0.78539816;  // TAU / 8
+			vec2 offset = vec2(cos(angle), sin(angle)) * outline_width / size;
+			alpha = max(alpha, texture(TEXTURE, UV + offset).a);
 		}
 		COLOR = vec4(outline_color.rgb, outline_color.a * alpha);
 	} else {

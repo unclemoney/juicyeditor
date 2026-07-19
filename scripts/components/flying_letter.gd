@@ -26,6 +26,10 @@ class_name FlyingLetter
 var character_text: String = ""
 var start_pos: Vector2
 
+## Font size for the letter label (0 = theme default). Set by the spawner to
+## match the editor's current zoomed font size.
+var font_size: int = 0
+
 @onready var label: Label
 @onready var debris_sprite: AnimatedSprite2D
 @onready var cleanup_timer: Timer
@@ -68,6 +72,8 @@ func _setup_components() -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.text = character_text
+	if font_size > 0:
+		label.add_theme_font_size_override("font_size", font_size)
 	add_child(label)
 	
 	# Create debris sprite for enhanced visual effects

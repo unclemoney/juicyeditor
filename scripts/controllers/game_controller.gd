@@ -47,6 +47,15 @@ var time_since_last_check: float = 0.0
 var instance_lock_file: String = ""
 var instance_command_file: String = ""
 var is_primary_instance: bool = false
+var heartbeat_interval: float = 2.0  # Refresh lock file heartbeat every 2 seconds
+var time_since_last_heartbeat: float = 0.0
+const LOCK_STALE_AFTER_SEC: int = 6  # Lock with no heartbeat for this long is abandoned
+
+## Settings saves are debounced: control drags (color pickers, sliders) fire
+## set_setting() dozens of times per second, and a full JSON disk write per
+## tick can stall the UI. Coalesce bursts into one write.
+var _settings_save_timer: Timer = null
+const SETTINGS_SAVE_DEBOUNCE_SEC: float = 0.75
 
 func _ready() -> void:
 	print("Juicy Editor starting up...")
@@ -91,10 +100,16 @@ func _process(delta: float) -> void:
 		return
 	
 	time_since_last_check += delta
+	time_since_last_heartbeat += delta
 	
 	if time_since_last_check >= check_interval:
 		time_since_last_check = 0.0
 		_check_command_file()
+	
+	# Refresh the lock file heartbeat so stale-lock detection works
+	if time_since_last_heartbeat >= heartbeat_interval:
+		time_since_last_heartbeat = 0.0
+		_write_instance_lock()
 
 func initialize_node_references() -> void:
 	# Initialize node references from paths
@@ -651,6 +666,22 @@ func set_setting(key: String, value: Variant) -> void:
 	_apply_rich_effects_settings()
 	
 	settings_changed.emit(editor_settings)
+	_request_save_settings()
+
+func _request_save_settings() -> void:
+	"""Schedule a settings save, coalescing bursts into a single disk write."""
+	if not is_inside_tree():
+		_save_settings()
+		return
+	if _settings_save_timer == null:
+		_settings_save_timer = Timer.new()
+		_settings_save_timer.one_shot = true
+		_settings_save_timer.wait_time = SETTINGS_SAVE_DEBOUNCE_SEC
+		_settings_save_timer.timeout.connect(_on_settings_save_timer_timeout)
+		add_child(_settings_save_timer)
+	_settings_save_timer.start()
+
+func _on_settings_save_timer_timeout() -> void:
 	_save_settings()
 
 func _apply_rich_effects_settings() -> void:
@@ -845,6 +876,10 @@ func _apply_settings_to_components(settings: Dictionary) -> void:
 	if text_editor:
 		if "font_size" in settings:
 			text_editor.add_theme_font_size_override("font_size", int(settings.font_size))
+			# Keep zoom math relative to the new base font size
+			var zoom_controller = get_node_or_null("/root/Main/ZoomController")
+			if zoom_controller and zoom_controller.has_method("update_base_font_size"):
+				zoom_controller.update_base_font_size(int(settings.font_size))
 		# Note: Line numbers and word wrap settings will be handled by the text editor component directly
 	
 	# Apply to audio manager
@@ -1058,35 +1093,37 @@ func _try_become_primary_instance() -> bool:
 	if FileAccess.file_exists(instance_lock_file):
 		print("GameController: Lock file found, checking contents...")
 		
-		# Check if the process is still alive by trying to read it
 		var lock_read = FileAccess.open(instance_lock_file, FileAccess.READ)
 		if lock_read:
-			var pid = lock_read.get_as_text().strip_edges()
+			var pid_text: String = lock_read.get_line().strip_edges()
+			var ts_text: String = lock_read.get_line().strip_edges() if not lock_read.eof_reached() else ""
 			lock_read.close()
-			print("GameController: Lock file contains PID: ", pid)
+			print("GameController: Lock file contains PID: ", pid_text, " heartbeat: ", ts_text)
 			
-			# If lock file exists with a valid PID, assume another instance is running
-			# The old working version did NOT verify if the PID is still running
-			# because OS.is_process_running() can be unreliable on Windows
-			if pid != "" and pid.is_valid_int():
-				print("GameController: Lock file exists with valid PID, another instance is running")
+			var pid: int = pid_text.to_int() if pid_text.is_valid_int() else -1
+			var heartbeat: int = ts_text.to_int() if ts_text.is_valid_int() else 0
+			var pid_alive: bool = _is_pid_running(pid)
+			var heartbeat_fresh: bool = heartbeat > 0 and (int(Time.get_unix_time_from_system()) - heartbeat) < LOCK_STALE_AFTER_SEC
+			
+			if pid_alive and heartbeat_fresh:
+				# Lock is actively refreshed by a live process - a real primary instance
+				print("GameController: Active primary instance detected (PID ", pid, ")")
 				is_primary_instance = false
 				return false
-			else:
-				# Invalid or empty PID - stale lock file
-				print("GameController: Lock file has invalid PID, treating as stale")
-				DirAccess.remove_absolute(instance_lock_file)
+			
+			# Stale lock: left behind by a crash/kill, or the PID was reused by an
+			# unrelated process. Take over instead of force-closing this window.
+			print("GameController: Stale lock file (pid_alive=", pid_alive, ", heartbeat_fresh=", heartbeat_fresh, "), taking over")
+			DirAccess.remove_absolute(instance_lock_file)
 		else:
 			# Can't read lock file - try to remove it
 			print("GameController: Cannot read lock file, removing it")
 			DirAccess.remove_absolute(instance_lock_file)
 	
-	# Create lock file with our PID
+	# Create lock file with our PID + heartbeat timestamp
 	print("GameController: Creating lock file...")
-	var lock_write = FileAccess.open(instance_lock_file, FileAccess.WRITE)
-	if lock_write:
-		lock_write.store_string(str(OS.get_process_id()))
-		lock_write.close()
+	_write_instance_lock()
+	if FileAccess.file_exists(instance_lock_file):
 		is_primary_instance = true
 		print("Created lock file, we are primary instance (PID: ", OS.get_process_id(), ")")
 		
@@ -1100,6 +1137,35 @@ func _try_become_primary_instance() -> bool:
 	print("GameController: Could not create lock file, assuming primary instance")
 	is_primary_instance = true
 	return true
+
+func _write_instance_lock() -> void:
+	"""Write/refresh the lock file with our PID and a heartbeat timestamp.
+	The heartbeat lets future launches distinguish a live primary from a stale
+	lock left behind by a crash or forced kill."""
+	if instance_lock_file == "":
+		return
+	var lock_write = FileAccess.open(instance_lock_file, FileAccess.WRITE)
+	if lock_write:
+		lock_write.store_line(str(OS.get_process_id()))
+		lock_write.store_line(str(int(Time.get_unix_time_from_system())))
+		lock_write.close()
+
+func _is_pid_running(pid: int) -> bool:
+	"""Best-effort check whether a process with the given PID exists.
+	NOTE: OS.is_process_running() only tracks child processes spawned by THIS
+	instance, so it can't verify lock-file PIDs. On any failure returns false:
+	we'd rather risk a duplicate window than force-close the user's only one."""
+	if pid <= 0:
+		return false
+	if OS.get_name() == "Windows":
+		var output: Array = []
+		var exit_code: int = OS.execute("tasklist", ["/FI", "PID eq %d" % pid, "/NH"], output, true)
+		if exit_code == 0 and output.size() > 0:
+			# tasklist prints "INFO: No tasks are running which match..." when nothing matches
+			return not str(output[0]).contains("No tasks")
+		return false
+	# Other platforms: no cheap verification - treat as not running
+	return false
 
 func _send_files_to_primary_instance() -> void:
 	"""Send our command line files to the primary instance via command file"""

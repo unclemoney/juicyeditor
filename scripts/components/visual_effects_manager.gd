@@ -18,6 +18,11 @@ var gradient_material: ShaderMaterial
 # Active looping glow tweens, keyed by control (so they can be stopped)
 var _glow_tweens: Dictionary = {}
 
+## How many glow pulse cycles to run. MUST stay bounded: an infinite
+## modulate tween forces the whole control (worst case: the full-screen
+## TextEdit) to redraw every single frame forever, overloading the GPU.
+const GLOW_LOOP_COUNT: int = 2
+
 # Effect configurations
 var text_shadow_config: Dictionary = {
 	"enabled": true,
@@ -223,7 +228,7 @@ func create_glow_effect(control: Control, glow_color: Color = Color.CYAN, durati
 	# Create a simple glow by modulating the control's color
 	var original_modulate = control.modulate
 	var tween = create_tween()
-	tween.set_loops()
+	tween.set_loops(GLOW_LOOP_COUNT)  # bounded - never loop forever
 	tween.set_ease(Tween.EASE_IN_OUT)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.bind_node(control)  # Auto-kill if the control is freed
@@ -238,6 +243,13 @@ func create_glow_effect(control: Control, glow_color: Color = Color.CYAN, durati
 	
 	tween.tween_property(control, "modulate", glow_modulate, duration * 0.5)
 	tween.tween_property(control, "modulate", original_modulate, duration * 0.5)
+	tween.finished.connect(_on_glow_tween_finished.bind(control, tween))
+
+func _on_glow_tween_finished(control: Control, tween: Tween) -> void:
+	# Only erase if this tween is still the tracked one (a newer glow may
+	# have replaced it via stop_glow_effect + create_glow_effect).
+	if _glow_tweens.get(control) == tween:
+		_glow_tweens.erase(control)
 
 func stop_glow_effect(control: Control) -> void:
 	if not control:

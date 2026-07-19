@@ -120,3 +120,12 @@ func _apply_zoom() -> void:
 func get_zoom_percentage() -> int:
 	"""Get current zoom level as a percentage (e.g., 100 for 100%)"""
 	return int(current_zoom * 100)
+
+func update_base_font_size(new_base_size: int) -> void:
+	"""Update the base editor font size (e.g. after a settings change) so zoom
+	percentages stay relative to the current base instead of a stale cached one."""
+	if new_base_size <= 0:
+		return
+	original_editor_font_size = new_base_size
+	original_line_numbers_font_size = new_base_size
+	_apply_zoom()

@@ -35,6 +35,7 @@ var effect_pool: Node
 
 # Screen shake state
 var _shake_tween: Tween = null
+var _shake_base_transform: Transform2D = Transform2D.IDENTITY
 
 func _ready() -> void:
 	# Setup object pool for performance optimization
@@ -174,7 +175,7 @@ func _spawn_typing_effect(pos: Vector2, character: String) -> void:
 	# Create typing effect using script
 	var effect_script = preload("res://scripts/components/typing_effect.gd")
 	var effect = Node2D.new()
-	var typing_effect_offset: Vector2 = Vector2(10, 8)
+	var typing_effect_offset: Vector2 = Vector2(10, 8) * _get_editor_zoom()
 	effect.set_script(effect_script)
 	effect.character_typed = character
 	effect.position = pos + typing_effect_offset
@@ -218,7 +219,7 @@ func _spawn_deletion_effect(pos: Vector2, deleted_char: String = "") -> void:
 	# Create enhanced explosion effect using new DeletionEffect component
 	var deletion_script = preload("res://scripts/components/deletion_effect.gd")
 	var explosion = Node2D.new()
-	var typing_effect_offset: Vector2 = Vector2(0, -8)
+	var typing_effect_offset: Vector2 = Vector2(0, -8) * _get_editor_zoom()
 	explosion.set_script(deletion_script)
 	explosion.position = pos + typing_effect_offset
 	explosion.destroy_on_complete = true
@@ -235,6 +236,8 @@ func _spawn_deletion_effect(pos: Vector2, deleted_char: String = "") -> void:
 		flying_letter.character_text = deleted_char
 		flying_letter.position = pos
 		flying_letter.effect_intensity = effect_intensity
+		# Match the letter's font size to the editor's current (zoomed) size
+		flying_letter.font_size = text_editor.get_theme_font_size("font_size")
 		
 		text_editor.add_child(flying_letter)
 		active_effects.append(flying_letter)
@@ -341,20 +344,32 @@ func apply_settings(settings: Dictionary) -> void:
 	
 	print("TypingEffectsManager settings applied:", settings)
 
+func _get_editor_zoom() -> float:
+	"""Current zoom factor of the editor (1.0 = 100%), used to scale effect offsets."""
+	var zoom_controller = get_node_or_null("/root/Main/ZoomController")
+	if zoom_controller and "current_zoom" in zoom_controller:
+		return zoom_controller.current_zoom
+	return 1.0
+
 func _shake_screen(intensity: float, duration: float) -> void:
 	"""Shake the viewport canvas transform so the TextEditor stays in place"""
 	var viewport = get_viewport()
 	if not viewport:
 		return
 	
-	var base_transform = viewport.canvas_transform
+	# Cache the true rest transform only while NOT shaking; capturing mid-shake
+	# would bake the displacement in as the new "base" and drift permanently.
+	var shaking: bool = _shake_tween != null and _shake_tween.is_valid()
+	if shaking:
+		_shake_tween.kill()
+	else:
+		_shake_base_transform = viewport.canvas_transform
+	
+	var base_transform = _shake_base_transform
+	viewport.canvas_transform = base_transform
+	
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
-	
-	# Kill previous shake to avoid drift from overlapping tweens
-	if _shake_tween and _shake_tween.is_valid():
-		_shake_tween.kill()
-		viewport.canvas_transform = base_transform
 	
 	_shake_tween = create_tween()
 	_shake_tween.tween_method(func(v: float):
