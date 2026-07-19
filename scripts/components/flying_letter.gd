@@ -126,7 +126,8 @@ func _start_flight() -> void:
 	var rot_speed = randf_range(rotations_per_s_min, rotations_per_s_max) * effect_intensity
 	
 	# End position (fallen down and drifted horizontally)
-	var end_x = start_pos.x + launch_x * effect_duration * 0.001
+	# launch_x is px/s, so multiply by duration (seconds) for total travel
+	var end_x = start_pos.x + launch_x * effect_duration
 	var end_y = start_pos.y + 200.0 * effect_intensity
 	var arc_height = abs(launch_y) * effect_intensity
 	

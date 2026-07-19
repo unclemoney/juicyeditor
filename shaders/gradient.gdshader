@@ -58,5 +58,7 @@ vec4 effect(vec2 screenSize, vec2 screen_coords){
 
 void fragment() {
     vec2 uv = UV;
-	COLOR *= effect(TEXTURE_PIXEL_SIZE, uv);
+	// Balatro expects the real resolution and pixel-space coords; passing
+	// TEXTURE_PIXEL_SIZE (1/res) makes pixel_size ~0 and explodes into noise.
+	COLOR = effect(1.0 / TEXTURE_PIXEL_SIZE, uv / TEXTURE_PIXEL_SIZE);
 }

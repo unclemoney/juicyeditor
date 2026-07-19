@@ -393,8 +393,13 @@ func _on_preview_button_pressed() -> void:
 	if not text_editor:
 		return
 
+	# Position restore is applied after show() (only when first created)
+	var just_created: bool = false
+	var restore_pos := Vector2i(-1, -1)
+
 	# Lazy-instantiate the preview window
 	if not _markdown_preview_window:
+		just_created = true
 		_markdown_preview_window = MarkdownViewWindowScene.instantiate()
 		add_child(_markdown_preview_window)
 		_markdown_preview_window.visibility_changed.connect(_on_preview_visibility_changed)
@@ -403,7 +408,7 @@ func _on_preview_button_pressed() -> void:
 		_markdown_preview_window.navigate_to.connect(_on_preview_navigate_to)
 		_markdown_preview_window.morph_requested.connect(_on_preview_morph_requested)
 
-		# Restore saved position/size
+		# Restore saved size (position is restored after show() below)
 		if game_controller:
 			var px: int = game_controller.editor_settings.get("markdown_preview_x", -1)
 			var py: int = game_controller.editor_settings.get("markdown_preview_y", -1)
@@ -411,12 +416,8 @@ func _on_preview_button_pressed() -> void:
 			var ph: int = game_controller.editor_settings.get("markdown_preview_h", 600)
 			if pw > 0 and ph > 0:
 				_markdown_preview_window.size = Vector2i(pw, ph)
-			# Restore position with basic sanity check
 			if px >= 0 and py >= 0:
-				var usable: Rect2i = DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen())
-				var safe_x: int = clampi(px, 0, maxi(usable.size.x - 100, 0))
-				var safe_y: int = clampi(py, 0, maxi(usable.size.y - 100, 0))
-				_markdown_preview_window.position = Vector2i(safe_x, safe_y)
+				restore_pos = Vector2i(px, py)
 
 	# Get current theme
 	var active_theme: JuicyTheme = null
@@ -426,6 +427,31 @@ func _on_preview_button_pressed() -> void:
 	# Open or refresh
 	var filename: String = current_file_path.get_file() if current_file_path != "" else "Untitled.md"
 	_markdown_preview_window.open_with(text_editor.text, filename, active_theme, current_file_path)
+
+	# Set position AFTER show(): with initial_position=ABSOLUTE nothing recenters
+	# the window, and pre-show position assignments would have been lost anyway.
+	if restore_pos.x >= 0:
+		if _markdown_preview_window.is_embedded():
+			# Embedded windows use viewport logical coordinates
+			var vp_size: Vector2 = get_viewport().get_visible_rect().size
+			restore_pos.x = clampi(restore_pos.x, 0, maxi(int(vp_size.x) - 100, 0))
+			restore_pos.y = clampi(restore_pos.y, 0, maxi(int(vp_size.y) - 100, 0))
+		else:
+			# Native OS windows use absolute screen pixel coordinates
+			var usable: Rect2i = DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen())
+			restore_pos.x = clampi(restore_pos.x, 0, maxi(usable.size.x - 100, 0))
+			restore_pos.y = clampi(restore_pos.y, 0, maxi(usable.size.y - 100, 0))
+		_markdown_preview_window.position = restore_pos
+	elif just_created:
+		# First open ever (no saved position): center on the main window
+		if _markdown_preview_window.is_embedded():
+			var vp_size: Vector2 = get_viewport().get_visible_rect().size
+			_markdown_preview_window.position = Vector2i(
+				maxi((int(vp_size.x) - _markdown_preview_window.size.x) / 2, 0),
+				maxi((int(vp_size.y) - _markdown_preview_window.size.y) / 2, 0))
+		else:
+			var main_win: Window = get_window()
+			_markdown_preview_window.position = main_win.position + (main_win.size - _markdown_preview_window.size) / 2
 
 	# Connect live update if enabled
 	_update_preview_live_connection()
@@ -532,16 +558,18 @@ func _open_file_in_preview(file_path: String) -> void:
 	_markdown_preview_window.open_with(content, file_path.get_file(), active_theme, file_path)
 
 
-func _open_file_in_preview_no_history(file_path: String) -> void:
+func _open_file_in_preview_no_history(file_path: String, content: String = "") -> void:
 	## Load a file and show it in the preview window without pushing history.
 	## Used for back/forward navigation (history is already managed).
+	## If content is empty, it is read from disk.
 	if not _markdown_preview_window:
 		return
-	var file = FileAccess.open(file_path, FileAccess.READ)
-	if not file:
-		return
-	var content: String = file.get_as_text()
-	file.close()
+	if content.is_empty():
+		var file = FileAccess.open(file_path, FileAccess.READ)
+		if not file:
+			return
+		content = file.get_as_text()
+		file.close()
 	var active_theme: JuicyTheme = null
 	if theme_manager and "current_theme" in theme_manager:
 		active_theme = theme_manager.current_theme
@@ -882,6 +910,9 @@ func _on_zoom_changed(zoom_level: float) -> void:
 	if zoom_reset_button:
 		var zoom_percent = int(zoom_level * 100)
 		zoom_reset_button.text = str(zoom_percent) + "%"
+	# Keep the caret in view after the font-size reflow (deferred so layout settles)
+	if text_editor:
+		text_editor.call_deferred("adjust_viewport_to_caret")
 
 func _on_file_menu_pressed(id: int) -> void:
 	match id:
@@ -924,6 +955,24 @@ func _on_tab_changed(_tab_index: int) -> void:
 			# Refresh outline panel for the new file content
 			if outline_panel and outline_panel.has_method("refresh_outline"):
 				outline_panel.refresh_outline()
+			
+			# Sync markdown preview with the new tab
+			_sync_preview_with_current_tab()
+
+func _sync_preview_with_current_tab() -> void:
+	"""Keep the markdown preview in sync after a tab switch.
+	Programmatic text assignment emits text_set (not text_changed), so the
+	live-update connection alone never reaches the preview on tab switch."""
+	if not _markdown_preview_window or not _markdown_preview_window.visible:
+		return
+	if current_file_path.get_extension().to_lower() == "md":
+		# Use the editor's current text so unsaved tab changes are shown
+		_open_file_in_preview_no_history(current_file_path, text_editor.text)
+		_update_preview_live_connection()
+	else:
+		# Non-markdown tab: stop forwarding its edits to the preview
+		_disconnect_preview_live_update()
+
 
 func _on_text_changed() -> void:
 	is_file_modified = true

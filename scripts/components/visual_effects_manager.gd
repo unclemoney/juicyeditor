@@ -15,6 +15,9 @@ var text_shadow_material: ShaderMaterial
 var outline_material: ShaderMaterial
 var gradient_material: ShaderMaterial
 
+# Active looping glow tweens, keyed by control (so they can be stopped)
+var _glow_tweens: Dictionary = {}
+
 # Effect configurations
 var text_shadow_config: Dictionary = {
 	"enabled": true,
@@ -199,6 +202,9 @@ func create_pulse_effect(control: Control, duration: float = 0.3, intensity: flo
 	if not control:
 		return
 	
+	# Scale around the center instead of the top-left corner
+	control.pivot_offset = control.size / 2.0
+	
 	var tween = create_tween()
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_BACK)
@@ -211,10 +217,17 @@ func create_glow_effect(control: Control, glow_color: Color = Color.CYAN, durati
 	if not control:
 		return
 	
+	# Stop any glow already running on this control
+	stop_glow_effect(control)
+	
 	# Create a simple glow by modulating the control's color
 	var original_modulate = control.modulate
 	var tween = create_tween()
 	tween.set_loops()
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.bind_node(control)  # Auto-kill if the control is freed
+	_glow_tweens[control] = tween
 	
 	var glow_modulate = Color(
 		original_modulate.r + glow_color.r * 0.3,
@@ -229,6 +242,13 @@ func create_glow_effect(control: Control, glow_color: Color = Color.CYAN, durati
 func stop_glow_effect(control: Control) -> void:
 	if not control:
 		return
+	
+	# Kill the looping tween so it stops overwriting modulate
+	if _glow_tweens.has(control):
+		var tween: Tween = _glow_tweens[control]
+		if tween and tween.is_valid():
+			tween.kill()
+		_glow_tweens.erase(control)
 	
 	# Reset modulate to normal
 	control.modulate = Color.WHITE

@@ -4,7 +4,7 @@
 
 [node name="MarkdownViewWindow" type="Window"]
 title = "Markdown Preview"
-initial_position = 2
+initial_position = 0
 size = Vector2i(700, 600)
 min_size = Vector2i(400, 300)
 script = ExtResource("1_script")

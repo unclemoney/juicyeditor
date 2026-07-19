@@ -892,6 +892,13 @@ func _kill_active_tweens() -> void:
 # ---- Signals / Callbacks ----
 
 func _on_close_requested() -> void:
+	# Stop any pending live re-render and reset per-session state so stale
+	# history/timers don't leak into the next time the window is opened
+	if _debounce_timer:
+		_debounce_timer.stop()
+	_history_back.clear()
+	_history_forward.clear()
+	_update_nav_buttons()
 	hide()
 
 
