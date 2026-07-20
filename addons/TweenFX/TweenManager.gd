@@ -12,6 +12,11 @@ static func track(node: CanvasItem, anim: TweenFX.Animations, tween: Tween) -> v
 		if not node.tree_exiting.is_connected(_on_node_exiting):
 			node.tree_exiting.connect(_on_node_exiting.bind(node), CONNECT_ONE_SHOT)
 	_active[node][anim] = tween
+	# Tie the tween to the node's lifetime: tweens are created on the
+	# SceneTree, so without this they outlive their target. An orphaned
+	# looping tween then completes every step in zero time, which makes the
+	# engine fail with "Infinite loop detected" (tween.cpp step()).
+	tween.bind_node(node)
 	tween.finished.connect(_on_tween_finished.bind(node, anim), CONNECT_ONE_SHOT)
 
 static func stop(node: CanvasItem, anim: TweenFX.Animations) -> void:
@@ -40,4 +45,10 @@ static func _on_tween_finished(node: CanvasItem, anim: TweenFX.Animations) -> vo
 		_active.erase(node)
 
 static func _on_node_exiting(node: CanvasItem) -> void:
-	_active.erase(node)
+	# Actually kill the node's tweens, not just forget them: an orphaned
+	# looping tween with a dead target triggers "Infinite loop detected".
+	if _active.has(node):
+		for tween in _active[node].values():
+			if tween and tween.is_valid():
+				tween.kill()
+		_active.erase(node)
